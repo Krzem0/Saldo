@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="ARCHITECTURE.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+    <File Path="ROADMAP.md" />
+  </Folder>
+  <Project Path="Saldo.Application/Saldo.Application.csproj" Id="d032edb8-098e-4fa7-98b9-8220f472e319" />
+  <Project Path="Saldo.Desktop.Wpf/Saldo.Desktop.Wpf.csproj" Id="dde64994-8242-4dc1-8909-dba471e227d2" />
+  <Project Path="Saldo.Domain/Saldo.Domain.csproj" />
+  <Project Path="Saldo.Infrastructure.Sqlite/Saldo.Infrastructure.Sqlite.csproj" Id="a84627c7-9494-45bb-904b-e162ad31522e" />
+  <Project Path="Saldo.Tests.Integration/Saldo.Tests.Integration.csproj" Id="feecb95f-abc9-41a7-982f-c401ab02923a" />
+  <Project Path="Saldo.Tests.Unit/Saldo.Tests.Unit.csproj" Id="068824ae-09fc-4421-bc60-b7d334b0180d" />
+</Solution>
