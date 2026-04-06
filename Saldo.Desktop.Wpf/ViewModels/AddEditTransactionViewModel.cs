@@ -1,0 +1,140 @@
+using System.Globalization;
+using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
+using Saldo.Application.DTOs;
+using Saldo.Application.UseCases;
+using Saldo.Desktop.Wpf.Infrastructure;
+using Saldo.Domain.Entities;
+using Saldo.Domain.Enums;
+
+namespace Saldo.Desktop.Wpf.ViewModels;
+
+public sealed class AddEditTransactionViewModel : ViewModelBase
+{
+    private readonly IServiceScopeFactory _scopeFactory;
+
+    private DateTime _date = DateTime.Today;
+    private DirectionItem _selectedDirection;
+    private string _amountText = string.Empty;
+    private Category? _selectedCategory;
+    private Member? _selectedMember;
+    private Counterparty? _selectedCounterparty;
+    private string? _description;
+    private string? _location;
+
+    public record DirectionItem(TransactionDirection Value, string Label);
+
+    public IReadOnlyList<DirectionItem> Directions { get; } =
+    [
+        new(TransactionDirection.Expense, "Expense"),
+        new(TransactionDirection.Income, "Income")
+    ];
+
+    public int? TransactionId { get; private set; }
+    public string Title => TransactionId.HasValue ? "Edit Transaction" : "Add Transaction";
+
+    public DateTime Date { get => _date; set => SetField(ref _date, value); }
+
+    public DirectionItem SelectedDirection
+    {
+        get => _selectedDirection;
+        set => SetField(ref _selectedDirection, value);
+    }
+
+    public string AmountText { get => _amountText; set => SetField(ref _amountText, value); }
+
+    public Category? SelectedCategory { get => _selectedCategory; set => SetField(ref _selectedCategory, value); }
+    public Member? SelectedMember { get => _selectedMember; set => SetField(ref _selectedMember, value); }
+    public Counterparty? SelectedCounterparty { get => _selectedCounterparty; set => SetField(ref _selectedCounterparty, value); }
+
+    public string? Description { get => _description; set => SetField(ref _description, value); }
+    public string? Location { get => _location; set => SetField(ref _location, value); }
+
+    public IReadOnlyList<Category> Categories { get; }
+    public IReadOnlyList<Member> Members { get; }
+    public IReadOnlyList<Counterparty> Counterparties { get; }
+
+    public bool IsValid =>
+        decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.CurrentCulture, out var amount) && amount > 0
+        && SelectedCategory is not null
+        && SelectedMember is not null
+        && SelectedCounterparty is not null;
+
+    public event Action<bool>? RequestClose;
+
+    public ICommand SaveCommand { get; }
+
+    public AddEditTransactionViewModel(
+        IServiceScopeFactory scopeFactory,
+        IReadOnlyList<Category> categories,
+        IReadOnlyList<Member> members,
+        IReadOnlyList<Counterparty> counterparties,
+        TransactionDto? existing = null)
+    {
+        _scopeFactory = scopeFactory;
+        Categories = categories;
+        Members = members;
+        Counterparties = counterparties;
+        _selectedDirection = Directions[0]; // default: Expense
+
+        if (existing is not null)
+            PopulateFrom(existing);
+
+        SaveCommand = new AsyncRelayCommand(SaveAsync, () => IsValid);
+    }
+
+    private void PopulateFrom(TransactionDto t)
+    {
+        TransactionId = t.Id;
+        _date = t.Date.ToDateTime(TimeOnly.MinValue);
+        _selectedDirection = Directions.FirstOrDefault(d => d.Value == t.Direction) ?? Directions[0];
+        _amountText = t.Amount.ToString("N2", CultureInfo.CurrentCulture);
+        _selectedCategory = Categories.FirstOrDefault(c => c.Id == t.CategoryId);
+        _selectedMember = Members.FirstOrDefault(m => m.Id == t.PayerId);
+        _selectedCounterparty = Counterparties.FirstOrDefault(c => c.Id == t.CounterpartyId);
+        _description = t.Description;
+        _location = t.Location;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (!decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.CurrentCulture, out var amount) || amount <= 0)
+            return;
+
+        await using var scope = _scopeFactory.CreateAsyncScope();
+
+        if (TransactionId.HasValue)
+        {
+            var cmd = new EditTransactionCommand(
+                TransactionId.Value,
+                DateOnly.FromDateTime(Date),
+                SelectedDirection.Value,
+                amount,
+                SelectedCategory!.Id,
+                SelectedMember!.Id,
+                SelectedCounterparty!.Id,
+                Description,
+                Location,
+                []);
+
+            await scope.ServiceProvider.GetRequiredService<EditTransaction>().ExecuteAsync(cmd);
+        }
+        else
+        {
+            var cmd = new AddTransactionCommand(
+                DateOnly.FromDateTime(Date),
+                SelectedDirection.Value,
+                amount,
+                SelectedCategory!.Id,
+                SelectedMember!.Id,
+                SelectedCounterparty!.Id,
+                Description,
+                Location,
+                []);
+
+            await scope.ServiceProvider.GetRequiredService<AddTransaction>().ExecuteAsync(cmd);
+        }
+
+        RequestClose?.Invoke(true);
+    }
+}
