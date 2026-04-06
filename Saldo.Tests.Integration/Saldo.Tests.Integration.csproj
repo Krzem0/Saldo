@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -12,6 +12,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Saldo.Application\Saldo.Application.csproj" />
+    <ProjectReference Include="..\Saldo.Domain\Saldo.Domain.csproj" />
+    <ProjectReference Include="..\Saldo.Infrastructure.Sqlite\Saldo.Infrastructure.Sqlite.csproj" />
   </ItemGroup>
 
   <ItemGroup>
