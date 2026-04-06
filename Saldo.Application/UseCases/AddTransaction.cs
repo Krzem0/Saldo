@@ -1,5 +1,6 @@
 using Saldo.Application.DTOs;
 using Saldo.Application.Interfaces;
+using Saldo.Application.Mapping;
 using Saldo.Domain.Entities;
 
 namespace Saldo.Application.UseCases;
@@ -44,22 +45,6 @@ public sealed class AddTransaction
         var saved = await _transactions.GetByIdAsync(transaction.Id, ct)
             ?? throw new InvalidOperationException($"Transaction {transaction.Id} not found after insert.");
 
-        return ToDto(saved);
+        return TransactionMapper.ToDto(saved);
     }
-
-    internal static TransactionDto ToDto(Transaction t) => new(
-        t.Id,
-        t.Date,
-        t.Direction,
-        t.Amount,
-        t.CategoryId,
-        t.Category?.Name ?? string.Empty,
-        t.PayerId,
-        t.Payer?.Name ?? string.Empty,
-        t.CounterpartyId,
-        t.Counterparty?.Name ?? string.Empty,
-        t.Description,
-        t.Location,
-        t.Tags.Select(tt => tt.Tag?.Name ?? string.Empty).ToList()
-    );
 }
