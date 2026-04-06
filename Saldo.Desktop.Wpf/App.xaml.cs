@@ -58,6 +58,9 @@ namespace Saldo.Desktop.Wpf
 
             services.AddTransient<MainViewModel>();
             services.AddTransient<TransactionListViewModel>();
+            services.AddTransient<CategoriesViewModel>();
+            services.AddTransient<MembersViewModel>();
+            services.AddTransient<CounterpartiesViewModel>();
             services.AddTransient<MainWindow>();
         }
 

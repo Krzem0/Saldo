@@ -4,9 +4,18 @@
         xmlns:views="clr-namespace:Saldo.Desktop.Wpf.Views"
         Title="Saldo" Height="600" Width="960"
         WindowStartupLocation="CenterScreen">
-    <TabControl>
+    <TabControl SelectionChanged="TabControl_SelectionChanged">
         <TabItem Header="Transactions">
             <views:TransactionListView DataContext="{Binding TransactionList}"/>
+        </TabItem>
+        <TabItem Header="Categories">
+            <views:ReferenceListView DataContext="{Binding Categories}"/>
+        </TabItem>
+        <TabItem Header="Members">
+            <views:ReferenceListView DataContext="{Binding Members}"/>
+        </TabItem>
+        <TabItem Header="Counterparties">
+            <views:ReferenceListView DataContext="{Binding Counterparties}"/>
         </TabItem>
     </TabControl>
 </Window>

@@ -10,4 +10,10 @@ public sealed class WpfDialogService : IDialogService
         var dialog = new AddEditTransactionDialog { DataContext = viewModel };
         return dialog.ShowDialog();
     }
+
+    public string? ShowNameDialog(string title, string? initialValue = null)
+    {
+        var dialog = new NameDialog(title, initialValue);
+        return dialog.ShowDialog() == true ? dialog.EnteredName : null;
+    }
 }
