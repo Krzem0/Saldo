@@ -1,6 +1,7 @@
 <Window x:Class="Saldo.Desktop.Wpf.Views.AddEditTransactionDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:Saldo.Desktop.Wpf.Controls"
         Title="{Binding Title}"
         Width="420" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -52,10 +53,10 @@
 
         <!-- Counterparty -->
         <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Counterparty]}"/>
-        <ComboBox Grid.Row="2" Grid.Column="1"
-                  ItemsSource="{Binding Parties}"
-                  SelectedItem="{Binding SelectedCounterparty}"
-                  DisplayMemberPath="Name"/>
+        <controls:AutocompleteComboBox Grid.Row="2" Grid.Column="1"
+                                       ItemsSource="{Binding Parties}"
+                                       SelectedItem="{Binding SelectedCounterparty}"
+                                       DisplayMemberPath="Name"/>
 
         <!-- Description -->
         <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Description]}"/>
@@ -64,10 +65,10 @@
 
         <!-- Category -->
         <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Category]}"/>
-        <ComboBox Grid.Row="4" Grid.Column="1"
-                  ItemsSource="{Binding Categories}"
-                  SelectedItem="{Binding SelectedCategory}"
-                  DisplayMemberPath="Name"/>
+        <controls:AutocompleteComboBox Grid.Row="4" Grid.Column="1"
+                                       ItemsSource="{Binding Categories}"
+                                       SelectedItem="{Binding SelectedCategory}"
+                                       DisplayMemberPath="Name"/>
 
         <!-- Location -->
         <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Location]}"/>
@@ -83,10 +84,10 @@
 
         <!-- Payer -->
         <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Payer]}"/>
-        <ComboBox Grid.Row="7" Grid.Column="1"
-                  ItemsSource="{Binding Parties}"
-                  SelectedItem="{Binding SelectedPayer}"
-                  DisplayMemberPath="Name"/>
+        <controls:AutocompleteComboBox Grid.Row="7" Grid.Column="1"
+                                       ItemsSource="{Binding Parties}"
+                                       SelectedItem="{Binding SelectedPayer}"
+                                       DisplayMemberPath="Name"/>
 
         <!-- Buttons -->
         <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2"
