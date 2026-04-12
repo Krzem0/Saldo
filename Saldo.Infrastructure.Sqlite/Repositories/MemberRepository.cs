@@ -5,42 +5,42 @@ using Saldo.Infrastructure.Sqlite.Persistence;
 
 namespace Saldo.Infrastructure.Sqlite.Repositories;
 
-public sealed class MemberRepository : IMemberRepository
+public sealed class PartyRepository : IPartyRepository
 {
     private readonly SaldoDbContext _context;
 
-    public MemberRepository(SaldoDbContext context)
+    public PartyRepository(SaldoDbContext context)
     {
         _context = context;
     }
 
-    public async Task<Member?> GetByIdAsync(int id, CancellationToken ct = default) =>
-        await _context.Members
+    public async Task<Party?> GetByIdAsync(int id, CancellationToken ct = default) =>
+        await _context.Parties
             .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.Id == id, ct);
+            .FirstOrDefaultAsync(p => p.Id == id, ct);
 
-    public async Task<IReadOnlyList<Member>> GetAllAsync(CancellationToken ct = default) =>
-        await _context.Members
+    public async Task<IReadOnlyList<Party>> GetAllAsync(CancellationToken ct = default) =>
+        await _context.Parties
             .AsNoTracking()
-            .OrderBy(m => m.Name)
+            .OrderBy(p => p.Name)
             .ToListAsync(ct);
 
-    public async Task AddAsync(Member member, CancellationToken ct = default)
+    public async Task AddAsync(Party party, CancellationToken ct = default)
     {
-        _context.Members.Add(member);
+        _context.Parties.Add(party);
         await _context.SaveChangesAsync(ct);
     }
 
-    public async Task UpdateAsync(Member member, CancellationToken ct = default)
+    public async Task UpdateAsync(Party party, CancellationToken ct = default)
     {
-        _context.Members.Update(member);
+        _context.Parties.Update(party);
         await _context.SaveChangesAsync(ct);
     }
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
-        await _context.Members
-            .Where(m => m.Id == id)
+        await _context.Parties
+            .Where(p => p.Id == id)
             .ExecuteDeleteAsync(ct);
     }
 }

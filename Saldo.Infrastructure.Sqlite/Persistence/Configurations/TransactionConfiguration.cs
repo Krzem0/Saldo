@@ -42,12 +42,12 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
             .OnDelete(DeleteBehavior.Restrict);
 
         e.HasOne(x => x.Payer)
-            .WithMany(x => x.TransactionsPaid)
+            .WithMany(x => x.PayerTransactions)
             .HasForeignKey(x => x.PayerId)
             .OnDelete(DeleteBehavior.Restrict);
 
         e.HasOne(x => x.Counterparty)
-            .WithMany(x => x.Transactions)
+            .WithMany(x => x.CounterpartyTransactions)
             .HasForeignKey(x => x.CounterpartyId)
             .OnDelete(DeleteBehavior.Restrict);
     }

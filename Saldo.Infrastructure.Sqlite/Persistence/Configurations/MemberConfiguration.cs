@@ -4,17 +4,17 @@ using Saldo.Domain.Entities;
 
 namespace Saldo.Infrastructure.Sqlite.Persistence.Configurations;
 
-internal sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
+internal sealed class PartyConfiguration : IEntityTypeConfiguration<Party>
 {
-    public void Configure(EntityTypeBuilder<Member> e)
+    public void Configure(EntityTypeBuilder<Party> e)
     {
-        e.ToTable("Members");
+        e.ToTable("Parties");
 
         e.HasKey(x => x.Id);
 
         e.Property(x => x.Name)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(200);
 
         e.HasIndex(x => x.Name)
             .IsUnique();

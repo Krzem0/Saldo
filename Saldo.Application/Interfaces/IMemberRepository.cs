@@ -2,11 +2,11 @@ using Saldo.Domain.Entities;
 
 namespace Saldo.Application.Interfaces;
 
-public interface IMemberRepository
+public interface IPartyRepository
 {
-    Task<Member?> GetByIdAsync(int id, CancellationToken ct = default);
-    Task<IReadOnlyList<Member>> GetAllAsync(CancellationToken ct = default);
-    Task AddAsync(Member member, CancellationToken ct = default);
-    Task UpdateAsync(Member member, CancellationToken ct = default);
+    Task<Party?> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<IReadOnlyList<Party>> GetAllAsync(CancellationToken ct = default);
+    Task AddAsync(Party party, CancellationToken ct = default);
+    Task UpdateAsync(Party party, CancellationToken ct = default);
     Task DeleteAsync(int id, CancellationToken ct = default);
 }

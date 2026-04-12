@@ -20,8 +20,7 @@ namespace Saldo.Desktop.Wpf
         {
             if (e.Source is not TabControl tc) return;
             if (tc.SelectedIndex == 1) _viewModel.Categories.LoadCommand.Execute(null);
-            else if (tc.SelectedIndex == 2) _viewModel.Members.LoadCommand.Execute(null);
-            else if (tc.SelectedIndex == 3) _viewModel.Counterparties.LoadCommand.Execute(null);
+            else if (tc.SelectedIndex == 2) _viewModel.Parties.LoadCommand.Execute(null);
         }
     }
 }

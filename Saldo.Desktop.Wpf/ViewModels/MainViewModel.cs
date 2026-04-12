@@ -6,18 +6,15 @@ public sealed class MainViewModel : ViewModelBase
 {
     public TransactionListViewModel TransactionList { get; }
     public CategoriesViewModel Categories { get; }
-    public MembersViewModel Members { get; }
-    public CounterpartiesViewModel Counterparties { get; }
+    public PartiesViewModel Parties { get; }
 
     public MainViewModel(
         TransactionListViewModel transactionList,
         CategoriesViewModel categories,
-        MembersViewModel members,
-        CounterpartiesViewModel counterparties)
+        PartiesViewModel parties)
     {
         TransactionList = transactionList;
         Categories = categories;
-        Members = members;
-        Counterparties = counterparties;
+        Parties = parties;
     }
 }

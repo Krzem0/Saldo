@@ -18,6 +18,7 @@
   <data name="TabCategories" xml:space="preserve"><value>Kategorie</value></data>
   <data name="TabMembers" xml:space="preserve"><value>Osoby</value></data>
   <data name="TabCounterparties" xml:space="preserve"><value>Odbiorcy</value></data>
+  <data name="TabParties" xml:space="preserve"><value>Podmioty</value></data>
   <data name="ErrorTitle" xml:space="preserve"><value>Błąd</value></data>
   <data name="Save" xml:space="preserve"><value>Zapisz</value></data>
   <data name="Cancel" xml:space="preserve"><value>Anuluj</value></data>
@@ -42,6 +43,7 @@
   <data name="Entity_Category" xml:space="preserve"><value>Kategoria</value></data>
   <data name="Entity_Member" xml:space="preserve"><value>Osoba</value></data>
   <data name="Entity_Counterparty" xml:space="preserve"><value>Odbiorca</value></data>
+  <data name="Entity_Party" xml:space="preserve"><value>Podmiot</value></data>
   <data name="AddEntityTitleTemplate" xml:space="preserve"><value>Dodaj {0}</value></data>
   <data name="EditEntityTitleTemplate" xml:space="preserve"><value>Edytuj {0}</value></data>
   <data name="DeleteEntityTitleTemplate" xml:space="preserve"><value>Usuń {0}</value></data>

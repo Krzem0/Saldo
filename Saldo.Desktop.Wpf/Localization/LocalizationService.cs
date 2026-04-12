@@ -7,7 +7,7 @@ namespace Saldo.Desktop.Wpf.Localization;
 public sealed class LocalizationService : ILocalizationService
 {
     private readonly ResourceManager _resourceManager = new("Saldo.Desktop.Wpf.Localization.Strings", typeof(LocalizationService).Assembly);
-    private readonly IReadOnlyList<CultureInfo> _availableCultures = [new CultureInfo("pl-PL"), new CultureInfo("en-US")];
+    private readonly IReadOnlyList<CultureInfo> _availableCultures = [new CultureInfo("en-US"), new CultureInfo("pl-PL")];
     private CultureInfo _currentCulture;
 
     public event PropertyChangedEventHandler? PropertyChanged;

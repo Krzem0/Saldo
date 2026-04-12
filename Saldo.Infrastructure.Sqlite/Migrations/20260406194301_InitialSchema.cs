@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -25,7 +25,7 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Counterparties",
+                name: "Parties",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
@@ -34,20 +34,7 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Counterparties", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Members",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Members", x => x.Id);
+                    table.PrimaryKey("PK_Parties", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -88,15 +75,15 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Transactions_Counterparties_CounterpartyId",
+                        name: "FK_Transactions_Parties_CounterpartyId",
                         column: x => x.CounterpartyId,
-                        principalTable: "Counterparties",
+                        principalTable: "Parties",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Transactions_Members_PayerId",
+                        name: "FK_Transactions_Parties_PayerId",
                         column: x => x.PayerId,
-                        principalTable: "Members",
+                        principalTable: "Parties",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -132,14 +119,8 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Counterparties_Name",
-                table: "Counterparties",
-                column: "Name",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Members_Name",
-                table: "Members",
+                name: "IX_Parties_Name",
+                table: "Parties",
                 column: "Name",
                 unique: true);
 
@@ -196,10 +177,7 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 name: "Categories");
 
             migrationBuilder.DropTable(
-                name: "Counterparties");
-
-            migrationBuilder.DropTable(
-                name: "Members");
+                name: "Parties");
         }
     }
 }

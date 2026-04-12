@@ -228,8 +228,8 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
 
     private async Task AddAsync()
     {
-        var (categories, members, counterparties) = await LoadReferenceDataAsync();
-        var dialogVm = new AddEditTransactionViewModel(_scopeFactory, Localization, categories, members, counterparties);
+        var (categories, parties) = await LoadReferenceDataAsync();
+        var dialogVm = new AddEditTransactionViewModel(_scopeFactory, Localization, categories, parties);
 
         if (_dialogService.ShowAddEditTransaction(dialogVm) == true)
             await LoadAsync();
@@ -239,8 +239,8 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     {
         if (SelectedTransaction is null) return;
 
-        var (categories, members, counterparties) = await LoadReferenceDataAsync();
-        var dialogVm = new AddEditTransactionViewModel(_scopeFactory, Localization, categories, members, counterparties, SelectedTransaction);
+        var (categories, parties) = await LoadReferenceDataAsync();
+        var dialogVm = new AddEditTransactionViewModel(_scopeFactory, Localization, categories, parties, SelectedTransaction);
 
         if (_dialogService.ShowAddEditTransaction(dialogVm) == true)
             await LoadAsync();
@@ -278,13 +278,12 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
         }
     }
 
-    private async Task<(IReadOnlyList<Domain.Entities.Category>, IReadOnlyList<Domain.Entities.Member>, IReadOnlyList<Domain.Entities.Counterparty>)> LoadReferenceDataAsync()
+    private async Task<(IReadOnlyList<Domain.Entities.Category>, IReadOnlyList<Domain.Entities.Party>)> LoadReferenceDataAsync()
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
         var categories = await scope.ServiceProvider.GetRequiredService<ICategoryRepository>().GetAllAsync();
-        var members = await scope.ServiceProvider.GetRequiredService<IMemberRepository>().GetAllAsync();
-        var counterparties = await scope.ServiceProvider.GetRequiredService<ICounterpartyRepository>().GetAllAsync();
-        return (categories, members, counterparties);
+        var parties = await scope.ServiceProvider.GetRequiredService<IPartyRepository>().GetAllAsync();
+        return (categories, parties);
     }
 
     protected override void OnCultureChanged()

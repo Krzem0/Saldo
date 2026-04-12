@@ -22,13 +22,13 @@ public sealed class Transaction
     /// Who initiated/paid the transaction.
     /// </summary>
     public int PayerId { get; set; }
-    public Member Payer { get; set; } = null!;
+    public Party Payer { get; set; } = null!;
 
     /// <summary>
     /// The other side of the transaction (shop/company/person).
     /// </summary>
     public int CounterpartyId { get; set; }
-    public Counterparty Counterparty { get; set; } = null!;
+    public Party Counterparty { get; set; } = null!;
 
     public string? Description { get; set; }
     public string? Location { get; set; }

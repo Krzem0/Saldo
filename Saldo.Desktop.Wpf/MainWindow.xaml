@@ -35,11 +35,8 @@
             <TabItem Header="{Binding Source={StaticResource Localization}, Path=[TabCategories]}">
                 <views:ReferenceListView DataContext="{Binding Categories}"/>
             </TabItem>
-            <TabItem Header="{Binding Source={StaticResource Localization}, Path=[TabMembers]}">
-                <views:ReferenceListView DataContext="{Binding Members}"/>
-            </TabItem>
-            <TabItem Header="{Binding Source={StaticResource Localization}, Path=[TabCounterparties]}">
-                <views:ReferenceListView DataContext="{Binding Counterparties}"/>
+            <TabItem Header="{Binding Source={StaticResource Localization}, Path=[TabParties]}">
+                <views:ReferenceListView DataContext="{Binding Parties}"/>
             </TabItem>
         </TabControl>
     </DockPanel>

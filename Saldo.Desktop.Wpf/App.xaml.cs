@@ -18,6 +18,25 @@ public partial class App : System.Windows.Application
 {
     private ServiceProvider? _serviceProvider;
     private readonly LocalizationService _localization = new();
+    private static readonly string[] DefaultCategoryNames =
+    [
+        "Housing",
+        "Supermarkets",
+        "Online shopping",
+        "Meals at work",
+        "Fast food",
+        "Transport",
+        "Pets",
+        "Entertainment",
+        "Salary",
+        "Bonus",
+        "Term deposit",
+        "Dividends",
+        "Other",
+        "Health",
+        "Donations and gifts",
+        "Personal care"
+    ];
 
     public App()
     {
@@ -83,8 +102,7 @@ public partial class App : System.Windows.Application
 
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
-        services.AddScoped<IMemberRepository, MemberRepository>();
-        services.AddScoped<ICounterpartyRepository, CounterpartyRepository>();
+        services.AddScoped<IPartyRepository, PartyRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
 
         services.AddScoped<AddTransaction>();
@@ -100,8 +118,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<MainViewModel>();
         services.AddTransient<TransactionListViewModel>();
         services.AddTransient<CategoriesViewModel>();
-        services.AddTransient<MembersViewModel>();
-        services.AddTransient<CounterpartiesViewModel>();
+        services.AddTransient<PartiesViewModel>();
         services.AddTransient<MainWindow>();
     }
 
@@ -124,10 +141,15 @@ public partial class App : System.Windows.Application
             .CreateLogger();
     }
 
-    // Seeds a minimal set of reference data so the app is usable out of the box.
     private static async Task SeedInitialDataAsync(SaldoDbContext context, Microsoft.Extensions.Logging.ILogger logger)
     {
-        if (await context.Categories.AnyAsync())
+        var hasAnyData = await context.Categories.AnyAsync()
+            || await context.Parties.AnyAsync()
+            || await context.Tags.AnyAsync()
+            || await context.Transactions.AnyAsync()
+            || await context.TransactionTags.AnyAsync();
+
+        if (hasAnyData)
         {
             logger.LogInformation("Reference data already exists; skipping seed.");
             return;
@@ -135,20 +157,8 @@ public partial class App : System.Windows.Application
 
         logger.LogInformation("Seeding initial reference data.");
 
-        context.Categories.AddRange(
-            new Category { Name = "Food & Drink" },
-            new Category { Name = "Transport" },
-            new Category { Name = "Shopping" },
-            new Category { Name = "Entertainment" },
-            new Category { Name = "Salary" },
-            new Category { Name = "Other" });
-
-        context.Members.Add(new Member { Name = "Me" });
-
-        context.Counterparties.AddRange(
-            new Counterparty { Name = "Shop" },
-            new Counterparty { Name = "Restaurant" },
-            new Counterparty { Name = "Online Store" });
+        context.Categories.AddRange(DefaultCategoryNames.Select(name => new Category { Name = name }));
+        context.Parties.Add(new Party { Name = "Me" });
 
         await context.SaveChangesAsync();
 

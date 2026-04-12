@@ -53,7 +53,7 @@
         <!-- Counterparty -->
         <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Counterparty]}"/>
         <ComboBox Grid.Row="2" Grid.Column="1"
-                  ItemsSource="{Binding Counterparties}"
+                  ItemsSource="{Binding Parties}"
                   SelectedItem="{Binding SelectedCounterparty}"
                   DisplayMemberPath="Name"/>
 
@@ -84,8 +84,8 @@
         <!-- Payer -->
         <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Payer]}"/>
         <ComboBox Grid.Row="7" Grid.Column="1"
-                  ItemsSource="{Binding Members}"
-                  SelectedItem="{Binding SelectedMember}"
+                  ItemsSource="{Binding Parties}"
+                  SelectedItem="{Binding SelectedPayer}"
                   DisplayMemberPath="Name"/>
 
         <!-- Buttons -->

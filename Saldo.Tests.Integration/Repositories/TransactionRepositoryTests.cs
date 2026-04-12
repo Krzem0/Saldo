@@ -24,15 +24,14 @@ public sealed class TransactionRepositoryTests : IDisposable
     private async Task<(int CategoryId, int PayerId, int CounterpartyId)> SeedReferencesAsync()
     {
         var category = new Category { Name = "Food" };
-        var member = new Member { Name = "Alice" };
-        var counterparty = new Counterparty { Name = "Shop" };
+        var payer = new Party { Name = "Alice" };
+        var counterparty = new Party { Name = "Shop" };
 
         _db.Context.Categories.Add(category);
-        _db.Context.Members.Add(member);
-        _db.Context.Counterparties.Add(counterparty);
+        _db.Context.Parties.AddRange(payer, counterparty);
         await _db.Context.SaveChangesAsync();
 
-        return (category.Id, member.Id, counterparty.Id);
+        return (category.Id, payer.Id, counterparty.Id);
     }
 
     private static Transaction MakeTransaction(int categoryId, int payerId, int counterpartyId,
