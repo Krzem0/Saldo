@@ -45,48 +45,48 @@
         <DatePicker Grid.Row="0" Grid.Column="1"
                     SelectedDate="{Binding Date}"/>
 
-        <!-- Direction -->
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="Direction"/>
-        <ComboBox Grid.Row="1" Grid.Column="1"
-                  ItemsSource="{Binding Directions}"
-                  SelectedItem="{Binding SelectedDirection}"
-                  DisplayMemberPath="Label"/>
-
         <!-- Amount -->
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Amount"/>
-        <TextBox Grid.Row="2" Grid.Column="1"
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Amount"/>
+        <TextBox Grid.Row="1" Grid.Column="1"
                  Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <!-- Category -->
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="Category"/>
-        <ComboBox Grid.Row="3" Grid.Column="1"
-                  ItemsSource="{Binding Categories}"
-                  SelectedItem="{Binding SelectedCategory}"
-                  DisplayMemberPath="Name"/>
-
-        <!-- Payer -->
-        <TextBlock Grid.Row="4" Grid.Column="0" Text="Payer"/>
-        <ComboBox Grid.Row="4" Grid.Column="1"
-                  ItemsSource="{Binding Members}"
-                  SelectedItem="{Binding SelectedMember}"
-                  DisplayMemberPath="Name"/>
-
         <!-- Counterparty -->
-        <TextBlock Grid.Row="5" Grid.Column="0" Text="Counterparty"/>
-        <ComboBox Grid.Row="5" Grid.Column="1"
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Counterparty"/>
+        <ComboBox Grid.Row="2" Grid.Column="1"
                   ItemsSource="{Binding Counterparties}"
                   SelectedItem="{Binding SelectedCounterparty}"
                   DisplayMemberPath="Name"/>
 
         <!-- Description -->
-        <TextBlock Grid.Row="6" Grid.Column="0" Text="Description"/>
-        <TextBox Grid.Row="6" Grid.Column="1"
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Description"/>
+        <TextBox Grid.Row="3" Grid.Column="1"
                  Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"/>
 
+        <!-- Category -->
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Category"/>
+        <ComboBox Grid.Row="4" Grid.Column="1"
+                  ItemsSource="{Binding Categories}"
+                  SelectedItem="{Binding SelectedCategory}"
+                  DisplayMemberPath="Name"/>
+
         <!-- Location -->
-        <TextBlock Grid.Row="7" Grid.Column="0" Text="Location"/>
-        <TextBox Grid.Row="7" Grid.Column="1"
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Location"/>
+        <TextBox Grid.Row="5" Grid.Column="1"
                  Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <!-- Direction -->
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="Direction"/>
+        <ComboBox Grid.Row="6" Grid.Column="1"
+                  ItemsSource="{Binding Directions}"
+                  SelectedItem="{Binding SelectedDirection}"
+                  DisplayMemberPath="Label"/>
+
+        <!-- Payer -->
+        <TextBlock Grid.Row="7" Grid.Column="0" Text="Payer"/>
+        <ComboBox Grid.Row="7" Grid.Column="1"
+                  ItemsSource="{Binding Members}"
+                  SelectedItem="{Binding SelectedMember}"
+                  DisplayMemberPath="Name"/>
 
         <!-- Buttons -->
         <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2"

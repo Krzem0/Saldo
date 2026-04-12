@@ -23,8 +23,8 @@ If you generate code that violates these rules, refactor it.
 
 ## Domain Model Guidelines
 - `Transaction`:
-  - Has `Date`, `Amount` (non-negative), `Type` (Income/Expense), optional `CategoryId`, optional `Note`.
-  - Sign is represented by `Type`, not by negative amounts.
+  - Has `Date`, `Direction` (Income/Expense), `Amount` (always positive), `CategoryId`, `PayerId`, `CounterpartyId`, optional `Description`, optional `Location`, and `Tags`.
+  - Sign/meaning is represented by `Direction`, not by negative amounts.
 - Prefer immutable value objects when appropriate.
 - Keep domain logic free from framework types (no WPF/WinUI/EF types in Domain).
 
@@ -34,7 +34,10 @@ If you generate code that violates these rules, refactor it.
   - `ITransactionRepository`, `ICategoryRepository`
   - optional `IUnitOfWork`
 - Keep validation at the use-case boundary; domain invariants inside Domain.
+- Prefer `Result<T>` for expected validation failures and other business outcomes that the UI should handle explicitly.
 - Return simple result DTOs appropriate for UI consumption.
+- Use exceptions only for unexpected technical failures or broken invariants.
+- When a use case needs diagnostics, inject `ILogger<T>` and keep logging focused on technical events and successful operations; do not log expected validation failures as errors.
 
 ## Infrastructure (SQLite)
 - Only `Saldo.Infrastructure.Sqlite` talks to SQLite.
@@ -47,6 +50,8 @@ If you generate code that violates these rules, refactor it.
 - ViewModels call Application use cases; no direct DB calls from UI.
 - Use async commands where IO is involved.
 - Avoid static singletons. Prefer DI.
+- The WPF shell uses `Microsoft.Extensions.Logging` with Serilog writing to `%AppData%\Saldo\Logs\saldo-.log`.
+- Prefer `ILogger<T>` injection over static logging.
 
 ## Coding Conventions
 - C# with nullable reference types enabled.

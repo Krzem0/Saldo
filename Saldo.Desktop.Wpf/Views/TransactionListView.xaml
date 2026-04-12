@@ -16,11 +16,136 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Button Grid.Column="0" Content="◄" Command="{Binding PreviousMonthCommand}" Padding="10,4"/>
-            <TextBlock Grid.Column="1" Text="{Binding MonthLabel}"
-                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                       FontSize="16" FontWeight="Bold"/>
-            <Button Grid.Column="2" Content="►" Command="{Binding NextMonthCommand}" Padding="10,4"/>
+
+            <Button Grid.Column="0" Content="‹" Command="{Binding PreviousMonthCommand}" Padding="10,4" FontSize="18"/>
+
+            <!-- Clickable month label + picker popup -->
+            <Grid Grid.Column="1" HorizontalAlignment="Center">
+                <Button x:Name="MonthPickerButton"
+                        Command="{Binding OpenMonthPickerCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Cursor="Hand"
+                        Padding="8,2">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}"
+                                    CornerRadius="4"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#E3F2FD"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="#BBDEFB"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <TextBlock Text="{Binding MonthLabel}"
+                               FontSize="16" FontWeight="Bold"
+                               VerticalAlignment="Center"/>
+                </Button>
+
+                <Popup IsOpen="{Binding IsMonthPickerOpen, Mode=TwoWay}"
+                       PlacementTarget="{Binding ElementName=MonthPickerButton}"
+                       Placement="Bottom"
+                       StaysOpen="False"
+                       AllowsTransparency="True"
+                       PopupAnimation="Fade">
+                    <Border Background="White"
+                            BorderBrush="#BDBDBD"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="10">
+                        <StackPanel Width="220">
+
+                            <!-- Year navigation inside popup -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="‹"
+                                        Command="{Binding PreviousPickerYearCommand}"
+                                        Padding="8,2" BorderThickness="0"
+                                        Background="Transparent" Cursor="Hand"
+                                        FontSize="18"/>
+                                <TextBox Grid.Column="1"
+                                         Text="{Binding PickerYearText, UpdateSourceTrigger=LostFocus}"
+                                         FontSize="14"
+                                         FontWeight="SemiBold"
+                                         HorizontalContentAlignment="Center"
+                                         VerticalContentAlignment="Center"
+                                         BorderThickness="1"
+                                         BorderBrush="#D0D0D0"
+                                         Background="White"
+                                         Padding="4,2"
+                                         Margin="6,0"
+                                         Width="90"/>
+                                <Button Grid.Column="2" Content="›"
+                                        Command="{Binding NextPickerYearCommand}"
+                                        Padding="8,2" BorderThickness="0"
+                                        Background="Transparent" Cursor="Hand"
+                                        FontSize="18"/>
+                            </Grid>
+
+                            <!-- 4×3 month grid -->
+                            <ItemsControl ItemsSource="{Binding PickerMonths}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="4" Columns="3"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding Label}"
+                                                CommandParameter="{Binding Number}"
+                                                Command="{Binding DataContext.SelectMonthCommand,
+                                                          RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                Margin="2" Padding="4,6" Cursor="Hand" FontSize="12">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Background" Value="White"/>
+                                                    <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Background="{TemplateBinding Background}"
+                                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                                        BorderThickness="1" CornerRadius="4"
+                                                                        Padding="{TemplateBinding Padding}">
+                                                                    <ContentPresenter HorizontalAlignment="Center"
+                                                                                      VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Background" Value="#E3F2FD"/>
+                                                                        <Setter Property="BorderBrush" Value="#1E88E5"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsPressed" Value="True">
+                                                                        <Setter Property="Background" Value="#BBDEFB"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                        </StackPanel>
+                    </Border>
+                </Popup>
+            </Grid>
+
+            <Button Grid.Column="2" Content="›" Command="{Binding NextMonthCommand}" Padding="10,4" FontSize="18"/>
         </Grid>
 
         <!-- Summary bar -->

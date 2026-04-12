@@ -44,12 +44,15 @@ public sealed class EditTransactionTests
 
         var result = await useCase.ExecuteAsync(ValidCommand());
 
-        Assert.Equal(1, result.Id);
-        Assert.Equal(new DateOnly(2025, 6, 20), result.Date);
-        Assert.Equal(TransactionDirection.Income, result.Direction);
-        Assert.Equal(250m, result.Amount);
-        Assert.Equal(2, result.CategoryId);
-        Assert.Equal("Updated", result.Description);
+        Assert.True(result.IsSuccess);
+        var dto = result.Value;
+
+        Assert.Equal(1, dto.Id);
+        Assert.Equal(new DateOnly(2025, 6, 20), dto.Date);
+        Assert.Equal(TransactionDirection.Income, dto.Direction);
+        Assert.Equal(250m, dto.Amount);
+        Assert.Equal(2, dto.CategoryId);
+        Assert.Equal("Updated", dto.Description);
     }
 
     [Theory]
@@ -59,8 +62,10 @@ public sealed class EditTransactionTests
     {
         var (useCase, _, _) = await SetupAsync();
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            useCase.ExecuteAsync(ValidCommand(id)));
+        var result = await useCase.ExecuteAsync(ValidCommand(id));
+
+        Assert.True(result.IsFailed);
+        Assert.Contains(result.Errors, e => e.Message == "Id must be positive.");
     }
 
     [Fact]
@@ -68,8 +73,10 @@ public sealed class EditTransactionTests
     {
         var (useCase, _, _) = await SetupAsync();
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-            useCase.ExecuteAsync(ValidCommand(id: 999)));
+        var result = await useCase.ExecuteAsync(ValidCommand(id: 999));
+
+        Assert.True(result.IsFailed);
+        Assert.Contains(result.Errors, e => e.Message == "Transaction 999 not found.");
     }
 
     [Theory]
@@ -79,7 +86,9 @@ public sealed class EditTransactionTests
     {
         var (useCase, _, _) = await SetupAsync();
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            useCase.ExecuteAsync(ValidCommand() with { Amount = amount }));
+        var result = await useCase.ExecuteAsync(ValidCommand() with { Amount = amount });
+
+        Assert.True(result.IsFailed);
+        Assert.Contains(result.Errors, e => e.Message == "Amount must be positive.");
     }
 }

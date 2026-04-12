@@ -15,9 +15,19 @@
 - Local persistence (SQLite)
 
 ## Tech Stack (planned)
-- .NET
-- Desktop UI (MVVM)
-- SQLite
+- .NET 10
+- WPF desktop UI (MVVM)
+- SQLite local persistence
+
+## Error Handling and Validation
+- Business validation is handled in the Application layer.
+- Use `Result<T>` for expected validation failures when a use case should return success/failure without throwing.
+- Reserve exceptions for unexpected technical failures.
+
+## Logging
+- The WPF shell uses `Microsoft.Extensions.Logging` with Serilog.
+- Logs are written to `%AppData%\Saldo\Logs\saldo-.log` with daily rolling files.
+- Use `ILogger<T>` for technical diagnostics; keep expected validation failures in `Result<T>`.
 
 ## Status
 🚧 Work in progress — early development / learning project

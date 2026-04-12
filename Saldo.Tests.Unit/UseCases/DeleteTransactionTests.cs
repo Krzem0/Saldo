@@ -27,7 +27,9 @@ public sealed class DeleteTransactionTests
     {
         var (useCase, repo) = await SetupAsync();
 
-        await useCase.ExecuteAsync(1);
+        var result = await useCase.ExecuteAsync(1);
+
+        Assert.True(result.IsSuccess);
 
         var deleted = await repo.GetByIdAsync(1);
         Assert.Null(deleted);
@@ -40,7 +42,10 @@ public sealed class DeleteTransactionTests
     {
         var (useCase, _) = await SetupAsync();
 
-        await Assert.ThrowsAsync<ArgumentException>(() => useCase.ExecuteAsync(id));
+        var result = await useCase.ExecuteAsync(id);
+
+        Assert.True(result.IsFailed);
+        Assert.Contains(result.Errors, e => e.Message == "Id must be positive.");
     }
 
     [Fact]
@@ -48,6 +53,9 @@ public sealed class DeleteTransactionTests
     {
         var (useCase, _) = await SetupAsync();
 
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => useCase.ExecuteAsync(999));
+        var result = await useCase.ExecuteAsync(999);
+
+        Assert.True(result.IsFailed);
+        Assert.Contains(result.Errors, e => e.Message == "Transaction 999 not found.");
     }
 }

@@ -26,15 +26,18 @@ public sealed class AddTransactionTests
 
         var result = await useCase.ExecuteAsync(ValidCommand());
 
-        Assert.Equal(1, result.Id);
-        Assert.Equal(new DateOnly(2025, 1, 15), result.Date);
-        Assert.Equal(TransactionDirection.Expense, result.Direction);
-        Assert.Equal(100m, result.Amount);
-        Assert.Equal(1, result.CategoryId);
-        Assert.Equal(1, result.PayerId);
-        Assert.Equal(1, result.CounterpartyId);
-        Assert.Equal("Groceries", result.Description);
-        Assert.Equal("Shop", result.Location);
+        Assert.True(result.IsSuccess);
+        var dto = result.Value;
+
+        Assert.Equal(1, dto.Id);
+        Assert.Equal(new DateOnly(2025, 1, 15), dto.Date);
+        Assert.Equal(TransactionDirection.Expense, dto.Direction);
+        Assert.Equal(100m, dto.Amount);
+        Assert.Equal(1, dto.CategoryId);
+        Assert.Equal(1, dto.PayerId);
+        Assert.Equal(1, dto.CounterpartyId);
+        Assert.Equal("Groceries", dto.Description);
+        Assert.Equal("Shop", dto.Location);
     }
 
     [Theory]
@@ -44,8 +47,10 @@ public sealed class AddTransactionTests
     {
         var useCase = new AddTransaction(new FakeTransactionRepository());
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            useCase.ExecuteAsync(ValidCommand() with { Amount = amount }));
+        var result = await useCase.ExecuteAsync(ValidCommand() with { Amount = amount });
+
+        Assert.True(result.IsFailed);
+        Assert.Contains(result.Errors, e => e.Message == "Amount must be positive.");
     }
 
     [Theory]
@@ -55,8 +60,10 @@ public sealed class AddTransactionTests
     {
         var useCase = new AddTransaction(new FakeTransactionRepository());
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            useCase.ExecuteAsync(ValidCommand() with { CategoryId = categoryId }));
+        var result = await useCase.ExecuteAsync(ValidCommand() with { CategoryId = categoryId });
+
+        Assert.True(result.IsFailed);
+        Assert.Contains(result.Errors, e => e.Message == "CategoryId is required.");
     }
 
     [Theory]
@@ -66,8 +73,10 @@ public sealed class AddTransactionTests
     {
         var useCase = new AddTransaction(new FakeTransactionRepository());
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            useCase.ExecuteAsync(ValidCommand() with { PayerId = payerId }));
+        var result = await useCase.ExecuteAsync(ValidCommand() with { PayerId = payerId });
+
+        Assert.True(result.IsFailed);
+        Assert.Contains(result.Errors, e => e.Message == "PayerId is required.");
     }
 
     [Theory]
@@ -77,7 +86,9 @@ public sealed class AddTransactionTests
     {
         var useCase = new AddTransaction(new FakeTransactionRepository());
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            useCase.ExecuteAsync(ValidCommand() with { CounterpartyId = counterpartyId }));
+        var result = await useCase.ExecuteAsync(ValidCommand() with { CounterpartyId = counterpartyId });
+
+        Assert.True(result.IsFailed);
+        Assert.Contains(result.Errors, e => e.Message == "CounterpartyId is required.");
     }
 }

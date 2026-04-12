@@ -2,28 +2,52 @@ using Saldo.Application.DTOs;
 using Saldo.Application.Interfaces;
 using Saldo.Application.Mapping;
 using Saldo.Domain.Entities;
+using FluentResults;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Saldo.Application.UseCases;
 
 public sealed class AddTransaction
 {
     private readonly ITransactionRepository _transactions;
+    private readonly ILogger<AddTransaction> _logger;
 
     public AddTransaction(ITransactionRepository transactions)
+        : this(transactions, NullLogger<AddTransaction>.Instance)
     {
-        _transactions = transactions;
     }
 
-    public async Task<TransactionDto> ExecuteAsync(AddTransactionCommand command, CancellationToken ct = default)
+    public AddTransaction(ITransactionRepository transactions, ILogger<AddTransaction> logger)
     {
+        _transactions = transactions;
+        _logger = logger;
+    }
+
+    public async Task<Result<TransactionDto>> ExecuteAsync(AddTransactionCommand command, CancellationToken ct = default)
+    {
+        _logger.LogDebug("Adding transaction for {Date} with amount {Amount}.", command.Date, command.Amount);
+
         if (command.Amount <= 0)
-            throw new ArgumentException("Amount must be positive.", nameof(command));
+        {
+            _logger.LogWarning("Transaction rejected because amount must be positive.");
+            return Result.Fail<TransactionDto>("Amount must be positive.");
+        }
         if (command.CategoryId <= 0)
-            throw new ArgumentException("CategoryId is required.", nameof(command));
+        {
+            _logger.LogWarning("Transaction rejected because category id is missing.");
+            return Result.Fail<TransactionDto>("CategoryId is required.");
+        }
         if (command.PayerId <= 0)
-            throw new ArgumentException("PayerId is required.", nameof(command));
+        {
+            _logger.LogWarning("Transaction rejected because payer id is missing.");
+            return Result.Fail<TransactionDto>("PayerId is required.");
+        }
         if (command.CounterpartyId <= 0)
-            throw new ArgumentException("CounterpartyId is required.", nameof(command));
+        {
+            _logger.LogWarning("Transaction rejected because counterparty id is missing.");
+            return Result.Fail<TransactionDto>("CounterpartyId is required.");
+        }
 
         var transaction = new Transaction
         {
@@ -45,6 +69,8 @@ public sealed class AddTransaction
         var saved = await _transactions.GetByIdAsync(transaction.Id, ct)
             ?? throw new InvalidOperationException($"Transaction {transaction.Id} not found after insert.");
 
-        return TransactionMapper.ToDto(saved);
+        _logger.LogInformation("Transaction {TransactionId} added successfully.", saved.Id);
+
+        return Result.Ok(TransactionMapper.ToDto(saved));
     }
 }

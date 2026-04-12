@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Saldo.Application.DTOs;
@@ -117,7 +118,12 @@ public sealed class AddEditTransactionViewModel : ViewModelBase
                 Location,
                 []);
 
-            await scope.ServiceProvider.GetRequiredService<EditTransaction>().ExecuteAsync(cmd);
+            var result = await scope.ServiceProvider.GetRequiredService<EditTransaction>().ExecuteAsync(cmd);
+            if (result.IsFailed)
+            {
+                MessageBox.Show(string.Join(Environment.NewLine, result.Errors.Select(e => e.Message)), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
         }
         else
         {
@@ -132,7 +138,12 @@ public sealed class AddEditTransactionViewModel : ViewModelBase
                 Location,
                 []);
 
-            await scope.ServiceProvider.GetRequiredService<AddTransaction>().ExecuteAsync(cmd);
+            var result = await scope.ServiceProvider.GetRequiredService<AddTransaction>().ExecuteAsync(cmd);
+            if (result.IsFailed)
+            {
+                MessageBox.Show(string.Join(Environment.NewLine, result.Errors.Select(e => e.Message)), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
         }
 
         RequestClose?.Invoke(true);
