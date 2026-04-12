@@ -1,4 +1,5 @@
 using Saldo.Application.DTOs;
+using Saldo.Application.Errors;
 using Saldo.Application.UseCases;
 using Saldo.Domain.Entities;
 using Saldo.Domain.Enums;
@@ -65,7 +66,7 @@ public sealed class EditTransactionTests
         var result = await useCase.ExecuteAsync(ValidCommand(id));
 
         Assert.True(result.IsFailed);
-        Assert.Contains(result.Errors, e => e.Message == "Id must be positive.");
+        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.IdMustBePositive);
     }
 
     [Fact]
@@ -76,7 +77,7 @@ public sealed class EditTransactionTests
         var result = await useCase.ExecuteAsync(ValidCommand(id: 999));
 
         Assert.True(result.IsFailed);
-        Assert.Contains(result.Errors, e => e.Message == "Transaction 999 not found.");
+        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.NotFound);
     }
 
     [Theory]
@@ -89,6 +90,6 @@ public sealed class EditTransactionTests
         var result = await useCase.ExecuteAsync(ValidCommand() with { Amount = amount });
 
         Assert.True(result.IsFailed);
-        Assert.Contains(result.Errors, e => e.Message == "Amount must be positive.");
+        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.AmountMustBePositive);
     }
 }

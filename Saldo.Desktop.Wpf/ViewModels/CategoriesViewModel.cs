@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Saldo.Application.Interfaces;
+using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Services;
 using Saldo.Domain.Entities;
 
@@ -7,10 +8,10 @@ namespace Saldo.Desktop.Wpf.ViewModels;
 
 public sealed class CategoriesViewModel : ReferenceListViewModel<Category>
 {
-    public CategoriesViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService)
-        : base(scopeFactory, dialogService) { }
+    public CategoriesViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService, ILocalizationService localization)
+        : base(scopeFactory, dialogService, localization) { }
 
-    protected override string EntityDisplayName => "Category";
+    protected override string EntityDisplayNameKey => "Entity_Category";
 
     protected override Task<IReadOnlyList<Category>> GetAllAsync(IServiceScope scope, CancellationToken ct)
         => scope.ServiceProvider.GetRequiredService<ICategoryRepository>().GetAllAsync(ct);

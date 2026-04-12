@@ -1,4 +1,5 @@
 using Saldo.Application.DTOs;
+using Saldo.Application.Errors;
 using Saldo.Application.Interfaces;
 using Saldo.Application.Mapping;
 using Saldo.Domain.Entities;
@@ -31,22 +32,22 @@ public sealed class AddTransaction
         if (command.Amount <= 0)
         {
             _logger.LogWarning("Transaction rejected because amount must be positive.");
-            return Result.Fail<TransactionDto>("Amount must be positive.");
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.AmountMustBePositive);
         }
         if (command.CategoryId <= 0)
         {
             _logger.LogWarning("Transaction rejected because category id is missing.");
-            return Result.Fail<TransactionDto>("CategoryId is required.");
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CategoryRequired);
         }
         if (command.PayerId <= 0)
         {
             _logger.LogWarning("Transaction rejected because payer id is missing.");
-            return Result.Fail<TransactionDto>("PayerId is required.");
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.PayerRequired);
         }
         if (command.CounterpartyId <= 0)
         {
             _logger.LogWarning("Transaction rejected because counterparty id is missing.");
-            return Result.Fail<TransactionDto>("CounterpartyId is required.");
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CounterpartyRequired);
         }
 
         var transaction = new Transaction

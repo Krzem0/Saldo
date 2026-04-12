@@ -53,6 +53,12 @@ If you generate code that violates these rules, refactor it.
 - The WPF shell uses `Microsoft.Extensions.Logging` with Serilog writing to `%AppData%\Saldo\Logs\saldo-.log`.
 - Prefer `ILogger<T>` injection over static logging.
 
+## Localization
+- The WPF UI is localized using resource-based translations.
+- Current supported cultures are `pl-PL` and `en-US`.
+- Do not hardcode user-facing strings in Views or ViewModels when a localized resource should be used.
+- When introducing new UI text, update the translation resources accordingly.
+
 ## Coding Conventions
 - C# with nullable reference types enabled.
 - Prefer clear naming: `Transaction`, `Category`, `MonthlySummary`.

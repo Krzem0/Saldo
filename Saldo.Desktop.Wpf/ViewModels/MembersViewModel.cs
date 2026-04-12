@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Saldo.Application.Interfaces;
+using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Services;
 using Saldo.Domain.Entities;
 
@@ -7,10 +8,10 @@ namespace Saldo.Desktop.Wpf.ViewModels;
 
 public sealed class MembersViewModel : ReferenceListViewModel<Member>
 {
-    public MembersViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService)
-        : base(scopeFactory, dialogService) { }
+    public MembersViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService, ILocalizationService localization)
+        : base(scopeFactory, dialogService, localization) { }
 
-    protected override string EntityDisplayName => "Member";
+    protected override string EntityDisplayNameKey => "Entity_Member";
 
     protected override Task<IReadOnlyList<Member>> GetAllAsync(IServiceScope scope, CancellationToken ct)
         => scope.ServiceProvider.GetRequiredService<IMemberRepository>().GetAllAsync(ct);

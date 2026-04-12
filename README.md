@@ -13,6 +13,7 @@
 - Basic categorization
 - Balance and simple summaries
 - Local persistence (SQLite)
+- UI localization using resource-based translations
 
 ## Tech Stack (planned)
 - .NET 10
@@ -28,6 +29,12 @@
 - The WPF shell uses `Microsoft.Extensions.Logging` with Serilog.
 - Logs are written to `%AppData%\Saldo\Logs\saldo-.log` with daily rolling files.
 - Use `ILogger<T>` for technical diagnostics; keep expected validation failures in `Result<T>`.
+
+## Localization
+- The WPF UI uses resource-based translations.
+- Supported cultures currently include `pl-PL` and `en-US`.
+- New user-facing text should be added through localization resources instead of hardcoded strings.
+- When adding a new screen or label, remember to update the translated resource entries.
 
 ## Status
 🚧 Work in progress — early development / learning project

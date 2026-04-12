@@ -41,48 +41,48 @@
         </Grid.Resources>
 
         <!-- Date -->
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="Date"/>
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Date]}"/>
         <DatePicker Grid.Row="0" Grid.Column="1"
                     SelectedDate="{Binding Date}"/>
 
         <!-- Amount -->
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="Amount"/>
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Amount]}"/>
         <TextBox Grid.Row="1" Grid.Column="1"
                  Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}"/>
 
         <!-- Counterparty -->
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Counterparty"/>
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Counterparty]}"/>
         <ComboBox Grid.Row="2" Grid.Column="1"
                   ItemsSource="{Binding Counterparties}"
                   SelectedItem="{Binding SelectedCounterparty}"
                   DisplayMemberPath="Name"/>
 
         <!-- Description -->
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="Description"/>
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Description]}"/>
         <TextBox Grid.Row="3" Grid.Column="1"
                  Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"/>
 
         <!-- Category -->
-        <TextBlock Grid.Row="4" Grid.Column="0" Text="Category"/>
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Category]}"/>
         <ComboBox Grid.Row="4" Grid.Column="1"
                   ItemsSource="{Binding Categories}"
                   SelectedItem="{Binding SelectedCategory}"
                   DisplayMemberPath="Name"/>
 
         <!-- Location -->
-        <TextBlock Grid.Row="5" Grid.Column="0" Text="Location"/>
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Location]}"/>
         <TextBox Grid.Row="5" Grid.Column="1"
                  Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"/>
 
         <!-- Direction -->
-        <TextBlock Grid.Row="6" Grid.Column="0" Text="Direction"/>
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Direction]}"/>
         <ComboBox Grid.Row="6" Grid.Column="1"
                   ItemsSource="{Binding Directions}"
                   SelectedItem="{Binding SelectedDirection}"
                   DisplayMemberPath="Label"/>
 
         <!-- Payer -->
-        <TextBlock Grid.Row="7" Grid.Column="0" Text="Payer"/>
+        <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Payer]}"/>
         <ComboBox Grid.Row="7" Grid.Column="1"
                   ItemsSource="{Binding Members}"
                   SelectedItem="{Binding SelectedMember}"
@@ -91,9 +91,9 @@
         <!-- Buttons -->
         <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2"
                     Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Save" Command="{Binding SaveCommand}"
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Save]}" Command="{Binding SaveCommand}"
                     Width="80" Padding="0,5" Margin="0,0,8,0" IsDefault="True"/>
-            <Button Content="Cancel" Click="Cancel_Click"
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Cancel]}" Click="Cancel_Click"
                     Width="80" Padding="0,5" IsCancel="True"/>
         </StackPanel>
     </Grid>

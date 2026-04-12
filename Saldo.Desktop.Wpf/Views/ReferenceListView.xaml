@@ -14,9 +14,9 @@
                  DisplayMemberPath="Name"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal">
-            <Button Content="Add"    Command="{Binding AddCommand}"    Padding="12,4" Margin="0,0,6,0"/>
-            <Button Content="Edit"   Command="{Binding EditCommand}"   Padding="12,4" Margin="0,0,6,0"/>
-            <Button Content="Delete" Command="{Binding DeleteCommand}" Padding="12,4"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Add]}"    Command="{Binding AddCommand}"    Padding="12,4" Margin="0,0,6,0"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Edit]}"   Command="{Binding EditCommand}"   Padding="12,4" Margin="0,0,6,0"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Delete]}" Command="{Binding DeleteCommand}" Padding="12,4"/>
         </StackPanel>
     </Grid>
 </UserControl>

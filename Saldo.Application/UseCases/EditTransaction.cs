@@ -1,4 +1,5 @@
 using Saldo.Application.DTOs;
+using Saldo.Application.Errors;
 using Saldo.Application.Interfaces;
 using Saldo.Application.Mapping;
 using Saldo.Domain.Entities;
@@ -31,34 +32,34 @@ public sealed class EditTransaction
         if (command.Id <= 0)
         {
             _logger.LogWarning("Transaction edit rejected because id must be positive.");
-            return Result.Fail<TransactionDto>("Id must be positive.");
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.IdMustBePositive);
         }
         if (command.Amount <= 0)
         {
             _logger.LogWarning("Transaction {TransactionId} edit rejected because amount must be positive.", command.Id);
-            return Result.Fail<TransactionDto>("Amount must be positive.");
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.AmountMustBePositive);
         }
         if (command.CategoryId <= 0)
         {
             _logger.LogWarning("Transaction {TransactionId} edit rejected because category id is missing.", command.Id);
-            return Result.Fail<TransactionDto>("CategoryId is required.");
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CategoryRequired);
         }
         if (command.PayerId <= 0)
         {
             _logger.LogWarning("Transaction {TransactionId} edit rejected because payer id is missing.", command.Id);
-            return Result.Fail<TransactionDto>("PayerId is required.");
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.PayerRequired);
         }
         if (command.CounterpartyId <= 0)
         {
             _logger.LogWarning("Transaction {TransactionId} edit rejected because counterparty id is missing.", command.Id);
-            return Result.Fail<TransactionDto>("CounterpartyId is required.");
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CounterpartyRequired);
         }
 
         var existing = await _transactions.GetByIdAsync(command.Id, ct);
         if (existing is null)
         {
             _logger.LogWarning("Transaction {TransactionId} not found for edit.", command.Id);
-            return Result.Fail<TransactionDto>($"Transaction {command.Id} not found.");
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.NotFound);
         }
 
         existing.Date = command.Date;

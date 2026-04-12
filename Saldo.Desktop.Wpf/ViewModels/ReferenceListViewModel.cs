@@ -1,14 +1,16 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
+using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Infrastructure;
 using Saldo.Desktop.Wpf.Services;
 
 namespace Saldo.Desktop.Wpf.ViewModels;
 
 /// <summary>Generic ViewModel for a simple name-based reference list (Category / Member / Counterparty).</summary>
-public abstract class ReferenceListViewModel<T> : ViewModelBase where T : class
+public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T : class
 {
     private readonly IServiceScopeFactory _scopeFactory;
     protected readonly IDialogService DialogService;
@@ -40,7 +42,8 @@ public abstract class ReferenceListViewModel<T> : ViewModelBase where T : class
     public ICommand EditCommand { get; }
     public ICommand DeleteCommand { get; }
 
-    protected ReferenceListViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService)
+   protected ReferenceListViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService, ILocalizationService localization)
+        : base(localization)
     {
         _scopeFactory = scopeFactory;
         DialogService = dialogService;
@@ -51,12 +54,14 @@ public abstract class ReferenceListViewModel<T> : ViewModelBase where T : class
         DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => SelectedItem is not null);
     }
 
-    protected abstract string EntityDisplayName { get; }
+    protected abstract string EntityDisplayNameKey { get; }
     protected abstract Task<IReadOnlyList<T>> GetAllAsync(IServiceScope scope, CancellationToken ct);
     protected abstract string GetName(T item);
     protected abstract Task AddCoreAsync(IServiceScope scope, string name, CancellationToken ct);
     protected abstract Task UpdateCoreAsync(IServiceScope scope, T item, string name, CancellationToken ct);
     protected abstract Task DeleteCoreAsync(IServiceScope scope, T item, CancellationToken ct);
+
+    protected string EntityDisplayName => T(EntityDisplayNameKey);
 
     private async Task LoadAsync()
     {
@@ -69,14 +74,14 @@ public abstract class ReferenceListViewModel<T> : ViewModelBase where T : class
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, $"Error loading {EntityDisplayName}", MessageBoxButton.OK, MessageBoxImage.Error);
+          MessageBox.Show(ex.Message, string.Format(CultureInfo.CurrentCulture, T("LoadErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally { IsLoading = false; }
     }
 
     private async Task AddAsync()
     {
-        var name = DialogService.ShowNameDialog($"Add {EntityDisplayName}");
+        var name = DialogService.ShowNameDialog(string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName));
         if (name is null) return;
 
         try
@@ -87,14 +92,14 @@ public abstract class ReferenceListViewModel<T> : ViewModelBase where T : class
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, $"Error adding {EntityDisplayName}", MessageBoxButton.OK, MessageBoxImage.Error);
+           MessageBox.Show(ex.Message, string.Format(CultureInfo.CurrentCulture, T("AddErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
     private async Task EditAsync()
     {
         if (SelectedItem is null) return;
-        var name = DialogService.ShowNameDialog($"Edit {EntityDisplayName}", GetName(SelectedItem));
+        var name = DialogService.ShowNameDialog(string.Format(CultureInfo.CurrentCulture, T("EditEntityTitleTemplate"), EntityDisplayName), GetName(SelectedItem));
         if (name is null) return;
 
         try
@@ -105,7 +110,7 @@ public abstract class ReferenceListViewModel<T> : ViewModelBase where T : class
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, $"Error updating {EntityDisplayName}", MessageBoxButton.OK, MessageBoxImage.Error);
+         MessageBox.Show(ex.Message, string.Format(CultureInfo.CurrentCulture, T("UpdateErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -113,8 +118,8 @@ public abstract class ReferenceListViewModel<T> : ViewModelBase where T : class
     {
         if (SelectedItem is null) return;
         var confirm = MessageBox.Show(
-            $"Delete \"{GetName(SelectedItem)}\"?",
-            $"Delete {EntityDisplayName}",
+         string.Format(CultureInfo.CurrentCulture, T("DeleteConfirmTemplate"), GetName(SelectedItem)),
+            string.Format(CultureInfo.CurrentCulture, T("DeleteEntityTitleTemplate"), EntityDisplayName),
             MessageBoxButton.YesNo, MessageBoxImage.Warning);
         if (confirm != MessageBoxResult.Yes) return;
 
@@ -126,7 +131,7 @@ public abstract class ReferenceListViewModel<T> : ViewModelBase where T : class
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, $"Error deleting {EntityDisplayName}", MessageBoxButton.OK, MessageBoxImage.Error);
+         MessageBox.Show(ex.Message, string.Format(CultureInfo.CurrentCulture, T("DeleteErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

@@ -1,6 +1,10 @@
 <UserControl x:Class="Saldo.Desktop.Wpf.Views.TransactionListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:localization="clr-namespace:Saldo.Desktop.Wpf.Localization">
+    <UserControl.Resources>
+        <localization:TransactionDirectionToTextConverter x:Key="TransactionDirectionToTextConverter"/>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -151,13 +155,13 @@
         <!-- Summary bar -->
         <Border Grid.Row="1" Background="#F0F4F8" Padding="12,6" Margin="8,0,8,4" CornerRadius="4">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <TextBlock Text="Income: " FontWeight="SemiBold"/>
+                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Income]}" FontWeight="SemiBold" Margin="0,0,4,0"/>
                 <TextBlock Text="{Binding Summary.TotalIncome, StringFormat={}{0:N2}}"
                            Foreground="#2E7D32" FontWeight="SemiBold" Margin="0,0,20,0"/>
-                <TextBlock Text="Expense: " FontWeight="SemiBold"/>
+                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Expense]}" FontWeight="SemiBold" Margin="0,0,4,0"/>
                 <TextBlock Text="{Binding Summary.TotalExpense, StringFormat={}{0:N2}}"
                            Foreground="#C62828" FontWeight="SemiBold" Margin="0,0,20,0"/>
-                <TextBlock Text="Balance: " FontWeight="SemiBold"/>
+                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Balance]}" FontWeight="SemiBold" Margin="0,0,4,0"/>
                 <TextBlock Text="{Binding Summary.Balance, StringFormat={}{0:N2}}"
                            FontWeight="Bold"/>
             </StackPanel>
@@ -174,13 +178,13 @@
                   AlternatingRowBackground="#FAFAFA"
                   Margin="8,0,8,0">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Date"
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Date]}"
                                     Binding="{Binding Date, StringFormat={}{0:dd.MM.yyyy}}"
                                     Width="90"/>
-                <DataGridTextColumn Header="Direction"
-                                    Binding="{Binding Direction}"
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Direction]}"
+                                     Binding="{Binding Direction, Converter={StaticResource TransactionDirectionToTextConverter}}"
                                     Width="80"/>
-                <DataGridTextColumn Header="Amount"
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Amount]}"
                                     Binding="{Binding Amount, StringFormat={}{0:N2}}"
                                     Width="110">
                     <DataGridTextColumn.ElementStyle>
@@ -190,18 +194,18 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="Category"    Binding="{Binding CategoryName}"    Width="120"/>
-                <DataGridTextColumn Header="Payer"       Binding="{Binding PayerName}"       Width="110"/>
-                <DataGridTextColumn Header="Counterparty" Binding="{Binding CounterpartyName}" Width="140"/>
-                <DataGridTextColumn Header="Description" Binding="{Binding Description}"     Width="*"/>
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Category]}"    Binding="{Binding CategoryName}"    Width="120"/>
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Payer]}"       Binding="{Binding PayerName}"       Width="110"/>
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Counterparty]}" Binding="{Binding CounterpartyName}" Width="140"/>
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Description]}" Binding="{Binding Description}"     Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
 
         <!-- Action buttons -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8,6,8,8">
-            <Button Content="+ Add"  Command="{Binding AddCommand}"    Padding="14,5" Margin="0,0,6,0"/>
-            <Button Content="Edit"   Command="{Binding EditCommand}"   Padding="14,5" Margin="0,0,6,0"/>
-            <Button Content="Delete" Command="{Binding DeleteCommand}" Padding="14,5"/>
+             <Button Content="{Binding Source={StaticResource Localization}, Path=[Add]}"  Command="{Binding AddCommand}"    Padding="14,5" Margin="0,0,6,0"/>
+             <Button Content="{Binding Source={StaticResource Localization}, Path=[Edit]}"   Command="{Binding EditCommand}"   Padding="14,5" Margin="0,0,6,0"/>
+             <Button Content="{Binding Source={StaticResource Localization}, Path=[Delete]}" Command="{Binding DeleteCommand}" Padding="14,5"/>
         </StackPanel>
     </Grid>
 </UserControl>

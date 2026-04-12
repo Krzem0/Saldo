@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve"><value>Saldo</value></data>
+  <data name="LanguageLabel" xml:space="preserve"><value>Język</value></data>
+  <data name="TabTransactions" xml:space="preserve"><value>Transakcje</value></data>
+  <data name="TabCategories" xml:space="preserve"><value>Kategorie</value></data>
+  <data name="TabMembers" xml:space="preserve"><value>Osoby</value></data>
+  <data name="TabCounterparties" xml:space="preserve"><value>Odbiorcy</value></data>
+  <data name="ErrorTitle" xml:space="preserve"><value>Błąd</value></data>
+  <data name="Save" xml:space="preserve"><value>Zapisz</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Anuluj</value></data>
+  <data name="Add" xml:space="preserve"><value>Dodaj</value></data>
+  <data name="Edit" xml:space="preserve"><value>Edytuj</value></data>
+  <data name="Delete" xml:space="preserve"><value>Usuń</value></data>
+  <data name="Date" xml:space="preserve"><value>Data</value></data>
+  <data name="Amount" xml:space="preserve"><value>Kwota</value></data>
+  <data name="Category" xml:space="preserve"><value>Kategoria</value></data>
+  <data name="Counterparty" xml:space="preserve"><value>Odbiorca</value></data>
+  <data name="Description" xml:space="preserve"><value>Opis</value></data>
+  <data name="Location" xml:space="preserve"><value>Lokalizacja</value></data>
+  <data name="Direction" xml:space="preserve"><value>Kierunek</value></data>
+  <data name="Payer" xml:space="preserve"><value>Płatnik</value></data>
+  <data name="Direction_Expense" xml:space="preserve"><value>Wydatek</value></data>
+  <data name="Direction_Income" xml:space="preserve"><value>Przychód</value></data>
+  <data name="Summary_Income" xml:space="preserve"><value>Przychody</value></data>
+  <data name="Summary_Expense" xml:space="preserve"><value>Wydatki</value></data>
+  <data name="Summary_Balance" xml:space="preserve"><value>Saldo</value></data>
+  <data name="Transaction_AddTitle" xml:space="preserve"><value>Dodaj transakcję</value></data>
+  <data name="Transaction_EditTitle" xml:space="preserve"><value>Edytuj transakcję</value></data>
+  <data name="Entity_Category" xml:space="preserve"><value>Kategoria</value></data>
+  <data name="Entity_Member" xml:space="preserve"><value>Osoba</value></data>
+  <data name="Entity_Counterparty" xml:space="preserve"><value>Odbiorca</value></data>
+  <data name="AddEntityTitleTemplate" xml:space="preserve"><value>Dodaj {0}</value></data>
+  <data name="EditEntityTitleTemplate" xml:space="preserve"><value>Edytuj {0}</value></data>
+  <data name="DeleteEntityTitleTemplate" xml:space="preserve"><value>Usuń {0}</value></data>
+  <data name="DeleteTransactionTitle" xml:space="preserve"><value>Usuń transakcję</value></data>
+  <data name="DeleteConfirmTemplate" xml:space="preserve"><value>Czy na pewno usunąć „{0}”?</value></data>
+  <data name="LoadErrorTemplate" xml:space="preserve"><value>Nie udało się wczytać {0}.</value></data>
+  <data name="AddErrorTemplate" xml:space="preserve"><value>Nie udało się dodać {0}.</value></data>
+  <data name="UpdateErrorTemplate" xml:space="preserve"><value>Nie udało się zaktualizować {0}.</value></data>
+  <data name="DeleteErrorTemplate" xml:space="preserve"><value>Nie udało się usunąć {0}.</value></data>
+  <data name="StartupFailedMessage" xml:space="preserve"><value>Nie udało się uruchomić aplikacji. Szczegóły zapisano w logu.</value></data>
+  <data name="UnhandledUiErrorMessage" xml:space="preserve"><value>Wystąpił nieoczekiwany błąd. Szczegóły zapisano w logu.</value></data>
+  <data name="TransactionsLoadError" xml:space="preserve"><value>Nie udało się wczytać transakcji.</value></data>
+  <data name="TransactionDirection_Expense" xml:space="preserve"><value>Wydatek</value></data>
+  <data name="TransactionDirection_Income" xml:space="preserve"><value>Przychód</value></data>
+  <data name="Validation_TransactionIdMustBePositive" xml:space="preserve"><value>Identyfikator transakcji musi być dodatni.</value></data>
+  <data name="Validation_AmountMustBePositive" xml:space="preserve"><value>Kwota musi być większa od zera.</value></data>
+  <data name="Validation_CategoryRequired" xml:space="preserve"><value>Kategoria jest wymagana.</value></data>
+  <data name="Validation_PayerRequired" xml:space="preserve"><value>Płatnik jest wymagany.</value></data>
+  <data name="Validation_CounterpartyRequired" xml:space="preserve"><value>Odbiorca jest wymagany.</value></data>
+  <data name="Validation_TransactionNotFound" xml:space="preserve"><value>Transakcja nie została znaleziona.</value></data>
+</root>

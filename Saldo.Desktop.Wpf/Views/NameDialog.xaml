@@ -23,8 +23,8 @@
                  Text="{Binding EnteredName, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Save" IsDefault="True" Click="Save_Click" Margin="0,0,8,0"/>
-            <Button Content="Cancel" IsCancel="True"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Save]}" IsDefault="True" Click="Save_Click" Margin="0,0,8,0"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Cancel]}" IsCancel="True"/>
         </StackPanel>
     </Grid>
 </Window>

@@ -2,20 +2,45 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:Saldo.Desktop.Wpf.Views"
-        Title="Saldo" Height="600" Width="960"
+        Title="{Binding Source={StaticResource Localization}, Path=[AppTitle]}"
+        Height="600" Width="960"
         WindowStartupLocation="CenterScreen">
-    <TabControl SelectionChanged="TabControl_SelectionChanged">
-        <TabItem Header="Transactions">
-            <views:TransactionListView DataContext="{Binding TransactionList}"/>
-        </TabItem>
-        <TabItem Header="Categories">
-            <views:ReferenceListView DataContext="{Binding Categories}"/>
-        </TabItem>
-        <TabItem Header="Members">
-            <views:ReferenceListView DataContext="{Binding Members}"/>
-        </TabItem>
-        <TabItem Header="Counterparties">
-            <views:ReferenceListView DataContext="{Binding Counterparties}"/>
-        </TabItem>
-    </TabControl>
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Background="#F7F7F7" BorderBrush="#E0E0E0" BorderThickness="0,0,0,1" Padding="12,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[AppTitle]}"
+                           FontSize="20" FontWeight="SemiBold"
+                           VerticalAlignment="Center"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[LanguageLabel]}"
+                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <ComboBox Width="180"
+                              ItemsSource="{Binding Source={StaticResource Localization}, Path=AvailableCultures}"
+                              SelectedItem="{Binding Source={StaticResource Localization}, Path=CurrentCulture, Mode=TwoWay}"
+                              DisplayMemberPath="NativeName"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <TabControl SelectionChanged="TabControl_SelectionChanged">
+            <TabItem Header="{Binding Source={StaticResource Localization}, Path=[TabTransactions]}">
+                <views:TransactionListView DataContext="{Binding TransactionList}"/>
+            </TabItem>
+            <TabItem Header="{Binding Source={StaticResource Localization}, Path=[TabCategories]}">
+                <views:ReferenceListView DataContext="{Binding Categories}"/>
+            </TabItem>
+            <TabItem Header="{Binding Source={StaticResource Localization}, Path=[TabMembers]}">
+                <views:ReferenceListView DataContext="{Binding Members}"/>
+            </TabItem>
+            <TabItem Header="{Binding Source={StaticResource Localization}, Path=[TabCounterparties]}">
+                <views:ReferenceListView DataContext="{Binding Counterparties}"/>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
 </Window>

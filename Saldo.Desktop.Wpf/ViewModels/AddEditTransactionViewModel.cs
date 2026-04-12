@@ -1,18 +1,21 @@
 using System.Globalization;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Saldo.Application.DTOs;
 using Saldo.Application.UseCases;
+using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Infrastructure;
 using Saldo.Domain.Entities;
 using Saldo.Domain.Enums;
 
 namespace Saldo.Desktop.Wpf.ViewModels;
 
-public sealed class AddEditTransactionViewModel : ViewModelBase
+public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 {
     private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IReadOnlyList<DirectionItem> _directions;
 
     private DateTime _date = DateTime.Today;
     private DirectionItem _selectedDirection;
@@ -23,16 +26,47 @@ public sealed class AddEditTransactionViewModel : ViewModelBase
     private string? _description;
     private string? _location;
 
-    public record DirectionItem(TransactionDirection Value, string Label);
+    public sealed class DirectionItem : ViewModelBase
+    {
+        private readonly ILocalizationService _localization;
+        private string _label;
 
-    public IReadOnlyList<DirectionItem> Directions { get; } =
-    [
-        new(TransactionDirection.Expense, "Expense"),
-        new(TransactionDirection.Income, "Income")
-    ];
+        public TransactionDirection Value { get; }
+
+        public string Label
+        {
+            get => _label;
+            private set => SetField(ref _label, value);
+        }
+
+        public DirectionItem(TransactionDirection value, ILocalizationService localization)
+        {
+            Value = value;
+            _localization = localization;
+            _label = GetLabel();
+            _localization.PropertyChanged += OnLocalizationChanged;
+        }
+
+        private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(ILocalizationService.CurrentCulture) || e.PropertyName == "Item[]")
+            {
+                Label = GetLabel();
+            }
+        }
+
+        private string GetLabel() => Value switch
+        {
+            TransactionDirection.Expense => _localization["Direction_Expense"],
+            TransactionDirection.Income => _localization["Direction_Income"],
+            _ => Value.ToString()
+        };
+    }
+
+    public IReadOnlyList<DirectionItem> Directions => _directions;
 
     public int? TransactionId { get; private set; }
-    public string Title => TransactionId.HasValue ? "Edit Transaction" : "Add Transaction";
+    public string Title => TransactionId.HasValue ? T("Transaction_EditTitle") : T("Transaction_AddTitle");
 
     public DateTime Date { get => _date; set => SetField(ref _date, value); }
 
@@ -67,16 +101,23 @@ public sealed class AddEditTransactionViewModel : ViewModelBase
 
     public AddEditTransactionViewModel(
         IServiceScopeFactory scopeFactory,
+        ILocalizationService localization,
         IReadOnlyList<Category> categories,
         IReadOnlyList<Member> members,
         IReadOnlyList<Counterparty> counterparties,
         TransactionDto? existing = null)
+        : base(localization)
     {
         _scopeFactory = scopeFactory;
         Categories = categories;
         Members = members;
         Counterparties = counterparties;
-        _selectedDirection = Directions[0]; // default: Expense
+        _directions =
+        [
+            new DirectionItem(TransactionDirection.Expense, localization),
+            new DirectionItem(TransactionDirection.Income, localization)
+        ];
+        _selectedDirection = _directions[0]; // default: Expense
 
         if (existing is not null)
             PopulateFrom(existing);
@@ -121,7 +162,11 @@ public sealed class AddEditTransactionViewModel : ViewModelBase
             var result = await scope.ServiceProvider.GetRequiredService<EditTransaction>().ExecuteAsync(cmd);
             if (result.IsFailed)
             {
-                MessageBox.Show(string.Join(Environment.NewLine, result.Errors.Select(e => e.Message)), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    string.Join(Environment.NewLine, result.Errors.Select(e => T(e.Message))),
+                    T("ErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 return;
             }
         }
@@ -141,11 +186,20 @@ public sealed class AddEditTransactionViewModel : ViewModelBase
             var result = await scope.ServiceProvider.GetRequiredService<AddTransaction>().ExecuteAsync(cmd);
             if (result.IsFailed)
             {
-                MessageBox.Show(string.Join(Environment.NewLine, result.Errors.Select(e => e.Message)), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    string.Join(Environment.NewLine, result.Errors.Select(e => T(e.Message))),
+                    T("ErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 return;
             }
         }
 
         RequestClose?.Invoke(true);
+    }
+
+    protected override void OnCultureChanged()
+    {
+        OnPropertyChanged(nameof(Title));
     }
 }

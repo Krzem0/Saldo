@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
@@ -6,14 +7,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Saldo.Application.DTOs;
 using Saldo.Application.Interfaces;
 using Saldo.Application.UseCases;
+using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Infrastructure;
 using Saldo.Desktop.Wpf.Services;
 
 namespace Saldo.Desktop.Wpf.ViewModels;
 
-public sealed record MonthItem(int Number, string Label);
-
-public sealed class TransactionListViewModel : ViewModelBase
+public sealed class TransactionListViewModel : LocalizedViewModelBase
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDialogService _dialogService;
@@ -27,6 +27,38 @@ public sealed class TransactionListViewModel : ViewModelBase
     private MonthlySummaryDto? _summary;
     private TransactionDto? _selectedTransaction;
     private bool _isLoading;
+
+    public sealed class MonthItem : ViewModelBase
+    {
+        private readonly ILocalizationService _localization;
+        private string _label;
+
+        public int Number { get; }
+
+        public string Label
+        {
+            get => _label;
+            private set => SetField(ref _label, value);
+        }
+
+        public MonthItem(int number, ILocalizationService localization)
+        {
+            Number = number;
+            _localization = localization;
+            _label = GetLabel();
+            _localization.PropertyChanged += OnLocalizationChanged;
+        }
+
+        private void OnLocalizationChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(e.PropertyName) || e.PropertyName == nameof(ILocalizationService.CurrentCulture) || e.PropertyName == "Item[]")
+            {
+                Label = GetLabel();
+            }
+        }
+
+        private string GetLabel() => CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(Number);
+    }
 
     public int Year  { get => _year;  private set => SetField(ref _year,  value); }
     public int Month { get => _month; private set => SetField(ref _month, value); }
@@ -69,11 +101,7 @@ public sealed class TransactionListViewModel : ViewModelBase
         }
     }
 
-    public IReadOnlyList<MonthItem> PickerMonths { get; } =
-        Enumerable.Range(1, 12)
-                  .Select(m => new MonthItem(m,
-                      CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(m)))
-                  .ToList();
+    public IReadOnlyList<MonthItem> PickerMonths { get; }
 
     public ObservableCollection<TransactionDto> Transactions
     {
@@ -110,13 +138,18 @@ public sealed class TransactionListViewModel : ViewModelBase
     public ICommand EditCommand              { get; }
     public ICommand DeleteCommand            { get; }
 
-    public TransactionListViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService)
+    public TransactionListViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService, ILocalizationService localization)
+        : base(localization)
     {
         _scopeFactory = scopeFactory;
         _dialogService = dialogService;
         _year       = DateTime.Today.Year;
         _month      = DateTime.Today.Month;
         _pickerYear = _year;
+
+        PickerMonths = Enumerable.Range(1, 12)
+            .Select(m => new MonthItem(m, localization))
+            .ToList();
 
         LoadCommand               = new AsyncRelayCommand(LoadAsync);
         PreviousMonthCommand      = new RelayCommand(PreviousMonth);
@@ -167,7 +200,7 @@ public sealed class TransactionListViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to load transactions: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(ex.Message, T("TransactionsLoadError"), MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -196,7 +229,7 @@ public sealed class TransactionListViewModel : ViewModelBase
     private async Task AddAsync()
     {
         var (categories, members, counterparties) = await LoadReferenceDataAsync();
-        var dialogVm = new AddEditTransactionViewModel(_scopeFactory, categories, members, counterparties);
+        var dialogVm = new AddEditTransactionViewModel(_scopeFactory, Localization, categories, members, counterparties);
 
         if (_dialogService.ShowAddEditTransaction(dialogVm) == true)
             await LoadAsync();
@@ -207,7 +240,7 @@ public sealed class TransactionListViewModel : ViewModelBase
         if (SelectedTransaction is null) return;
 
         var (categories, members, counterparties) = await LoadReferenceDataAsync();
-        var dialogVm = new AddEditTransactionViewModel(_scopeFactory, categories, members, counterparties, SelectedTransaction);
+        var dialogVm = new AddEditTransactionViewModel(_scopeFactory, Localization, categories, members, counterparties, SelectedTransaction);
 
         if (_dialogService.ShowAddEditTransaction(dialogVm) == true)
             await LoadAsync();
@@ -218,8 +251,8 @@ public sealed class TransactionListViewModel : ViewModelBase
         if (SelectedTransaction is null) return;
 
         var confirm = MessageBox.Show(
-            $"Delete this transaction ({SelectedTransaction.Date:dd.MM.yyyy}, {SelectedTransaction.Amount:N2})?",
-            "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            string.Format(CultureInfo.CurrentCulture, T("DeleteConfirmTemplate"), $"{SelectedTransaction.Date:dd.MM.yyyy}, {SelectedTransaction.Amount:N2}"),
+            T("DeleteTransactionTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question);
 
         if (confirm != MessageBoxResult.Yes) return;
 
@@ -229,7 +262,11 @@ public sealed class TransactionListViewModel : ViewModelBase
             var result = await scope.ServiceProvider.GetRequiredService<DeleteTransaction>().ExecuteAsync(SelectedTransaction.Id);
             if (result.IsFailed)
             {
-                MessageBox.Show(string.Join(Environment.NewLine, result.Errors.Select(e => e.Message)), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    string.Join(Environment.NewLine, result.Errors.Select(e => T(e.Message))),
+                    T("ErrorTitle"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 return;
             }
 
@@ -237,7 +274,7 @@ public sealed class TransactionListViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to delete: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(ex.Message, T("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -248,5 +285,11 @@ public sealed class TransactionListViewModel : ViewModelBase
         var members = await scope.ServiceProvider.GetRequiredService<IMemberRepository>().GetAllAsync();
         var counterparties = await scope.ServiceProvider.GetRequiredService<ICounterpartyRepository>().GetAllAsync();
         return (categories, members, counterparties);
+    }
+
+    protected override void OnCultureChanged()
+    {
+        OnPropertyChanged(nameof(MonthLabel));
+        LoadCommand.Execute(null);
     }
 }

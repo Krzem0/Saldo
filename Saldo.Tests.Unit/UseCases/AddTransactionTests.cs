@@ -1,4 +1,5 @@
 using Saldo.Application.DTOs;
+using Saldo.Application.Errors;
 using Saldo.Application.UseCases;
 using Saldo.Domain.Enums;
 using Saldo.Tests.Unit.Fakes;
@@ -50,7 +51,7 @@ public sealed class AddTransactionTests
         var result = await useCase.ExecuteAsync(ValidCommand() with { Amount = amount });
 
         Assert.True(result.IsFailed);
-        Assert.Contains(result.Errors, e => e.Message == "Amount must be positive.");
+        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.AmountMustBePositive);
     }
 
     [Theory]
@@ -63,7 +64,7 @@ public sealed class AddTransactionTests
         var result = await useCase.ExecuteAsync(ValidCommand() with { CategoryId = categoryId });
 
         Assert.True(result.IsFailed);
-        Assert.Contains(result.Errors, e => e.Message == "CategoryId is required.");
+        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.CategoryRequired);
     }
 
     [Theory]
@@ -76,7 +77,7 @@ public sealed class AddTransactionTests
         var result = await useCase.ExecuteAsync(ValidCommand() with { PayerId = payerId });
 
         Assert.True(result.IsFailed);
-        Assert.Contains(result.Errors, e => e.Message == "PayerId is required.");
+        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.PayerRequired);
     }
 
     [Theory]
@@ -89,6 +90,6 @@ public sealed class AddTransactionTests
         var result = await useCase.ExecuteAsync(ValidCommand() with { CounterpartyId = counterpartyId });
 
         Assert.True(result.IsFailed);
-        Assert.Contains(result.Errors, e => e.Message == "CounterpartyId is required.");
+        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.CounterpartyRequired);
     }
 }
