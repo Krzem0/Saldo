@@ -12,27 +12,34 @@ public sealed class EditTransactionTests
     private static async Task<(EditTransaction UseCase, FakeTransactionRepository Repo, int Id)> SetupAsync()
     {
         var repo = new FakeTransactionRepository();
+        var locations = new FakeLocationRepository();
+        var parties = new FakePartyRepository([
+            new() { Id = 1, Name = "Me" },
+            new() { Id = 2, Name = "Employer" }
+        ]);
         await repo.AddAsync(new Transaction
         {
             Date = new DateOnly(2025, 1, 10),
-            Direction = TransactionDirection.Expense,
+            Type = TransactionType.Expense,
             Amount = 100m,
             CategoryId = 1,
             PayerId = 1,
             CounterpartyId = 1,
             Description = "Original"
         });
-        return (new EditTransaction(repo), repo, 1);
+        return (new EditTransaction(repo, parties, locations), repo, 1);
     }
 
     private static EditTransactionCommand ValidCommand(int id = 1) => new(
         Id: id,
         Date: new DateOnly(2025, 6, 20),
-        Direction: TransactionDirection.Income,
+        Type: TransactionType.Income,
         Amount: 250m,
         CategoryId: 2,
         PayerId: 2,
+        PayerName: "Employer",
         CounterpartyId: 2,
+        CounterpartyName: "Employer",
         Description: "Updated",
         Location: "Office",
         TagIds: []
@@ -50,7 +57,7 @@ public sealed class EditTransactionTests
 
         Assert.Equal(1, dto.Id);
         Assert.Equal(new DateOnly(2025, 6, 20), dto.Date);
-        Assert.Equal(TransactionDirection.Income, dto.Direction);
+        Assert.Equal(TransactionType.Income, dto.Type);
         Assert.Equal(250m, dto.Amount);
         Assert.Equal(2, dto.CategoryId);
         Assert.Equal("Updated", dto.Description);

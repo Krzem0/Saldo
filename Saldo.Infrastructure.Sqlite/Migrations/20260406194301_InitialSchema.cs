@@ -38,6 +38,19 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Locations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Locations", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tags",
                 columns: table => new
                 {
@@ -57,13 +70,13 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Date = table.Column<DateOnly>(type: "TEXT", nullable: false),
-                    Direction = table.Column<int>(type: "INTEGER", nullable: false),
+                    Type = table.Column<int>(type: "INTEGER", nullable: false),
                     Amount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
                     CategoryId = table.Column<int>(type: "INTEGER", nullable: false),
                     PayerId = table.Column<int>(type: "INTEGER", nullable: false),
                     CounterpartyId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Location = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true)
+                    LocationId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -72,6 +85,12 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                         name: "FK_Transactions_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Transactions_Locations_LocationId",
+                        column: x => x.LocationId,
+                        principalTable: "Locations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -119,6 +138,12 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Locations_Name",
+                table: "Locations",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Parties_Name",
                 table: "Parties",
                 column: "Name",
@@ -146,9 +171,14 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 column: "Date");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Transactions_Date_Direction",
+                name: "IX_Transactions_Date_Type",
                 table: "Transactions",
-                columns: new[] { "Date", "Direction" });
+                columns: new[] { "Date", "Type" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Transactions_LocationId",
+                table: "Transactions",
+                column: "LocationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_PayerId",
@@ -172,6 +202,9 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
 
             migrationBuilder.DropTable(
                 name: "Transactions");
+
+            migrationBuilder.DropTable(
+                name: "Locations");
 
             migrationBuilder.DropTable(
                 name: "Categories");

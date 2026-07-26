@@ -37,7 +37,7 @@ public sealed class LocalizationService : ILocalizationService
 
     public LocalizationService()
     {
-        _currentCulture = _availableCultures[0];
+        _currentCulture = GetDefaultCulture();
         CultureInfo.CurrentCulture = _currentCulture;
         CultureInfo.CurrentUICulture = _currentCulture;
         CultureInfo.DefaultThreadCurrentCulture = _currentCulture;
@@ -47,6 +47,15 @@ public sealed class LocalizationService : ILocalizationService
     public string this[string key] => _resourceManager.GetString(key, CurrentCulture) ?? key;
 
     public string Format(string key, params object[] args) => string.Format(CurrentCulture, this[key], args);
+
+    private CultureInfo GetDefaultCulture()
+    {
+        var systemCulture = CultureInfo.CurrentUICulture;
+
+        return _availableCultures.FirstOrDefault(c => string.Equals(c.Name, systemCulture.Name, StringComparison.OrdinalIgnoreCase))
+            ?? _availableCultures.FirstOrDefault(c => string.Equals(c.TwoLetterISOLanguageName, systemCulture.TwoLetterISOLanguageName, StringComparison.OrdinalIgnoreCase))
+            ?? _availableCultures[0];
+    }
 
     private void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }

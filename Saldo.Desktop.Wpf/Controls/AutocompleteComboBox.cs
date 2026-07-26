@@ -199,7 +199,6 @@ public class AutocompleteComboBox : Control
         UpdateFilteredView();
         SyncTextWithSelection();
         ApplyDefaultSelectionIfNeeded();
-        EnsureEmptyInitialSelection();
         UpdateClearButtonVisibility();
     }
 
@@ -302,27 +301,6 @@ public class AutocompleteComboBox : Control
             }
         }
 
-        if (DefaultSelectedItem is null && SelectedItem is not null && string.IsNullOrWhiteSpace(Text))
-        {
-            _suppressTextHandling = true;
-            try
-            {
-                SelectedItem = null;
-                if (_itemsList is not null)
-                {
-                    _itemsList.SelectedItem = null;
-                    _itemsList.SelectedIndex = -1;
-                }
-            }
-            finally
-            {
-                _suppressTextHandling = false;
-            }
-
-            UpdateClearButtonVisibility();
-            return;
-        }
-
         if (SelectedItem is null)
         {
             if (string.IsNullOrWhiteSpace(Text))
@@ -353,29 +331,6 @@ public class AutocompleteComboBox : Control
 
         SyncTextWithSelection();
         UpdateClearButtonVisibility();
-    }
-
-    private void EnsureEmptyInitialSelection()
-    {
-        if (DefaultSelectedItem is not null || !string.IsNullOrWhiteSpace(Text) || SelectedItem is null)
-        {
-            return;
-        }
-
-        _suppressTextHandling = true;
-        try
-        {
-            SelectedItem = null;
-            if (_itemsList is not null)
-            {
-                _itemsList.SelectedItem = null;
-                _itemsList.SelectedIndex = -1;
-            }
-        }
-        finally
-        {
-            _suppressTextHandling = false;
-        }
     }
 
     private void EditableTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -571,7 +526,9 @@ public class AutocompleteComboBox : Control
     {
         if (source is IList list)
         {
-            return new ListCollectionView(list);
+            var view = new ListCollectionView(list);
+            view.MoveCurrentToPosition(-1);
+            return view;
         }
 
         var copy = new List<object?>();
@@ -580,7 +537,9 @@ public class AutocompleteComboBox : Control
             copy.Add(item);
         }
 
-        return new ListCollectionView(copy);
+        var copiedView = new ListCollectionView(copy);
+        copiedView.MoveCurrentToPosition(-1);
+        return copiedView;
     }
 
     private bool MatchesFilter(object? item, string text)

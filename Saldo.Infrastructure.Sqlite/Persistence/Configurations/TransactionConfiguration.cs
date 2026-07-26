@@ -15,7 +15,7 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         e.Property(x => x.Date)
             .IsRequired();
 
-        e.Property(x => x.Direction)
+        e.Property(x => x.Type)
             .IsRequired();
 
         e.Property(x => x.Amount)
@@ -25,13 +25,11 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         e.Property(x => x.Description)
             .HasMaxLength(500);
 
-        e.Property(x => x.Location)
-            .HasMaxLength(100);
-
         // Indeksy pod filtrowanie i raporty
         e.HasIndex(x => x.Date);
-        e.HasIndex(x => new { x.Date, x.Direction });
+        e.HasIndex(x => new { x.Date, x.Type });
         e.HasIndex(x => x.CategoryId);
+        e.HasIndex(x => x.LocationId);
         e.HasIndex(x => x.PayerId);
         e.HasIndex(x => x.CounterpartyId);
 
@@ -49,6 +47,11 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         e.HasOne(x => x.Counterparty)
             .WithMany(x => x.CounterpartyTransactions)
             .HasForeignKey(x => x.CounterpartyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        e.HasOne(x => x.Location)
+            .WithMany(x => x.Transactions)
+            .HasForeignKey(x => x.LocationId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

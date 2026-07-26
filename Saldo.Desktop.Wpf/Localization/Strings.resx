@@ -19,6 +19,7 @@
   <data name="TabMembers" xml:space="preserve"><value>Osoby</value></data>
   <data name="TabCounterparties" xml:space="preserve"><value>Odbiorcy</value></data>
   <data name="TabParties" xml:space="preserve"><value>Podmioty</value></data>
+  <data name="TabLocations" xml:space="preserve"><value>Miejsca</value></data>
   <data name="ErrorTitle" xml:space="preserve"><value>Błąd</value></data>
   <data name="Save" xml:space="preserve"><value>Zapisz</value></data>
   <data name="Cancel" xml:space="preserve"><value>Anuluj</value></data>
@@ -30,11 +31,11 @@
   <data name="Category" xml:space="preserve"><value>Kategoria</value></data>
   <data name="Counterparty" xml:space="preserve"><value>Odbiorca</value></data>
   <data name="Description" xml:space="preserve"><value>Opis</value></data>
-  <data name="Location" xml:space="preserve"><value>Lokalizacja</value></data>
-  <data name="Direction" xml:space="preserve"><value>Kierunek</value></data>
+  <data name="Location" xml:space="preserve"><value>Miejsce</value></data>
+  <data name="Type" xml:space="preserve"><value>Typ</value></data>
   <data name="Payer" xml:space="preserve"><value>Płatnik</value></data>
-  <data name="Direction_Expense" xml:space="preserve"><value>Wydatek</value></data>
-  <data name="Direction_Income" xml:space="preserve"><value>Przychód</value></data>
+  <data name="Type_Expense" xml:space="preserve"><value>Wydatek</value></data>
+  <data name="Type_Income" xml:space="preserve"><value>Przychód</value></data>
   <data name="Summary_Income" xml:space="preserve"><value>Przychody</value></data>
   <data name="Summary_Expense" xml:space="preserve"><value>Wydatki</value></data>
   <data name="Summary_Balance" xml:space="preserve"><value>Saldo</value></data>
@@ -44,6 +45,7 @@
   <data name="Entity_Member" xml:space="preserve"><value>Osoba</value></data>
   <data name="Entity_Counterparty" xml:space="preserve"><value>Odbiorca</value></data>
   <data name="Entity_Party" xml:space="preserve"><value>Podmiot</value></data>
+  <data name="Entity_Location" xml:space="preserve"><value>Miejsce</value></data>
   <data name="AddEntityTitleTemplate" xml:space="preserve"><value>Dodaj {0}</value></data>
   <data name="EditEntityTitleTemplate" xml:space="preserve"><value>Edytuj {0}</value></data>
   <data name="DeleteEntityTitleTemplate" xml:space="preserve"><value>Usuń {0}</value></data>
@@ -56,8 +58,8 @@
   <data name="StartupFailedMessage" xml:space="preserve"><value>Nie udało się uruchomić aplikacji. Szczegóły zapisano w logu.</value></data>
   <data name="UnhandledUiErrorMessage" xml:space="preserve"><value>Wystąpił nieoczekiwany błąd. Szczegóły zapisano w logu.</value></data>
   <data name="TransactionsLoadError" xml:space="preserve"><value>Nie udało się wczytać transakcji.</value></data>
-  <data name="TransactionDirection_Expense" xml:space="preserve"><value>Wydatek</value></data>
-  <data name="TransactionDirection_Income" xml:space="preserve"><value>Przychód</value></data>
+  <data name="TransactionType_Expense" xml:space="preserve"><value>Wydatek</value></data>
+  <data name="TransactionType_Income" xml:space="preserve"><value>Przychód</value></data>
   <data name="Validation_TransactionIdMustBePositive" xml:space="preserve"><value>Identyfikator transakcji musi być dodatni.</value></data>
   <data name="Validation_AmountMustBePositive" xml:space="preserve"><value>Kwota musi być większa od zera.</value></data>
   <data name="Validation_CategoryRequired" xml:space="preserve"><value>Kategoria jest wymagana.</value></data>

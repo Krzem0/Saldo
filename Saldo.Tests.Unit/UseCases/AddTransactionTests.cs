@@ -10,11 +10,13 @@ public sealed class AddTransactionTests
 {
     private static AddTransactionCommand ValidCommand() => new(
         Date: new DateOnly(2025, 1, 15),
-        Direction: TransactionDirection.Expense,
+        Type: TransactionType.Expense,
         Amount: 100m,
         CategoryId: 1,
         PayerId: 1,
+        PayerName: "Me",
         CounterpartyId: 1,
+        CounterpartyName: "Shop",
         Description: "Groceries",
         Location: "Shop",
         TagIds: []
@@ -23,7 +25,9 @@ public sealed class AddTransactionTests
     [Fact]
     public async Task ExecuteAsync_ValidCommand_ReturnsDtoWithCorrectData()
     {
-        var useCase = new AddTransaction(new FakeTransactionRepository());
+        var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository([
+            new() { Id = 1, Name = "Me" }
+        ]), new FakeLocationRepository());
 
         var result = await useCase.ExecuteAsync(ValidCommand());
 
@@ -32,7 +36,7 @@ public sealed class AddTransactionTests
 
         Assert.Equal(1, dto.Id);
         Assert.Equal(new DateOnly(2025, 1, 15), dto.Date);
-        Assert.Equal(TransactionDirection.Expense, dto.Direction);
+        Assert.Equal(TransactionType.Expense, dto.Type);
         Assert.Equal(100m, dto.Amount);
         Assert.Equal(1, dto.CategoryId);
         Assert.Equal(1, dto.PayerId);
@@ -46,7 +50,7 @@ public sealed class AddTransactionTests
     [InlineData(-1)]
     public async Task ExecuteAsync_NonPositiveAmount_ThrowsArgumentException(decimal amount)
     {
-        var useCase = new AddTransaction(new FakeTransactionRepository());
+        var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository(), new FakeLocationRepository());
 
         var result = await useCase.ExecuteAsync(ValidCommand() with { Amount = amount });
 
@@ -59,7 +63,7 @@ public sealed class AddTransactionTests
     [InlineData(-1)]
     public async Task ExecuteAsync_InvalidCategoryId_ThrowsArgumentException(int categoryId)
     {
-        var useCase = new AddTransaction(new FakeTransactionRepository());
+        var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository(), new FakeLocationRepository());
 
         var result = await useCase.ExecuteAsync(ValidCommand() with { CategoryId = categoryId });
 
@@ -72,9 +76,9 @@ public sealed class AddTransactionTests
     [InlineData(-1)]
     public async Task ExecuteAsync_InvalidPayerId_ThrowsArgumentException(int payerId)
     {
-        var useCase = new AddTransaction(new FakeTransactionRepository());
+        var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository(), new FakeLocationRepository());
 
-        var result = await useCase.ExecuteAsync(ValidCommand() with { PayerId = payerId });
+        var result = await useCase.ExecuteAsync(ValidCommand() with { PayerId = payerId, PayerName = null });
 
         Assert.True(result.IsFailed);
         Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.PayerRequired);
@@ -85,11 +89,28 @@ public sealed class AddTransactionTests
     [InlineData(-1)]
     public async Task ExecuteAsync_InvalidCounterpartyId_ThrowsArgumentException(int counterpartyId)
     {
-        var useCase = new AddTransaction(new FakeTransactionRepository());
+        var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository(), new FakeLocationRepository());
 
-        var result = await useCase.ExecuteAsync(ValidCommand() with { CounterpartyId = counterpartyId });
+        var result = await useCase.ExecuteAsync(ValidCommand() with { CounterpartyId = counterpartyId, CounterpartyName = null });
 
         Assert.True(result.IsFailed);
         Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.CounterpartyRequired);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_NewCounterpartyName_AddsPartyAndUsesIt()
+    {
+        var parties = new FakePartyRepository([new() { Id = 1, Name = "Me" }]);
+        var useCase = new AddTransaction(new FakeTransactionRepository(), parties, new FakeLocationRepository());
+
+        var result = await useCase.ExecuteAsync(ValidCommand() with
+        {
+            CounterpartyId = null,
+            CounterpartyName = "Żabka"
+        });
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("Żabka", result.Value.CounterpartyName);
+        Assert.Contains(await parties.GetAllAsync(), party => party.Name == "Żabka");
     }
 }

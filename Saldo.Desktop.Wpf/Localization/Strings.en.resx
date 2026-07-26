@@ -19,6 +19,7 @@
   <data name="TabMembers" xml:space="preserve"><value>People</value></data>
   <data name="TabCounterparties" xml:space="preserve"><value>Counterparties</value></data>
   <data name="TabParties" xml:space="preserve"><value>Parties</value></data>
+  <data name="TabLocations" xml:space="preserve"><value>Locations</value></data>
   <data name="ErrorTitle" xml:space="preserve"><value>Error</value></data>
   <data name="Save" xml:space="preserve"><value>Save</value></data>
   <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
@@ -31,10 +32,10 @@
   <data name="Counterparty" xml:space="preserve"><value>Counterparty</value></data>
   <data name="Description" xml:space="preserve"><value>Description</value></data>
   <data name="Location" xml:space="preserve"><value>Location</value></data>
-  <data name="Direction" xml:space="preserve"><value>Direction</value></data>
+  <data name="Type" xml:space="preserve"><value>Type</value></data>
   <data name="Payer" xml:space="preserve"><value>Payer</value></data>
-  <data name="Direction_Expense" xml:space="preserve"><value>Expense</value></data>
-  <data name="Direction_Income" xml:space="preserve"><value>Income</value></data>
+  <data name="Type_Expense" xml:space="preserve"><value>Expense</value></data>
+  <data name="Type_Income" xml:space="preserve"><value>Income</value></data>
   <data name="Summary_Income" xml:space="preserve"><value>Income</value></data>
   <data name="Summary_Expense" xml:space="preserve"><value>Expense</value></data>
   <data name="Summary_Balance" xml:space="preserve"><value>Balance</value></data>
@@ -44,6 +45,7 @@
   <data name="Entity_Member" xml:space="preserve"><value>Person</value></data>
   <data name="Entity_Counterparty" xml:space="preserve"><value>Recipient</value></data>
   <data name="Entity_Party" xml:space="preserve"><value>Party</value></data>
+  <data name="Entity_Location" xml:space="preserve"><value>Location</value></data>
   <data name="AddEntityTitleTemplate" xml:space="preserve"><value>Add {0}</value></data>
   <data name="EditEntityTitleTemplate" xml:space="preserve"><value>Edit {0}</value></data>
   <data name="DeleteEntityTitleTemplate" xml:space="preserve"><value>Delete {0}</value></data>
@@ -56,8 +58,8 @@
   <data name="StartupFailedMessage" xml:space="preserve"><value>Application startup failed. See the log for details.</value></data>
   <data name="UnhandledUiErrorMessage" xml:space="preserve"><value>An unexpected error occurred. See the log for details.</value></data>
   <data name="TransactionsLoadError" xml:space="preserve"><value>Failed to load transactions.</value></data>
-  <data name="TransactionDirection_Expense" xml:space="preserve"><value>Expense</value></data>
-  <data name="TransactionDirection_Income" xml:space="preserve"><value>Income</value></data>
+  <data name="TransactionType_Expense" xml:space="preserve"><value>Expense</value></data>
+  <data name="TransactionType_Income" xml:space="preserve"><value>Income</value></data>
   <data name="Validation_TransactionIdMustBePositive" xml:space="preserve"><value>Transaction id must be positive.</value></data>
   <data name="Validation_AmountMustBePositive" xml:space="preserve"><value>Amount must be greater than zero.</value></data>
   <data name="Validation_CategoryRequired" xml:space="preserve"><value>Category is required.</value></data>

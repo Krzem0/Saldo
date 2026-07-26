@@ -58,6 +58,25 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     b.ToTable("Parties", (string)null);
                 });
 
+            modelBuilder.Entity("Saldo.Domain.Entities.Location", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Locations", (string)null);
+                });
+
             modelBuilder.Entity("Saldo.Domain.Entities.Tag", b =>
                 {
                     b.Property<int>("Id")
@@ -100,12 +119,11 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Direction")
+                    b.Property<int>("Type")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Location")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("PayerId")
                         .HasColumnType("INTEGER");
@@ -118,9 +136,11 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
 
                     b.HasIndex("Date");
 
+                    b.HasIndex("LocationId");
+
                     b.HasIndex("PayerId");
 
-                    b.HasIndex("Date", "Direction");
+                    b.HasIndex("Date", "Type");
 
                     b.ToTable("Transactions", (string)null);
                 });
@@ -148,6 +168,11 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Saldo.Domain.Entities.Location", "Location")
+                        .WithMany("Transactions")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Saldo.Domain.Entities.Party", "Counterparty")
                         .WithMany("CounterpartyTransactions")
                         .HasForeignKey("CounterpartyId")
@@ -163,6 +188,8 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("Counterparty");
+
+                    b.Navigation("Location");
 
                     b.Navigation("Payer");
                 });
@@ -187,6 +214,11 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 });
 
             modelBuilder.Entity("Saldo.Domain.Entities.Category", b =>
+                {
+                    b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("Saldo.Domain.Entities.Location", b =>
                 {
                     b.Navigation("Transactions");
                 });

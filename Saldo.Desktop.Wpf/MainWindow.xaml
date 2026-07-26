@@ -38,6 +38,9 @@
             <TabItem Header="{Binding Source={StaticResource Localization}, Path=[TabParties]}">
                 <views:ReferenceListView DataContext="{Binding Parties}"/>
             </TabItem>
+            <TabItem Header="{Binding Source={StaticResource Localization}, Path=[TabLocations]}">
+                <views:ReferenceListView DataContext="{Binding Locations}"/>
+            </TabItem>
         </TabControl>
     </DockPanel>
 </Window>

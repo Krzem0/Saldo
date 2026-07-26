@@ -147,6 +147,7 @@
                                 <ListBox x:Name="PART_ItemsList"
                                          ItemsSource="{Binding FilteredItemsSource, RelativeSource={RelativeSource TemplatedParent}}"
                                          SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                         IsSynchronizedWithCurrentItem="False"
                                          DisplayMemberPath="{TemplateBinding DisplayMemberPath}"
                                          Background="Transparent"
                                          BorderThickness="0"

@@ -4,11 +4,13 @@ namespace Saldo.Application.DTOs;
 
 public sealed record AddTransactionCommand(
     DateOnly Date,
-    TransactionDirection Direction,
+    TransactionType Type,
     decimal Amount,
     int CategoryId,
-    int PayerId,
-    int CounterpartyId,
+    int? PayerId,
+    string? PayerName,
+    int? CounterpartyId,
+    string? CounterpartyName,
     string? Description,
     string? Location,
     IReadOnlyList<int> TagIds

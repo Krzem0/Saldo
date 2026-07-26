@@ -13,7 +13,7 @@ public sealed class DeleteTransactionTests
         await repo.AddAsync(new Transaction
         {
             Date = new DateOnly(2025, 1, 1),
-            Direction = TransactionDirection.Expense,
+            Type = TransactionType.Expense,
             Amount = 50m,
             CategoryId = 1,
             PayerId = 1,

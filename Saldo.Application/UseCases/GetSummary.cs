@@ -18,11 +18,11 @@ public sealed class GetSummary
         var transactions = await _transactions.GetByMonthAsync(query.Year, query.Month, ct);
 
         var totalIncome = transactions
-            .Where(t => t.Direction == TransactionDirection.Income)
+            .Where(t => t.Type == TransactionType.Income)
             .Sum(t => t.Amount);
 
         var totalExpense = transactions
-            .Where(t => t.Direction == TransactionDirection.Expense)
+            .Where(t => t.Type == TransactionType.Expense)
             .Sum(t => t.Amount);
 
         return new MonthlySummaryDto(query.Year, query.Month, totalIncome, totalExpense, totalIncome - totalExpense);

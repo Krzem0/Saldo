@@ -22,9 +22,9 @@ public sealed class ListTransactionsTests
     public async Task ExecuteAsync_TransactionsInMonth_ReturnsOnlyThatMonth()
     {
         var repo = new FakeTransactionRepository();
-        await repo.AddAsync(new Transaction { Date = new DateOnly(2025, 1, 10), Amount = 100m, Direction = TransactionDirection.Expense, CategoryId = 1, PayerId = 1, CounterpartyId = 1 });
-        await repo.AddAsync(new Transaction { Date = new DateOnly(2025, 1, 20), Amount = 200m, Direction = TransactionDirection.Income, CategoryId = 1, PayerId = 1, CounterpartyId = 1 });
-        await repo.AddAsync(new Transaction { Date = new DateOnly(2025, 2, 5), Amount = 50m, Direction = TransactionDirection.Expense, CategoryId = 1, PayerId = 1, CounterpartyId = 1 });
+        await repo.AddAsync(new Transaction { Date = new DateOnly(2025, 1, 10), Amount = 100m, Type = TransactionType.Expense, CategoryId = 1, PayerId = 1, CounterpartyId = 1 });
+        await repo.AddAsync(new Transaction { Date = new DateOnly(2025, 1, 20), Amount = 200m, Type = TransactionType.Income, CategoryId = 1, PayerId = 1, CounterpartyId = 1 });
+        await repo.AddAsync(new Transaction { Date = new DateOnly(2025, 2, 5), Amount = 50m, Type = TransactionType.Expense, CategoryId = 1, PayerId = 1, CounterpartyId = 1 });
 
         var useCase = new ListTransactions(repo);
         var result = await useCase.ExecuteAsync(new ListTransactionsQuery(2025, 1));
@@ -41,12 +41,13 @@ public sealed class ListTransactionsTests
         {
             Date = new DateOnly(2025, 3, 15),
             Amount = 99.50m,
-            Direction = TransactionDirection.Expense,
+            Type = TransactionType.Expense,
             CategoryId = 2,
             PayerId = 3,
             CounterpartyId = 4,
             Description = "Lunch",
-            Location = "Cafe"
+            Location = new Location { Id = 1, Name = "Cafe" },
+            LocationId = 1
         });
 
         var useCase = new ListTransactions(repo);
@@ -55,7 +56,7 @@ public sealed class ListTransactionsTests
         var dto = Assert.Single(result);
         Assert.Equal(new DateOnly(2025, 3, 15), dto.Date);
         Assert.Equal(99.50m, dto.Amount);
-        Assert.Equal(TransactionDirection.Expense, dto.Direction);
+        Assert.Equal(TransactionType.Expense, dto.Type);
         Assert.Equal(2, dto.CategoryId);
         Assert.Equal(3, dto.PayerId);
         Assert.Equal(4, dto.CounterpartyId);

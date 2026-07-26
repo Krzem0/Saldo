@@ -6,7 +6,7 @@ public sealed class Category
     public string Name { get; set; } = string.Empty;
 
     // Optional: jeśli chcesz rozróżniać kategorie pod Income/Expense, dodaj później.
-    // public TransactionDirection? AppliesTo { get; set; }
+    // public TransactionType? AppliesTo { get; set; }
 
     public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

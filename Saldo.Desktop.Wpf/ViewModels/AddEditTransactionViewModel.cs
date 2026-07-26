@@ -15,23 +15,26 @@ namespace Saldo.Desktop.Wpf.ViewModels;
 public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly IReadOnlyList<DirectionItem> _directions;
+    private readonly IReadOnlyList<TypeItem> _types;
 
     private DateTime _date = DateTime.Today;
-    private DirectionItem _selectedDirection;
+    private TypeItem _selectedType;
     private string _amountText = string.Empty;
     private Category? _selectedCategory;
     private Party? _selectedPayer;
+    private string _payerText = string.Empty;
     private Party? _selectedCounterparty;
+    private string _counterpartyText = string.Empty;
+    private Location? _selectedLocation;
+    private string _locationText = string.Empty;
     private string? _description;
-    private string? _location;
 
-    public sealed class DirectionItem : ViewModelBase
+    public sealed class TypeItem : ViewModelBase
     {
         private readonly ILocalizationService _localization;
         private string _label;
 
-        public TransactionDirection Value { get; }
+        public TransactionType Value { get; }
 
         public string Label
         {
@@ -39,7 +42,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             private set => SetField(ref _label, value);
         }
 
-        public DirectionItem(TransactionDirection value, ILocalizationService localization)
+        public TypeItem(TransactionType value, ILocalizationService localization)
         {
             Value = value;
             _localization = localization;
@@ -57,42 +60,46 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
         private string GetLabel() => Value switch
         {
-            TransactionDirection.Expense => _localization["Direction_Expense"],
-            TransactionDirection.Income => _localization["Direction_Income"],
+            TransactionType.Expense => _localization["Type_Expense"],
+            TransactionType.Income => _localization["Type_Income"],
             _ => Value.ToString()
         };
     }
 
-    public IReadOnlyList<DirectionItem> Directions => _directions;
+    public IReadOnlyList<TypeItem> Types => _types;
 
     public int? TransactionId { get; private set; }
     public string Title => TransactionId.HasValue ? T("Transaction_EditTitle") : T("Transaction_AddTitle");
 
     public DateTime Date { get => _date; set => SetField(ref _date, value); }
 
-    public DirectionItem SelectedDirection
+    public TypeItem SelectedType
     {
-        get => _selectedDirection;
-        set => SetField(ref _selectedDirection, value);
+        get => _selectedType;
+        set => SetField(ref _selectedType, value);
     }
 
     public string AmountText { get => _amountText; set => SetField(ref _amountText, value); }
 
     public Category? SelectedCategory { get => _selectedCategory; set => SetField(ref _selectedCategory, value); }
     public Party? SelectedPayer { get => _selectedPayer; set => SetField(ref _selectedPayer, value); }
+    public string PayerText { get => _payerText; set => SetField(ref _payerText, value); }
     public Party? SelectedCounterparty { get => _selectedCounterparty; set => SetField(ref _selectedCounterparty, value); }
+    public string CounterpartyText { get => _counterpartyText; set => SetField(ref _counterpartyText, value); }
+    public Location? SelectedLocation { get => _selectedLocation; set => SetField(ref _selectedLocation, value); }
 
     public string? Description { get => _description; set => SetField(ref _description, value); }
-    public string? Location { get => _location; set => SetField(ref _location, value); }
+    public string LocationText { get => _locationText; set => SetField(ref _locationText, value); }
 
     public IReadOnlyList<Category> Categories { get; }
     public IReadOnlyList<Party> Parties { get; }
+    public IReadOnlyList<Location> Locations { get; }
 
     public bool IsValid =>
         decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.CurrentCulture, out var amount) && amount > 0
         && SelectedCategory is not null
-        && SelectedPayer is not null
-        && SelectedCounterparty is not null;
+        && (SelectedPayer is not null || !string.IsNullOrWhiteSpace(PayerText))
+        && (SelectedCounterparty is not null || !string.IsNullOrWhiteSpace(CounterpartyText));
 
     public event Action<bool>? RequestClose;
 
@@ -103,36 +110,61 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         ILocalizationService localization,
         IReadOnlyList<Category> categories,
         IReadOnlyList<Party> parties,
+        IReadOnlyList<Location> locations,
+        NewTransactionDefaultsDto? defaults = null,
         TransactionDto? existing = null)
         : base(localization)
     {
         _scopeFactory = scopeFactory;
         Categories = categories;
         Parties = parties;
-        _directions =
+        Locations = locations;
+        _types =
         [
-            new DirectionItem(TransactionDirection.Expense, localization),
-            new DirectionItem(TransactionDirection.Income, localization)
+            new TypeItem(TransactionType.Expense, localization),
+            new TypeItem(TransactionType.Income, localization)
         ];
-        _selectedDirection = _directions[0]; // default: Expense
+        _selectedType = _types[0];
+
+        if (defaults is not null)
+        {
+            ApplyDefaults(defaults);
+        }
 
         if (existing is not null)
+        {
             PopulateFrom(existing);
+        }
 
         SaveCommand = new AsyncRelayCommand(SaveAsync, () => IsValid);
+    }
+
+    private void ApplyDefaults(NewTransactionDefaultsDto defaults)
+    {
+        _date = defaults.Date.ToDateTime(TimeOnly.MinValue);
+        _selectedType = Types.FirstOrDefault(d => d.Value == defaults.Type) ?? Types[0];
+        _selectedPayer = defaults.PayerId.HasValue
+            ? Parties.FirstOrDefault(p => p.Id == defaults.PayerId.Value)
+            : null;
+        _payerText = _selectedPayer?.Name ?? string.Empty;
     }
 
     private void PopulateFrom(TransactionDto t)
     {
         TransactionId = t.Id;
         _date = t.Date.ToDateTime(TimeOnly.MinValue);
-        _selectedDirection = Directions.FirstOrDefault(d => d.Value == t.Direction) ?? Directions[0];
+        _selectedType = Types.FirstOrDefault(d => d.Value == t.Type) ?? Types[0];
         _amountText = t.Amount.ToString("N2", CultureInfo.CurrentCulture);
         _selectedCategory = Categories.FirstOrDefault(c => c.Id == t.CategoryId);
         _selectedPayer = Parties.FirstOrDefault(p => p.Id == t.PayerId);
+        _payerText = t.PayerName;
         _selectedCounterparty = Parties.FirstOrDefault(p => p.Id == t.CounterpartyId);
+        _counterpartyText = t.CounterpartyName;
+        _selectedLocation = t.LocationId.HasValue
+            ? Locations.FirstOrDefault(location => location.Id == t.LocationId.Value)
+            : null;
         _description = t.Description;
-        _location = t.Location;
+        _locationText = t.Location ?? string.Empty;
     }
 
     private async Task SaveAsync()
@@ -147,13 +179,15 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             var cmd = new EditTransactionCommand(
                 TransactionId.Value,
                 DateOnly.FromDateTime(Date),
-                SelectedDirection.Value,
+                SelectedType.Value,
                 amount,
                 SelectedCategory!.Id,
-                SelectedPayer!.Id,
-                SelectedCounterparty!.Id,
+                SelectedPayer?.Id,
+                ResolvePartyName(SelectedPayer, PayerText),
+                SelectedCounterparty?.Id,
+                ResolvePartyName(SelectedCounterparty, CounterpartyText),
                 Description,
-                Location,
+                ResolveLocationName(),
                 []);
 
             var result = await scope.ServiceProvider.GetRequiredService<EditTransaction>().ExecuteAsync(cmd);
@@ -171,13 +205,15 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         {
             var cmd = new AddTransactionCommand(
                 DateOnly.FromDateTime(Date),
-                SelectedDirection.Value,
+                SelectedType.Value,
                 amount,
                 SelectedCategory!.Id,
-                SelectedPayer!.Id,
-                SelectedCounterparty!.Id,
+                SelectedPayer?.Id,
+                ResolvePartyName(SelectedPayer, PayerText),
+                SelectedCounterparty?.Id,
+                ResolvePartyName(SelectedCounterparty, CounterpartyText),
                 Description,
-                Location,
+                ResolveLocationName(),
                 []);
 
             var result = await scope.ServiceProvider.GetRequiredService<AddTransaction>().ExecuteAsync(cmd);
@@ -198,5 +234,25 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     protected override void OnCultureChanged()
     {
         OnPropertyChanged(nameof(Title));
+    }
+
+    private string? ResolveLocationName()
+    {
+        if (SelectedLocation is not null)
+        {
+            return SelectedLocation.Name;
+        }
+
+        return string.IsNullOrWhiteSpace(LocationText) ? null : LocationText.Trim();
+    }
+
+    private static string? ResolvePartyName(Party? selectedParty, string? text)
+    {
+        if (selectedParty is not null)
+        {
+            return selectedParty.Name;
+        }
+
+        return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
     }
 }

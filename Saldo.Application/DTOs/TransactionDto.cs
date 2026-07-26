@@ -5,7 +5,7 @@ namespace Saldo.Application.DTOs;
 public sealed record TransactionDto(
     int Id,
     DateOnly Date,
-    TransactionDirection Direction,
+    TransactionType Type,
     decimal Amount,
     int CategoryId,
     string CategoryName,
@@ -13,7 +13,8 @@ public sealed record TransactionDto(
     string PayerName,
     int CounterpartyId,
     string CounterpartyName,
-    string? Description,
+    int? LocationId,
     string? Location,
+    string? Description,
     IReadOnlyList<string> Tags
 );

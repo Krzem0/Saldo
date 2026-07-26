@@ -56,6 +56,7 @@
         <controls:AutocompleteComboBox Grid.Row="2" Grid.Column="1"
                                        ItemsSource="{Binding Parties}"
                                        SelectedItem="{Binding SelectedCounterparty}"
+                                       Text="{Binding CounterpartyText, UpdateSourceTrigger=PropertyChanged}"
                                        DisplayMemberPath="Name"/>
 
         <!-- Description -->
@@ -72,14 +73,17 @@
 
         <!-- Location -->
         <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Location]}"/>
-        <TextBox Grid.Row="5" Grid.Column="1"
-                 Text="{Binding Location, UpdateSourceTrigger=PropertyChanged}"/>
+        <controls:AutocompleteComboBox Grid.Row="5" Grid.Column="1"
+                                       ItemsSource="{Binding Locations}"
+                                       SelectedItem="{Binding SelectedLocation}"
+                                       Text="{Binding LocationText, UpdateSourceTrigger=PropertyChanged}"
+                                       DisplayMemberPath="Name"/>
 
-        <!-- Direction -->
-        <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Direction]}"/>
+        <!-- Type -->
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Type]}"/>
         <ComboBox Grid.Row="6" Grid.Column="1"
-                  ItemsSource="{Binding Directions}"
-                  SelectedItem="{Binding SelectedDirection}"
+                  ItemsSource="{Binding Types}"
+                  SelectedItem="{Binding SelectedType}"
                   DisplayMemberPath="Label"/>
 
         <!-- Payer -->
@@ -87,6 +91,7 @@
         <controls:AutocompleteComboBox Grid.Row="7" Grid.Column="1"
                                        ItemsSource="{Binding Parties}"
                                        SelectedItem="{Binding SelectedPayer}"
+                                       Text="{Binding PayerText, UpdateSourceTrigger=PropertyChanged}"
                                        DisplayMemberPath="Name"/>
 
         <!-- Buttons -->

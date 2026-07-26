@@ -8,10 +8,10 @@ public sealed class Transaction
 
     public DateOnly Date { get; set; }
 
-    public TransactionDirection Direction { get; set; }
+    public TransactionType Type { get; set; }
 
     /// <summary>
-    /// Always positive; semantics are defined by Direction (Expense/Income).
+    /// Always positive; semantics are defined by Type (Expense/Income).
     /// </summary>
     public decimal Amount { get; set; }
 
@@ -30,8 +30,10 @@ public sealed class Transaction
     public int CounterpartyId { get; set; }
     public Party Counterparty { get; set; } = null!;
 
+    public int? LocationId { get; set; }
+    public Location? Location { get; set; }
+
     public string? Description { get; set; }
-    public string? Location { get; set; }
 
     public ICollection<TransactionTag> Tags { get; set; } = new List<TransactionTag>();
 }

@@ -4,11 +4,11 @@ using Saldo.Domain.Enums;
 
 namespace Saldo.Desktop.Wpf.Localization;
 
-public sealed class TransactionDirectionToTextConverter : IValueConverter
+public sealed class TransactionTypeToTextConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not TransactionDirection direction)
+        if (value is not TransactionType type)
         {
             return string.Empty;
         }
@@ -16,14 +16,14 @@ public sealed class TransactionDirectionToTextConverter : IValueConverter
         var localization = System.Windows.Application.Current?.Resources["Localization"] as ILocalizationService;
         if (localization is null)
         {
-            return direction.ToString();
+            return type.ToString();
         }
 
-        return direction switch
+        return type switch
         {
-            TransactionDirection.Expense => localization["Direction_Expense"],
-            TransactionDirection.Income => localization["Direction_Income"],
-            _ => direction.ToString()
+            TransactionType.Expense => localization["Type_Expense"],
+            TransactionType.Income => localization["Type_Income"],
+            _ => type.ToString()
         };
     }
 

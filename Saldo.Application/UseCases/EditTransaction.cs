@@ -12,16 +12,20 @@ namespace Saldo.Application.UseCases;
 public sealed class EditTransaction
 {
     private readonly ITransactionRepository _transactions;
+    private readonly IPartyRepository _parties;
+    private readonly ILocationRepository _locations;
     private readonly ILogger<EditTransaction> _logger;
 
-    public EditTransaction(ITransactionRepository transactions)
-        : this(transactions, NullLogger<EditTransaction>.Instance)
+    public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations)
+        : this(transactions, parties, locations, NullLogger<EditTransaction>.Instance)
     {
     }
 
-    public EditTransaction(ITransactionRepository transactions, ILogger<EditTransaction> logger)
+    public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, ILogger<EditTransaction> logger)
     {
         _transactions = transactions;
+        _parties = parties;
+        _locations = locations;
         _logger = logger;
     }
 
@@ -44,14 +48,14 @@ public sealed class EditTransaction
             _logger.LogWarning("Transaction {TransactionId} edit rejected because category id is missing.", command.Id);
             return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CategoryRequired);
         }
-        if (command.PayerId <= 0)
+        if (!command.PayerId.HasValue && string.IsNullOrWhiteSpace(command.PayerName))
         {
-            _logger.LogWarning("Transaction {TransactionId} edit rejected because payer id is missing.", command.Id);
+            _logger.LogWarning("Transaction {TransactionId} edit rejected because payer is missing.", command.Id);
             return Result.Fail<TransactionDto>(ErrorCodes.Transaction.PayerRequired);
         }
-        if (command.CounterpartyId <= 0)
+        if (!command.CounterpartyId.HasValue && string.IsNullOrWhiteSpace(command.CounterpartyName))
         {
-            _logger.LogWarning("Transaction {TransactionId} edit rejected because counterparty id is missing.", command.Id);
+            _logger.LogWarning("Transaction {TransactionId} edit rejected because counterparty is missing.", command.Id);
             return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CounterpartyRequired);
         }
 
@@ -62,14 +66,32 @@ public sealed class EditTransaction
             return Result.Fail<TransactionDto>(ErrorCodes.Transaction.NotFound);
         }
 
+        var payer = await ResolvePartyAsync(command.PayerId, command.PayerName, ct);
+        if (payer is null)
+        {
+            _logger.LogWarning("Transaction {TransactionId} edit rejected because payer could not be resolved.", command.Id);
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.PayerRequired);
+        }
+
+        var counterparty = await ResolvePartyAsync(command.CounterpartyId, command.CounterpartyName, ct);
+        if (counterparty is null)
+        {
+            _logger.LogWarning("Transaction {TransactionId} edit rejected because counterparty could not be resolved.", command.Id);
+            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CounterpartyRequired);
+        }
+
         existing.Date = command.Date;
-        existing.Direction = command.Direction;
+        existing.Type = command.Type;
         existing.Amount = command.Amount;
         existing.CategoryId = command.CategoryId;
-        existing.PayerId = command.PayerId;
-        existing.CounterpartyId = command.CounterpartyId;
+        existing.PayerId = payer.Id;
+        existing.Payer = payer;
+        existing.CounterpartyId = counterparty.Id;
+        existing.Counterparty = counterparty;
+        var location = await ResolveLocationAsync(command.Location, ct);
+        existing.LocationId = location?.Id;
+        existing.Location = location;
         existing.Description = command.Description;
-        existing.Location = command.Location;
         existing.Tags = command.TagIds
             .Select(tagId => new TransactionTag { TagId = tagId })
             .ToList();
@@ -82,5 +104,78 @@ public sealed class EditTransaction
         _logger.LogInformation("Transaction {TransactionId} edited successfully.", saved.Id);
 
         return Result.Ok(TransactionMapper.ToDto(saved));
+    }
+
+    private async Task<Party?> ResolvePartyAsync(int? partyId, string? partyName, CancellationToken ct)
+    {
+        if (partyId.HasValue && partyId.Value > 0)
+        {
+            var existingById = await _parties.GetByIdAsync(partyId.Value, ct);
+            if (existingById is not null)
+            {
+                return existingById;
+            }
+        }
+
+        var normalizedInput = NormalizeName(partyName);
+        if (normalizedInput is null)
+        {
+            return null;
+        }
+
+        var existing = (await _parties.GetAllAsync(ct))
+            .FirstOrDefault(party => string.Equals(
+                NormalizeName(party.Name),
+                normalizedInput,
+                StringComparison.Ordinal));
+
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        var party = new Party { Name = partyName!.Trim() };
+        await _parties.AddAsync(party, ct);
+        return party;
+    }
+
+    private async Task<Location?> ResolveLocationAsync(string? locationName, CancellationToken ct)
+    {
+        var normalizedInput = NormalizeName(locationName);
+        if (normalizedInput is null)
+        {
+            return null;
+        }
+
+        var existing = (await _locations.GetAllAsync(ct))
+            .FirstOrDefault(location => string.Equals(
+                NormalizeName(location.Name),
+                normalizedInput,
+                StringComparison.Ordinal));
+
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        var location = new Location { Name = locationName!.Trim() };
+        await _locations.AddAsync(location, ct);
+        return location;
+    }
+
+    private static string? NormalizeName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var normalized = value.Trim().Normalize(System.Text.NormalizationForm.FormD);
+        var chars = normalized
+            .Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
+            .Select(char.ToLowerInvariant)
+            .ToArray();
+
+        return new string(chars);
     }
 }

@@ -8,10 +8,10 @@ namespace Saldo.Tests.Unit.UseCases;
 
 public sealed class GetSummaryTests
 {
-    private static Transaction MakeTransaction(TransactionDirection direction, decimal amount, int month = 1) => new()
+    private static Transaction MakeTransaction(TransactionType type, decimal amount, int month = 1) => new()
     {
         Date = new DateOnly(2025, month, 1),
-        Direction = direction,
+        Type = type,
         Amount = amount,
         CategoryId = 1,
         PayerId = 1,
@@ -34,8 +34,8 @@ public sealed class GetSummaryTests
     public async Task ExecuteAsync_OnlyIncome_CorrectSums()
     {
         var repo = new FakeTransactionRepository();
-        await repo.AddAsync(MakeTransaction(TransactionDirection.Income, 500m));
-        await repo.AddAsync(MakeTransaction(TransactionDirection.Income, 300m));
+        await repo.AddAsync(MakeTransaction(TransactionType.Income, 500m));
+        await repo.AddAsync(MakeTransaction(TransactionType.Income, 300m));
 
         var result = await new GetSummary(repo).ExecuteAsync(new ListTransactionsQuery(2025, 1));
 
@@ -48,9 +48,9 @@ public sealed class GetSummaryTests
     public async Task ExecuteAsync_MixedTransactions_BalanceIsIncomeMinusExpense()
     {
         var repo = new FakeTransactionRepository();
-        await repo.AddAsync(MakeTransaction(TransactionDirection.Income, 1000m));
-        await repo.AddAsync(MakeTransaction(TransactionDirection.Expense, 350m));
-        await repo.AddAsync(MakeTransaction(TransactionDirection.Expense, 150m));
+        await repo.AddAsync(MakeTransaction(TransactionType.Income, 1000m));
+        await repo.AddAsync(MakeTransaction(TransactionType.Expense, 350m));
+        await repo.AddAsync(MakeTransaction(TransactionType.Expense, 150m));
 
         var result = await new GetSummary(repo).ExecuteAsync(new ListTransactionsQuery(2025, 1));
 
@@ -63,8 +63,8 @@ public sealed class GetSummaryTests
     public async Task ExecuteAsync_IgnoresOtherMonths()
     {
         var repo = new FakeTransactionRepository();
-        await repo.AddAsync(MakeTransaction(TransactionDirection.Income, 1000m, month: 1));
-        await repo.AddAsync(MakeTransaction(TransactionDirection.Income, 9999m, month: 2));
+        await repo.AddAsync(MakeTransaction(TransactionType.Income, 1000m, month: 1));
+        await repo.AddAsync(MakeTransaction(TransactionType.Income, 9999m, month: 2));
 
         var result = await new GetSummary(repo).ExecuteAsync(new ListTransactionsQuery(2025, 1));
 

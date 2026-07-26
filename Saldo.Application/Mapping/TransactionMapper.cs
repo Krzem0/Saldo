@@ -8,7 +8,7 @@ internal static class TransactionMapper
     internal static TransactionDto ToDto(Transaction t) => new(
         t.Id,
         t.Date,
-        t.Direction,
+        t.Type,
         t.Amount,
         t.CategoryId,
         t.Category?.Name ?? string.Empty,
@@ -16,8 +16,9 @@ internal static class TransactionMapper
         t.Payer?.Name ?? string.Empty,
         t.CounterpartyId,
         t.Counterparty?.Name ?? string.Empty,
+        t.LocationId,
+        t.Location?.Name,
         t.Description,
-        t.Location,
         t.Tags.Select(tt => tt.Tag?.Name ?? string.Empty).ToList()
     );
 }

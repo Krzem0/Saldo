@@ -10,6 +10,7 @@ using Saldo.Domain.Entities;
 using Saldo.Infrastructure.Sqlite.Persistence;
 using Saldo.Infrastructure.Sqlite.Repositories;
 using Serilog;
+using System.Globalization;
 using System.Windows;
 
 namespace Saldo.Desktop.Wpf;
@@ -18,25 +19,6 @@ public partial class App : System.Windows.Application
 {
     private ServiceProvider? _serviceProvider;
     private readonly LocalizationService _localization = new();
-    private static readonly string[] DefaultCategoryNames =
-    [
-        "Housing",
-        "Supermarkets",
-        "Online shopping",
-        "Meals at work",
-        "Fast food",
-        "Transport",
-        "Pets",
-        "Entertainment",
-        "Salary",
-        "Bonus",
-        "Term deposit",
-        "Dividends",
-        "Other",
-        "Health",
-        "Donations and gifts",
-        "Personal care"
-    ];
 
     public App()
     {
@@ -66,7 +48,7 @@ public partial class App : System.Windows.Application
                 var context = scope.ServiceProvider.GetRequiredService<SaldoDbContext>();
                 logger.LogInformation("Applying database migrations.");
                 await context.Database.MigrateAsync();
-                await SeedInitialDataAsync(context, logger);
+                await SeedInitialDataAsync(context, logger, _localization.CurrentCulture);
             }
 
             logger.LogInformation("Opening main window.");
@@ -102,6 +84,7 @@ public partial class App : System.Windows.Application
 
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IPartyRepository, PartyRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
 
@@ -110,6 +93,7 @@ public partial class App : System.Windows.Application
         services.AddScoped<DeleteTransaction>();
         services.AddScoped<ListTransactions>();
         services.AddScoped<GetSummary>();
+        services.AddScoped<GetNewTransactionDefaults>();
 
         services.AddSingleton<IDialogService, WpfDialogService>();
         services.AddSingleton(localization);
@@ -119,6 +103,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<TransactionListViewModel>();
         services.AddTransient<CategoriesViewModel>();
         services.AddTransient<PartiesViewModel>();
+        services.AddTransient<LocationsViewModel>();
         services.AddTransient<MainWindow>();
     }
 
@@ -141,7 +126,7 @@ public partial class App : System.Windows.Application
             .CreateLogger();
     }
 
-    private static async Task SeedInitialDataAsync(SaldoDbContext context, Microsoft.Extensions.Logging.ILogger logger)
+    private static async Task SeedInitialDataAsync(SaldoDbContext context, Microsoft.Extensions.Logging.ILogger logger, CultureInfo culture)
     {
         var hasAnyData = await context.Categories.AnyAsync()
             || await context.Parties.AnyAsync()
@@ -157,13 +142,64 @@ public partial class App : System.Windows.Application
 
         logger.LogInformation("Seeding initial reference data.");
 
-        context.Categories.AddRange(DefaultCategoryNames.Select(name => new Category { Name = name }));
-        context.Parties.Add(new Party { Name = "Me" });
+        var seedData = GetSeedData(culture);
+
+        context.Categories.AddRange(seedData.CategoryNames.Select(name => new Category { Name = name }));
+        context.Parties.Add(new Party { Name = seedData.DefaultPartyName });
 
         await context.SaveChangesAsync();
 
         logger.LogInformation("Initial reference data seeded.");
     }
+
+    private static SeedData GetSeedData(CultureInfo culture)
+    {
+        return culture.TwoLetterISOLanguageName switch
+        {
+            "pl" => new SeedData(
+                [
+                    "Mieszkanie",
+                    "Supermarkety",
+                    "Zakupy online",
+                    "Posiłki w pracy",
+                    "Fast food",
+                    "Transport",
+                    "Zwierzęta",
+                    "Rozrywka",
+                    "Wynagrodzenie",
+                    "Premia",
+                    "Lokata",
+                    "Dywidendy",
+                    "Inne",
+                    "Zdrowie",
+                    "Darowizny i prezenty",
+                    "Pielęgnacja"
+                ],
+                "Ja"),
+            _ => new SeedData(
+                [
+                    "Housing",
+                    "Supermarkets",
+                    "Online shopping",
+                    "Meals at work",
+                    "Fast food",
+                    "Transport",
+                    "Pets",
+                    "Entertainment",
+                    "Salary",
+                    "Bonus",
+                    "Term deposit",
+                    "Dividends",
+                    "Other",
+                    "Health",
+                    "Donations and gifts",
+                    "Personal care"
+                ],
+                "Me")
+        };
+    }
+
+    private sealed record SeedData(IReadOnlyList<string> CategoryNames, string DefaultPartyName);
 
     private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {

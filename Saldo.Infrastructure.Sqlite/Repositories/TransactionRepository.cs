@@ -17,6 +17,7 @@ public sealed class TransactionRepository : ITransactionRepository
     public async Task<Transaction?> GetByIdAsync(int id, CancellationToken ct = default) =>
         await _context.Transactions
             .Include(t => t.Category)
+            .Include(t => t.Location)
             .Include(t => t.Payer)
             .Include(t => t.Counterparty)
             .Include(t => t.Tags)
@@ -31,6 +32,7 @@ public sealed class TransactionRepository : ITransactionRepository
 
         return await _context.Transactions
             .Include(t => t.Category)
+            .Include(t => t.Location)
             .Include(t => t.Payer)
             .Include(t => t.Counterparty)
             .Include(t => t.Tags)
@@ -43,6 +45,7 @@ public sealed class TransactionRepository : ITransactionRepository
 
     public async Task AddAsync(Transaction transaction, CancellationToken ct = default)
     {
+        ClearReferenceNavigations(transaction);
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync(ct);
     }
@@ -53,6 +56,20 @@ public sealed class TransactionRepository : ITransactionRepository
         await _context.TransactionTags
             .Where(tt => tt.TransactionId == transaction.Id)
             .ExecuteDeleteAsync(ct);
+
+        // The caller may pass an entity still tracked after an earlier insert.
+        // Detach it before clearing navigations so EF does not interpret that as
+        // severing required relationships.
+        var entry = _context.Entry(transaction);
+        if (entry.State != EntityState.Detached)
+        {
+            entry.State = EntityState.Detached;
+        }
+
+        // Reference entities are selected by their foreign keys. They may come from
+        // no-tracking queries, so attaching their navigation objects could make EF
+        // try to insert them again (or track two Party objects with the same key).
+        ClearReferenceNavigations(transaction);
 
         // Attach transaction and mark scalar fields as modified
         _context.Transactions.Attach(transaction).State = EntityState.Modified;
@@ -68,6 +85,14 @@ public sealed class TransactionRepository : ITransactionRepository
         }
 
         await _context.SaveChangesAsync(ct);
+    }
+
+    private static void ClearReferenceNavigations(Transaction transaction)
+    {
+        transaction.Category = null!;
+        transaction.Payer = null!;
+        transaction.Counterparty = null!;
+        transaction.Location = null;
     }
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)

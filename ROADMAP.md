@@ -1,8 +1,9 @@
 # Roadmap
 
-This roadmap is scoped for an **offline-first** personal finance tracker (Saldo) with a clean architecture core and a WPF UI.
+This roadmap is scoped for an offline-first personal finance tracker (Saldo) with a clean architecture core and a WPF UI.
 
-## Phase 0 — Project Setup (Day 0)
+## Phase 0 - Project Setup
+
 - [x] Create solution and projects:
   - [x] Saldo.Domain
   - [x] Saldo.Application
@@ -17,69 +18,95 @@ This roadmap is scoped for an **offline-first** personal finance tracker (Saldo)
   - [x] .gitignore
 - [x] Define coding conventions (nullable, analyzers, formatting)
 
-## Phase 1 — Domain + Use Cases (MVP Core)
-**Goal:** a testable core with minimal rules.
+## Phase 1 - Domain + Use Cases
+
+Goal: a testable core with minimal but real business rules.
+
 - [x] Define domain model:
-  - [x] `Transaction` (Income/Expense, date, amount, category?, note)
+  - [x] `Transaction`
   - [x] `Category`
-  - [x] `Money` / amount rules (no negative amounts; sign handled by type)
+  - [x] `Party`
+  - [x] `Location`
+  - [x] `TransactionType`
 - [x] Define application contracts:
   - [x] `ITransactionRepository`
   - [x] `ICategoryRepository`
+  - [x] `IPartyRepository`
+  - [x] `ILocationRepository`
   - [ ] `IUnitOfWork` (optional)
-- [x] Implement use cases (application layer):
+- [x] Implement use cases:
   - [x] AddTransaction
   - [x] EditTransaction
   - [x] DeleteTransaction
-  - [x] ListTransactions (with paging/filter by month)
-  - [x] GetSummary (month totals: income, expense, balance)
-- [x] Unit tests for domain rules + use cases
+  - [x] ListTransactions
+  - [x] GetSummary
+  - [x] GetNewTransactionDefaults
+- [x] Keep business defaults and validation outside the GUI
+- [x] Unit tests for core behavior
 
-## Phase 2 — SQLite Persistence
-**Goal:** reliable local storage.
-- [x] Choose persistence approach (one):
+## Phase 2 - SQLite Persistence
+
+Goal: reliable local storage.
+
+- [x] Choose persistence approach:
   - [x] EF Core + SQLite
   - [ ] Dapper + migrations
-- [x] Implement SQLite schema + migrations:
-  - [x] Transactions table
-  - [x] Categories table
+- [x] Implement SQLite schema and mappings:
+  - [x] Transactions
+  - [x] Categories
+  - [x] Parties
+  - [x] Locations
+- [x] Keep the initial migration aligned with the current early-stage model
 - [x] Implement repositories in `Saldo.Infrastructure.Sqlite`
-- [x] Integration tests against a temp SQLite file
+- [x] Integration tests against a temporary SQLite database
 
-## Phase 3 — WPF UI (MVP)
-**Goal:** usable app for day-to-day tracking.
-- [x] WPF shell setup + MVVM:
-  - [x] Navigation (simple: tabs/pages)
-  - [x] DI setup (Microsoft.Extensions.DependencyInjection)
+## Phase 3 - WPF UI
+
+Goal: usable app for day-to-day tracking.
+
+- [x] WPF shell setup + MVVM
+- [x] DI setup
+- [x] Resource-based localization
+- [x] Default app culture based on the system culture
 - [x] Screens:
-  - [x] Transactions list (current month default)
+  - [x] Transactions list
   - [x] Add/Edit transaction dialog
-  - [x] Categories management (basic)
-  - [ ] Monthly summary view
-- [ ] UX basics:
+  - [x] Categories management
+  - [x] Parties management
+  - [x] Locations management
+- [x] UX basics:
   - [x] Validation messages
   - [x] Keyboard-friendly input
-  - [ ] Sorting/filtering on list
+  - [x] Autocomplete for dictionary-backed fields
+- [x] Dictionary behavior:
+  - [x] Category selected from existing values only
+  - [x] Party can be added inline from transaction entry
+  - [x] Location can be added inline from transaction entry
+- [ ] Sorting/filtering on the transaction list
+- [ ] Dedicated monthly summary screen
 
-## Phase 4 — Quality + Ops (Local App)
-**Goal:** “production-grade” hygiene.
-- [x] Structured logging (Serilog or built-in)
-- [x] Global error handling + user-friendly error dialog
-- [ ] Config:
-  - [x] DB path location
-  - [ ] Backup folder
-- [ ] Packaging:
-  - [ ] MSIX or simple installer (optional)
+## Phase 4 - Quality + Local App Ops
 
-## Phase 5 — Nice-to-haves
+Goal: production-grade hygiene for a local desktop app.
+
+- [x] Structured logging
+- [x] Global error handling with user-friendly dialogs
+- [x] Configurable DB path location
+- [ ] Backup folder configuration
+- [ ] Packaging / installer
+
+## Phase 5 - Nice-to-haves
+
 - [ ] Recurring transactions
 - [ ] CSV import/export
 - [ ] Tags + advanced filters
 - [ ] Backup/restore to a single file
-- [ ] Charts (monthly trend)
+- [ ] Charts / trends
 
-## Phase 6 — Second UI (WinUI 3) (Optional)
-**Goal:** reuse the same core with a different desktop frontend.
-- [ ] Create `Saldo.Desktop.WinUI`
+## Phase 6 - Second UI (Optional)
+
+Goal: reuse the same core with another frontend.
+
+- [ ] Create a second desktop frontend
 - [ ] Reuse Application + Infrastructure via DI
-- [ ] Rebuild screens with WinUI components
+- [ ] Keep transaction defaults and dictionary rules frontend-agnostic
