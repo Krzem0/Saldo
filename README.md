@@ -26,6 +26,7 @@
 - `Party` and `Location` use autocomplete, but can also be created inline while saving a transaction
 - New transaction defaults are resolved outside the GUI, in the Application layer
 - User-facing labels are localized, while domain values remain stable in English
+- Transaction form validation is displayed next to the relevant field; errors that cannot be assigned to a field are shown in a form-level summary
 
 ## Tech Stack
 
@@ -34,10 +35,15 @@
 - EF Core + SQLite
 - Microsoft.Extensions.DependencyInjection
 - Microsoft.Extensions.Logging + Serilog
+- FluentValidation
+- FluentResults
 
 ## Error Handling and Validation
 
-- Business validation is handled in the Application layer
+- Business validation is defined with FluentValidation and always executed at the Application use-case boundary
+- The UI handles input-format concerns that exist only in a text-based form, such as parsing an amount to `decimal`
+- Validation failures carry stable error codes and, where applicable, the affected property name
+- The UI localizes these codes and displays field errors inline, with a form-level summary as a fallback
 - Use `Result<T>` for expected validation failures when a use case should return success/failure without throwing
 - Reserve exceptions for unexpected technical failures
 

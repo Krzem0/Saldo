@@ -42,6 +42,9 @@ Goal: a testable core with minimal but real business rules.
   - [x] GetSummary
   - [x] GetNewTransactionDefaults
 - [x] Keep business defaults and validation outside the GUI
+  - [x] FluentValidation command validators in Application
+  - [x] Shared transaction rules reused by add/edit validation
+  - [x] Stable validation error codes with property metadata
 - [x] Unit tests for core behavior
 
 ## Phase 2 - SQLite Persistence
@@ -75,7 +78,10 @@ Goal: usable app for day-to-day tracking.
   - [x] Parties management
   - [x] Locations management
 - [x] UX basics:
-  - [x] Validation messages
+  - [x] Validation messages localized and displayed next to affected fields
+  - [x] Form-level summary for errors that cannot be assigned to a field
+  - [x] All applicable errors collected during one save attempt
+  - [x] Save remains available so validation can explain incomplete input
   - [x] Keyboard-friendly input
   - [x] Autocomplete for dictionary-backed fields
 - [x] Dictionary behavior:
@@ -109,4 +115,5 @@ Goal: reuse the same core with another frontend.
 
 - [ ] Create a second desktop frontend
 - [ ] Reuse Application + Infrastructure via DI
-- [ ] Keep transaction defaults and dictionary rules frontend-agnostic
+- [x] Keep transaction validation, defaults, and dictionary rules frontend-agnostic
+- [ ] Reuse stable validation codes and property metadata in the second frontend

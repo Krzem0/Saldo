@@ -6,6 +6,8 @@ using Saldo.Domain.Entities;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using FluentValidation;
+using Saldo.Application.Validation;
 
 namespace Saldo.Application.UseCases;
 
@@ -15,43 +17,37 @@ public sealed class AddTransaction
     private readonly IPartyRepository _parties;
     private readonly ILocationRepository _locations;
     private readonly ILogger<AddTransaction> _logger;
+    private readonly IValidator<AddTransactionCommand> _validator;
 
     public AddTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations)
-        : this(transactions, parties, locations, NullLogger<AddTransaction>.Instance)
+        : this(transactions, parties, locations, new AddTransactionCommandValidator(), NullLogger<AddTransaction>.Instance)
     {
     }
 
     public AddTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, ILogger<AddTransaction> logger)
+        : this(transactions, parties, locations, new AddTransactionCommandValidator(), logger)
+    {
+    }
+
+    public AddTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, IValidator<AddTransactionCommand> validator, ILogger<AddTransaction> logger)
     {
         _transactions = transactions;
         _parties = parties;
         _locations = locations;
         _logger = logger;
+        _validator = validator;
     }
 
     public async Task<Result<TransactionDto>> ExecuteAsync(AddTransactionCommand command, CancellationToken ct = default)
     {
         _logger.LogDebug("Adding transaction for {Date} with amount {Amount}.", command.Date, command.Amount);
 
-        if (command.Amount <= 0)
+        var validationResult = await _validator.ValidateAsync(command, ct);
+        if (!validationResult.IsValid)
         {
-            _logger.LogWarning("Transaction rejected because amount must be positive.");
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.AmountMustBePositive);
-        }
-        if (command.CategoryId <= 0)
-        {
-            _logger.LogWarning("Transaction rejected because category id is missing.");
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CategoryRequired);
-        }
-        if (!command.PayerId.HasValue && string.IsNullOrWhiteSpace(command.PayerName))
-        {
-            _logger.LogWarning("Transaction rejected because payer is missing.");
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.PayerRequired);
-        }
-        if (!command.CounterpartyId.HasValue && string.IsNullOrWhiteSpace(command.CounterpartyName))
-        {
-            _logger.LogWarning("Transaction rejected because counterparty is missing.");
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CounterpartyRequired);
+            _logger.LogWarning("Transaction rejected because validation failed: {ValidationErrors}.",
+                string.Join(", ", validationResult.Errors.Select(error => error.ErrorCode)));
+            return validationResult.ToFailedResult<TransactionDto>();
         }
 
         var payer = await ResolvePartyAsync(command.PayerId, command.PayerName, ct);

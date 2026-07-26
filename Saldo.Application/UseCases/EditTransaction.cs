@@ -6,6 +6,8 @@ using Saldo.Domain.Entities;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using FluentValidation;
+using Saldo.Application.Validation;
 
 namespace Saldo.Application.UseCases;
 
@@ -15,48 +17,37 @@ public sealed class EditTransaction
     private readonly IPartyRepository _parties;
     private readonly ILocationRepository _locations;
     private readonly ILogger<EditTransaction> _logger;
+    private readonly IValidator<EditTransactionCommand> _validator;
 
     public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations)
-        : this(transactions, parties, locations, NullLogger<EditTransaction>.Instance)
+        : this(transactions, parties, locations, new EditTransactionCommandValidator(), NullLogger<EditTransaction>.Instance)
     {
     }
 
     public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, ILogger<EditTransaction> logger)
+        : this(transactions, parties, locations, new EditTransactionCommandValidator(), logger)
+    {
+    }
+
+    public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, IValidator<EditTransactionCommand> validator, ILogger<EditTransaction> logger)
     {
         _transactions = transactions;
         _parties = parties;
         _locations = locations;
         _logger = logger;
+        _validator = validator;
     }
 
     public async Task<Result<TransactionDto>> ExecuteAsync(EditTransactionCommand command, CancellationToken ct = default)
     {
         _logger.LogDebug("Editing transaction {TransactionId}.", command.Id);
 
-        if (command.Id <= 0)
+        var validationResult = await _validator.ValidateAsync(command, ct);
+        if (!validationResult.IsValid)
         {
-            _logger.LogWarning("Transaction edit rejected because id must be positive.");
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.IdMustBePositive);
-        }
-        if (command.Amount <= 0)
-        {
-            _logger.LogWarning("Transaction {TransactionId} edit rejected because amount must be positive.", command.Id);
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.AmountMustBePositive);
-        }
-        if (command.CategoryId <= 0)
-        {
-            _logger.LogWarning("Transaction {TransactionId} edit rejected because category id is missing.", command.Id);
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CategoryRequired);
-        }
-        if (!command.PayerId.HasValue && string.IsNullOrWhiteSpace(command.PayerName))
-        {
-            _logger.LogWarning("Transaction {TransactionId} edit rejected because payer is missing.", command.Id);
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.PayerRequired);
-        }
-        if (!command.CounterpartyId.HasValue && string.IsNullOrWhiteSpace(command.CounterpartyName))
-        {
-            _logger.LogWarning("Transaction {TransactionId} edit rejected because counterparty is missing.", command.Id);
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CounterpartyRequired);
+            _logger.LogWarning("Transaction {TransactionId} edit rejected because validation failed: {ValidationErrors}.",
+                command.Id, string.Join(", ", validationResult.Errors.Select(error => error.ErrorCode)));
+            return validationResult.ToFailedResult<TransactionDto>();
         }
 
         var existing = await _transactions.GetByIdAsync(command.Id, ct);

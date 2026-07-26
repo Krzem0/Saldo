@@ -12,6 +12,9 @@ using Saldo.Infrastructure.Sqlite.Repositories;
 using Serilog;
 using System.Globalization;
 using System.Windows;
+using FluentValidation;
+using Saldo.Application.DTOs;
+using Saldo.Application.Validation;
 
 namespace Saldo.Desktop.Wpf;
 
@@ -87,6 +90,9 @@ public partial class App : System.Windows.Application
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IPartyRepository, PartyRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
+
+        services.AddScoped<IValidator<AddTransactionCommand>, AddTransactionCommandValidator>();
+        services.AddScoped<IValidator<EditTransactionCommand>, EditTransactionCommandValidator>();
 
         services.AddScoped<AddTransaction>();
         services.AddScoped<EditTransaction>();

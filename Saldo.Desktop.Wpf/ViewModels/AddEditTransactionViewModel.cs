@@ -1,9 +1,10 @@
 using System.Globalization;
 using System.ComponentModel;
-using System.Windows;
 using System.Windows.Input;
+using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using Saldo.Application.DTOs;
+using Saldo.Application.Errors;
 using Saldo.Application.UseCases;
 using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Infrastructure;
@@ -14,6 +15,9 @@ namespace Saldo.Desktop.Wpf.ViewModels;
 
 public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 {
+    private const string AmountRequiredError = "Validation_AmountRequired";
+    private const string AmountMustBeNumberError = "Validation_AmountMustBeNumber";
+
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IReadOnlyList<TypeItem> _types;
 
@@ -28,6 +32,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     private Location? _selectedLocation;
     private string _locationText = string.Empty;
     private string? _description;
+    private readonly Dictionary<string, List<string>> _validationErrorCodes = [];
 
     public sealed class TypeItem : ViewModelBase
     {
@@ -79,13 +84,55 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         set => SetField(ref _selectedType, value);
     }
 
-    public string AmountText { get => _amountText; set => SetField(ref _amountText, value); }
+    public string AmountText
+    {
+        get => _amountText;
+        set
+        {
+            if (SetField(ref _amountText, value)) ClearFieldError(nameof(AmountText));
+        }
+    }
 
-    public Category? SelectedCategory { get => _selectedCategory; set => SetField(ref _selectedCategory, value); }
-    public Party? SelectedPayer { get => _selectedPayer; set => SetField(ref _selectedPayer, value); }
-    public string PayerText { get => _payerText; set => SetField(ref _payerText, value); }
-    public Party? SelectedCounterparty { get => _selectedCounterparty; set => SetField(ref _selectedCounterparty, value); }
-    public string CounterpartyText { get => _counterpartyText; set => SetField(ref _counterpartyText, value); }
+    public Category? SelectedCategory
+    {
+        get => _selectedCategory;
+        set
+        {
+            if (SetField(ref _selectedCategory, value)) ClearFieldError(nameof(SelectedCategory));
+        }
+    }
+    public Party? SelectedPayer
+    {
+        get => _selectedPayer;
+        set
+        {
+            if (SetField(ref _selectedPayer, value)) ClearFieldError(nameof(PayerText));
+        }
+    }
+    public string PayerText
+    {
+        get => _payerText;
+        set
+        {
+            if (SetField(ref _payerText, value)) ClearFieldError(nameof(PayerText));
+        }
+    }
+    public Party? SelectedCounterparty
+    {
+        get => _selectedCounterparty;
+        set
+        {
+            if (SetField(ref _selectedCounterparty, value)) ClearFieldError(nameof(CounterpartyText));
+        }
+    }
+    public string CounterpartyText
+    {
+        get => _counterpartyText;
+        set
+        {
+            if (SetField(ref _counterpartyText, value)) ClearFieldError(nameof(CounterpartyText));
+        }
+    }
     public Location? SelectedLocation { get => _selectedLocation; set => SetField(ref _selectedLocation, value); }
 
     public string? Description { get => _description; set => SetField(ref _description, value); }
@@ -95,11 +142,17 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     public IReadOnlyList<Party> Parties { get; }
     public IReadOnlyList<Location> Locations { get; }
 
-    public bool IsValid =>
-        decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.CurrentCulture, out var amount) && amount > 0
-        && SelectedCategory is not null
-        && (SelectedPayer is not null || !string.IsNullOrWhiteSpace(PayerText))
-        && (SelectedCounterparty is not null || !string.IsNullOrWhiteSpace(CounterpartyText));
+    public string AmountError => GetErrorText(nameof(AmountText));
+    public string CategoryError => GetErrorText(nameof(SelectedCategory));
+    public string PayerError => GetErrorText(nameof(PayerText));
+    public string CounterpartyError => GetErrorText(nameof(CounterpartyText));
+    public string ValidationSummary => GetErrorText(string.Empty);
+
+    public bool HasAmountError => HasError(nameof(AmountText));
+    public bool HasCategoryError => HasError(nameof(SelectedCategory));
+    public bool HasPayerError => HasError(nameof(PayerText));
+    public bool HasCounterpartyError => HasError(nameof(CounterpartyText));
+    public bool HasValidationSummary => HasError(string.Empty);
 
     public event Action<bool>? RequestClose;
 
@@ -136,7 +189,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             PopulateFrom(existing);
         }
 
-        SaveCommand = new AsyncRelayCommand(SaveAsync, () => IsValid);
+        SaveCommand = new AsyncRelayCommand(SaveAsync);
     }
 
     private void ApplyDefaults(NewTransactionDefaultsDto defaults)
@@ -169,8 +222,19 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
     private async Task SaveAsync()
     {
-        if (!decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.CurrentCulture, out var amount) || amount <= 0)
-            return;
+        string? amountInputError = null;
+        decimal amount;
+
+        if (string.IsNullOrWhiteSpace(AmountText))
+        {
+            amount = 0;
+            amountInputError = AmountRequiredError;
+        }
+        else if (!decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.CurrentCulture, out amount))
+        {
+            amount = 0;
+            amountInputError = AmountMustBeNumberError;
+        }
 
         await using var scope = _scopeFactory.CreateAsyncScope();
 
@@ -181,7 +245,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
                 DateOnly.FromDateTime(Date),
                 SelectedType.Value,
                 amount,
-                SelectedCategory!.Id,
+                SelectedCategory?.Id ?? 0,
                 SelectedPayer?.Id,
                 ResolvePartyName(SelectedPayer, PayerText),
                 SelectedCounterparty?.Id,
@@ -193,11 +257,9 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             var result = await scope.ServiceProvider.GetRequiredService<EditTransaction>().ExecuteAsync(cmd);
             if (result.IsFailed)
             {
-                MessageBox.Show(
-                    string.Join(Environment.NewLine, result.Errors.Select(e => T(e.Message))),
-                    T("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                ApplyValidationErrors(result.Errors);
+                if (amountInputError is not null)
+                    SetFieldError(nameof(AmountText), amountInputError);
                 return;
             }
         }
@@ -207,7 +269,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
                 DateOnly.FromDateTime(Date),
                 SelectedType.Value,
                 amount,
-                SelectedCategory!.Id,
+                SelectedCategory?.Id ?? 0,
                 SelectedPayer?.Id,
                 ResolvePartyName(SelectedPayer, PayerText),
                 SelectedCounterparty?.Id,
@@ -219,11 +281,9 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             var result = await scope.ServiceProvider.GetRequiredService<AddTransaction>().ExecuteAsync(cmd);
             if (result.IsFailed)
             {
-                MessageBox.Show(
-                    string.Join(Environment.NewLine, result.Errors.Select(e => T(e.Message))),
-                    T("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                ApplyValidationErrors(result.Errors);
+                if (amountInputError is not null)
+                    SetFieldError(nameof(AmountText), amountInputError);
                 return;
             }
         }
@@ -234,6 +294,98 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     protected override void OnCultureChanged()
     {
         OnPropertyChanged(nameof(Title));
+        NotifyAllErrorProperties();
+    }
+
+    private void ApplyValidationErrors(IEnumerable<IError> errors)
+    {
+        _validationErrorCodes.Clear();
+
+        foreach (var error in errors)
+        {
+            var propertyName = error.Metadata.TryGetValue("PropertyName", out var value)
+                ? value?.ToString()
+                : null;
+            var viewModelProperty = MapCommandProperty(propertyName);
+
+            if (!_validationErrorCodes.TryGetValue(viewModelProperty, out var codes))
+            {
+                codes = [];
+                _validationErrorCodes[viewModelProperty] = codes;
+            }
+
+            codes.Add(error.Message);
+        }
+
+        NotifyAllErrorProperties();
+    }
+
+    private static string MapCommandProperty(string? propertyName) => propertyName switch
+    {
+        nameof(ITransactionCommand.Amount) => nameof(AmountText),
+        nameof(ITransactionCommand.CategoryId) => nameof(SelectedCategory),
+        nameof(ITransactionCommand.PayerName) => nameof(PayerText),
+        nameof(ITransactionCommand.CounterpartyName) => nameof(CounterpartyText),
+        _ => string.Empty
+    };
+
+    private bool HasError(string propertyName) =>
+        _validationErrorCodes.TryGetValue(propertyName, out var errors) && errors.Count > 0;
+
+    private string GetErrorText(string propertyName) =>
+        _validationErrorCodes.TryGetValue(propertyName, out var errors)
+            ? string.Join(Environment.NewLine, errors.Select(LocalizeError))
+            : string.Empty;
+
+    private string LocalizeError(string errorCode) => errorCode switch
+    {
+        AmountRequiredError => T(AmountRequiredError),
+        AmountMustBeNumberError => T(AmountMustBeNumberError),
+        ErrorCodes.Transaction.IdMustBePositive => T("Validation_TransactionIdMustBePositive"),
+        ErrorCodes.Transaction.AmountMustBePositive => T("Validation_AmountMustBePositive"),
+        ErrorCodes.Transaction.CategoryRequired => T("Validation_CategoryRequired"),
+        ErrorCodes.Transaction.PayerRequired => T("Validation_PayerRequired"),
+        ErrorCodes.Transaction.CounterpartyRequired => T("Validation_CounterpartyRequired"),
+        ErrorCodes.Transaction.NotFound => T("Validation_TransactionNotFound"),
+        _ => errorCode
+    };
+
+    private void SetFieldError(string propertyName, string errorCode)
+    {
+        _validationErrorCodes[propertyName] = [errorCode];
+        NotifyErrorProperties(propertyName);
+    }
+
+    private void ClearFieldError(string propertyName)
+    {
+        if (_validationErrorCodes.Remove(propertyName))
+        {
+            NotifyErrorProperties(propertyName);
+        }
+    }
+
+    private void NotifyAllErrorProperties()
+    {
+        NotifyErrorProperties(nameof(AmountText));
+        NotifyErrorProperties(nameof(SelectedCategory));
+        NotifyErrorProperties(nameof(PayerText));
+        NotifyErrorProperties(nameof(CounterpartyText));
+        NotifyErrorProperties(string.Empty);
+    }
+
+    private void NotifyErrorProperties(string propertyName)
+    {
+        var (textProperty, visibilityProperty) = propertyName switch
+        {
+            nameof(AmountText) => (nameof(AmountError), nameof(HasAmountError)),
+            nameof(SelectedCategory) => (nameof(CategoryError), nameof(HasCategoryError)),
+            nameof(PayerText) => (nameof(PayerError), nameof(HasPayerError)),
+            nameof(CounterpartyText) => (nameof(CounterpartyError), nameof(HasCounterpartyError)),
+            _ => (nameof(ValidationSummary), nameof(HasValidationSummary))
+        };
+
+        OnPropertyChanged(textProperty);
+        OnPropertyChanged(visibilityProperty);
     }
 
     private string? ResolveLocationName()

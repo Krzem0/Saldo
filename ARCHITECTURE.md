@@ -20,6 +20,8 @@ Responsible for:
 - MVVM bindings
 - Navigation and dialog flow
 - Localization display concerns
+- Parsing UI-specific input representations, such as converting amount text to `decimal`
+- Presenting validation feedback returned by Application
 
 Contains:
 
@@ -32,6 +34,8 @@ Rules:
 
 - No direct database access
 - No business rules in views
+- UI input parsing must not become a second copy of business validation
+- Field-level errors should be displayed next to their controls; errors without a field should be displayed in a form-level summary
 - UI labels may be localized, but domain values should not depend on translated text
 
 ### 2) Application (Use Cases)
@@ -48,11 +52,17 @@ Contains:
 - Use cases such as `AddTransaction`, `EditTransaction`, `DeleteTransaction`, `ListTransactions`, `GetSummary`, `GetNewTransactionDefaults`
 - DTOs used by ViewModels
 - Repository abstractions
+- FluentValidation validators for use-case commands
+- Stable error codes and validation-result mapping
 
 Rules:
 
 - Depends on Domain abstractions and repository interfaces
 - No UI concepts
+- Add/edit transaction use cases validate their commands before resolving references or writing data
+- Shared transaction rules are defined once and reused by add/edit command validators
+- Expected validation failures are returned as `Result<T>` errors rather than exceptions
+- Validation errors include the command property name when the error can be assigned to a field
 - May enforce workflow rules such as:
   - category must be chosen from an existing dictionary value
   - party and location may be created inline when saving a transaction
@@ -135,12 +145,25 @@ Rules:
 - `Party` and `Location` are reusable dictionaries that may be extended inline while saving a transaction
 - Matching for inline-created parties and locations should avoid duplicates caused by casing or diacritics where possible
 
+## Validation and Error Contract
+
+- FluentValidation in `Saldo.Application` is the source of truth for business rules at the use-case boundary
+- The WPF layer may validate representation-specific input before command creation, for example whether amount text can be parsed as `decimal`
+- Parsing does not replace business validation; the resulting command is still validated by Application
+- Validation failures use stable technical codes such as `Transaction.CategoryRequired`
+- When possible, an error carries `PropertyName` metadata identifying the command property that failed
+- Presentation maps command properties to controls, localizes technical codes, and displays messages without depending on FluentValidation types
+- Errors that cannot be mapped to a control remain visible in a form-level summary
+- A single save attempt should collect and present all applicable validation errors
+
 ## Key Design Decisions
 
 - MVVM for UI maintainability and testability
 - EF Core + SQLite as a local, reliable, zero-config persistence layer
 - Repository pattern to separate application workflows from storage
 - Resource-based localization for user-facing text
+- FluentValidation for reusable, UI-independent command validation
+- FluentResults for expected business failures and their metadata
 - One-way dependencies:
   - UI -> Application -> Domain
   - Infrastructure implements interfaces used by Application
@@ -155,6 +178,7 @@ Rules:
 ## Testing Strategy
 
 - Unit tests for Application and Domain behavior
+- Validator and use-case tests should verify stable error codes and relevant property metadata
 - Integration tests for SQLite persistence
 - Minimal GUI testing, with most business behavior verified outside WPF
 

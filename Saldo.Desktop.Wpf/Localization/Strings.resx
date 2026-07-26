@@ -66,4 +66,6 @@
   <data name="Validation_PayerRequired" xml:space="preserve"><value>Płatnik jest wymagany.</value></data>
   <data name="Validation_CounterpartyRequired" xml:space="preserve"><value>Odbiorca jest wymagany.</value></data>
   <data name="Validation_TransactionNotFound" xml:space="preserve"><value>Transakcja nie została znaleziona.</value></data>
+  <data name="Validation_AmountRequired" xml:space="preserve"><value>Kwota jest wymagana.</value></data>
+  <data name="Validation_AmountMustBeNumber" xml:space="preserve"><value>Kwota musi być liczbą.</value></data>
 </root>

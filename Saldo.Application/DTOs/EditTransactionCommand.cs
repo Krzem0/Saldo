@@ -15,4 +15,4 @@ public sealed record EditTransactionCommand(
     string? Description,
     string? Location,
     IReadOnlyList<int> TagIds
-);
+) : ITransactionCommand;
