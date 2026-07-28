@@ -34,6 +34,9 @@
   <data name="Location" xml:space="preserve"><value>Miejsce</value></data>
   <data name="Type" xml:space="preserve"><value>Typ</value></data>
   <data name="Payer" xml:space="preserve"><value>Płatnik</value></data>
+  <data name="AddCategoryTooltip" xml:space="preserve"><value>Dodaj kategorię</value></data>
+  <data name="AddPartyTooltip" xml:space="preserve"><value>Dodaj podmiot</value></data>
+  <data name="AddLocationTooltip" xml:space="preserve"><value>Dodaj miejsce</value></data>
   <data name="Type_Expense" xml:space="preserve"><value>Wydatek</value></data>
   <data name="Type_Income" xml:space="preserve"><value>Przychód</value></data>
   <data name="Summary_Income" xml:space="preserve"><value>Przychody</value></data>
@@ -41,6 +44,9 @@
   <data name="Summary_Balance" xml:space="preserve"><value>Saldo</value></data>
   <data name="Transaction_AddTitle" xml:space="preserve"><value>Dodaj transakcję</value></data>
   <data name="Transaction_EditTitle" xml:space="preserve"><value>Edytuj transakcję</value></data>
+  <data name="Transaction_AddDraftTitle" xml:space="preserve"><value>Dodaj transakcję — szkic</value></data>
+  <data name="Transaction_UnsavedChangesTitle" xml:space="preserve"><value>Niezapisane zmiany</value></data>
+  <data name="Transaction_UnsavedChangesMessage" xml:space="preserve"><value>Transakcja ma niezapisane zmiany. Czy chcesz zapisać je przed zamknięciem?</value></data>
   <data name="Entity_Category" xml:space="preserve"><value>Kategoria</value></data>
   <data name="Entity_Member" xml:space="preserve"><value>Osoba</value></data>
   <data name="Entity_Counterparty" xml:space="preserve"><value>Odbiorca</value></data>
@@ -55,6 +61,7 @@
   <data name="AddErrorTemplate" xml:space="preserve"><value>Nie udało się dodać {0}.</value></data>
   <data name="UpdateErrorTemplate" xml:space="preserve"><value>Nie udało się zaktualizować {0}.</value></data>
   <data name="DeleteErrorTemplate" xml:space="preserve"><value>Nie udało się usunąć {0}.</value></data>
+  <data name="DeleteInUseErrorTemplate" xml:space="preserve"><value>Nie można usunąć elementu „{0}”, ponieważ jest używany przez istniejące transakcje.</value></data>
   <data name="StartupFailedMessage" xml:space="preserve"><value>Nie udało się uruchomić aplikacji. Szczegóły zapisano w logu.</value></data>
   <data name="UnhandledUiErrorMessage" xml:space="preserve"><value>Wystąpił nieoczekiwany błąd. Szczegóły zapisano w logu.</value></data>
   <data name="TransactionsLoadError" xml:space="preserve"><value>Nie udało się wczytać transakcji.</value></data>
@@ -65,6 +72,8 @@
   <data name="Validation_CategoryRequired" xml:space="preserve"><value>Kategoria jest wymagana.</value></data>
   <data name="Validation_PayerRequired" xml:space="preserve"><value>Płatnik jest wymagany.</value></data>
   <data name="Validation_CounterpartyRequired" xml:space="preserve"><value>Odbiorca jest wymagany.</value></data>
+  <data name="Validation_ReferenceSelectionRequired" xml:space="preserve"><value>Wybierz pozycję z listy lub dodaj ją przyciskiem +.</value></data>
+  <data name="Validation_LocationInvalid" xml:space="preserve"><value>Wybierz istniejące miejsce z listy lub dodaj je przyciskiem +.</value></data>
   <data name="Validation_TransactionNotFound" xml:space="preserve"><value>Transakcja nie została znaleziona.</value></data>
   <data name="Validation_AmountRequired" xml:space="preserve"><value>Kwota jest wymagana.</value></data>
   <data name="Validation_AmountMustBeNumber" xml:space="preserve"><value>Kwota musi być liczbą.</value></data>

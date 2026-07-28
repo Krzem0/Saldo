@@ -43,11 +43,14 @@ public sealed class EditTransaction
         _logger.LogDebug("Editing transaction {TransactionId}.", command.Id);
 
         var validationResult = await _validator.ValidateAsync(command, ct);
-        if (!validationResult.IsValid)
+        var errors = validationResult.Errors
+            .Select(failure => (IError)new Error(failure.ErrorCode)
+                .WithMetadata("PropertyName", failure.PropertyName))
+            .ToList();
+
+        if (errors.Any(error => error.Message == ErrorCodes.Transaction.IdMustBePositive))
         {
-            _logger.LogWarning("Transaction {TransactionId} edit rejected because validation failed: {ValidationErrors}.",
-                command.Id, string.Join(", ", validationResult.Errors.Select(error => error.ErrorCode)));
-            return validationResult.ToFailedResult<TransactionDto>();
+            return Result.Fail<TransactionDto>(errors);
         }
 
         var existing = await _transactions.GetByIdAsync(command.Id, ct);
@@ -61,14 +64,33 @@ public sealed class EditTransaction
         if (payer is null)
         {
             _logger.LogWarning("Transaction {TransactionId} edit rejected because payer could not be resolved.", command.Id);
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.PayerRequired);
+            AddErrorIfMissing(errors, ErrorCodes.Transaction.PayerRequired, nameof(ITransactionCommand.PayerName));
         }
 
         var counterparty = await ResolvePartyAsync(command.CounterpartyId, command.CounterpartyName, ct);
         if (counterparty is null)
         {
             _logger.LogWarning("Transaction {TransactionId} edit rejected because counterparty could not be resolved.", command.Id);
-            return Result.Fail<TransactionDto>(ErrorCodes.Transaction.CounterpartyRequired);
+            AddErrorIfMissing(errors, ErrorCodes.Transaction.CounterpartyRequired, nameof(ITransactionCommand.CounterpartyName));
+        }
+
+        var location = await ResolveLocationAsync(command.Location, ct);
+        if (!string.IsNullOrWhiteSpace(command.Location) && location is null)
+        {
+            _logger.LogWarning("Transaction {TransactionId} edit rejected because location could not be resolved.", command.Id);
+            AddErrorIfMissing(errors, ErrorCodes.Transaction.LocationInvalid, nameof(ITransactionCommand.Location));
+        }
+
+        if (errors.Count > 0)
+        {
+            _logger.LogWarning("Transaction {TransactionId} edit rejected because validation failed: {ValidationErrors}.",
+                command.Id, string.Join(", ", errors.Select(error => error.Message)));
+            return Result.Fail<TransactionDto>(errors);
+        }
+
+        if (payer is null || counterparty is null)
+        {
+            throw new InvalidOperationException("Transaction references could not be resolved after validation.");
         }
 
         existing.Date = command.Date;
@@ -79,7 +101,6 @@ public sealed class EditTransaction
         existing.Payer = payer;
         existing.CounterpartyId = counterparty.Id;
         existing.Counterparty = counterparty;
-        var location = await ResolveLocationAsync(command.Location, ct);
         existing.LocationId = location?.Id;
         existing.Location = location;
         existing.Description = command.Description;
@@ -125,9 +146,7 @@ public sealed class EditTransaction
             return existing;
         }
 
-        var party = new Party { Name = partyName!.Trim() };
-        await _parties.AddAsync(party, ct);
-        return party;
+        return null;
     }
 
     private async Task<Location?> ResolveLocationAsync(string? locationName, CancellationToken ct)
@@ -149,9 +168,7 @@ public sealed class EditTransaction
             return existing;
         }
 
-        var location = new Location { Name = locationName!.Trim() };
-        await _locations.AddAsync(location, ct);
-        return location;
+        return null;
     }
 
     private static string? NormalizeName(string? value)
@@ -168,5 +185,15 @@ public sealed class EditTransaction
             .ToArray();
 
         return new string(chars);
+    }
+
+    private static void AddErrorIfMissing(List<IError> errors, string errorCode, string propertyName)
+    {
+        if (errors.Any(error => error.Message == errorCode))
+        {
+            return;
+        }
+
+        errors.Add(new Error(errorCode).WithMetadata("PropertyName", propertyName));
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Infrastructure;
 using Saldo.Desktop.Wpf.Services;
+using Saldo.Application.Errors;
 
 namespace Saldo.Desktop.Wpf.ViewModels;
 
@@ -129,9 +130,21 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
             await DeleteCoreAsync(scope, SelectedItem, CancellationToken.None);
             await LoadAsync();
         }
+        catch (ReferenceEntityInUseException)
+        {
+            MessageBox.Show(
+                string.Format(CultureInfo.CurrentCulture, T("DeleteInUseErrorTemplate"), GetName(SelectedItem)),
+                string.Format(CultureInfo.CurrentCulture, T("DeleteEntityTitleTemplate"), EntityDisplayName),
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
         catch (Exception ex)
         {
-         MessageBox.Show(ex.Message, string.Format(CultureInfo.CurrentCulture, T("DeleteErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
+         MessageBox.Show(
+             string.Format(CultureInfo.CurrentCulture, T("DeleteErrorTemplate"), EntityDisplayName),
+             T("ErrorTitle"),
+             MessageBoxButton.OK,
+             MessageBoxImage.Error);
         }
     }
 }

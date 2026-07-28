@@ -198,6 +198,7 @@
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Payer]}"       Binding="{Binding PayerName}"       Width="110"/>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Counterparty]}" Binding="{Binding CounterpartyName}" Width="140"/>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Description]}" Binding="{Binding Description}"     Width="*"/>
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Location]}"     Binding="{Binding Location}"        Width="120"/>
             </DataGrid.Columns>
         </DataGrid>
 

@@ -1,6 +1,7 @@
 using Saldo.Application.DTOs;
 using Saldo.Application.Errors;
 using Saldo.Application.UseCases;
+using Saldo.Domain.Entities;
 using Saldo.Domain.Enums;
 using Saldo.Tests.Unit.Fakes;
 
@@ -9,51 +10,37 @@ namespace Saldo.Tests.Unit.UseCases;
 public sealed class AddTransactionTests
 {
     private static AddTransactionCommand ValidCommand() => new(
-        Date: new DateOnly(2025, 1, 15),
-        Type: TransactionType.Expense,
-        Amount: 100m,
-        CategoryId: 1,
-        PayerId: 1,
-        PayerName: "Me",
-        CounterpartyId: 1,
-        CounterpartyName: "Shop",
-        Description: "Groceries",
-        Location: "Shop",
-        TagIds: []
-    );
+        Date: new DateOnly(2025, 1, 15), Type: TransactionType.Expense, Amount: 100m,
+        CategoryId: 1, PayerId: 1, PayerName: "Me", CounterpartyId: 2, CounterpartyName: "Shop",
+        Description: "Groceries", Location: "Shop", TagIds: []);
 
     [Fact]
     public async Task ExecuteAsync_ValidCommand_ReturnsDtoWithCorrectData()
     {
         var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository([
-            new() { Id = 1, Name = "Me" }
-        ]), new FakeLocationRepository());
+            new() { Id = 1, Name = "Me" }, new() { Id = 2, Name = "Shop" }
+        ]), new FakeLocationRepository([new Location { Id = 1, Name = "Shop" }]));
 
         var result = await useCase.ExecuteAsync(ValidCommand());
 
         Assert.True(result.IsSuccess);
-        var dto = result.Value;
-
-        Assert.Equal(1, dto.Id);
-        Assert.Equal(new DateOnly(2025, 1, 15), dto.Date);
-        Assert.Equal(TransactionType.Expense, dto.Type);
-        Assert.Equal(100m, dto.Amount);
-        Assert.Equal(1, dto.CategoryId);
-        Assert.Equal(1, dto.PayerId);
-        Assert.Equal(1, dto.CounterpartyId);
-        Assert.Equal("Groceries", dto.Description);
-        Assert.Equal("Shop", dto.Location);
+        Assert.Equal(1, result.Value.Id);
+        Assert.Equal(new DateOnly(2025, 1, 15), result.Value.Date);
+        Assert.Equal(TransactionType.Expense, result.Value.Type);
+        Assert.Equal(100m, result.Value.Amount);
+        Assert.Equal(1, result.Value.CategoryId);
+        Assert.Equal(1, result.Value.PayerId);
+        Assert.Equal(2, result.Value.CounterpartyId);
+        Assert.Equal("Groceries", result.Value.Description);
+        Assert.Equal("Shop", result.Value.Location);
     }
 
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public async Task ExecuteAsync_NonPositiveAmount_ThrowsArgumentException(decimal amount)
+    public async Task ExecuteAsync_NonPositiveAmount_ReturnsValidationError(decimal amount)
     {
-        var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository(), new FakeLocationRepository());
-
-        var result = await useCase.ExecuteAsync(ValidCommand() with { Amount = amount });
-
+        var result = await CreateUseCase().ExecuteAsync(ValidCommand() with { Amount = amount });
         Assert.True(result.IsFailed);
         Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.AmountMustBePositive);
     }
@@ -61,12 +48,9 @@ public sealed class AddTransactionTests
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public async Task ExecuteAsync_InvalidCategoryId_ThrowsArgumentException(int categoryId)
+    public async Task ExecuteAsync_InvalidCategoryId_ReturnsValidationError(int categoryId)
     {
-        var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository(), new FakeLocationRepository());
-
-        var result = await useCase.ExecuteAsync(ValidCommand() with { CategoryId = categoryId });
-
+        var result = await CreateUseCase().ExecuteAsync(ValidCommand() with { CategoryId = categoryId });
         Assert.True(result.IsFailed);
         Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.CategoryRequired);
     }
@@ -74,12 +58,9 @@ public sealed class AddTransactionTests
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public async Task ExecuteAsync_InvalidPayerId_ThrowsArgumentException(int payerId)
+    public async Task ExecuteAsync_InvalidPayerId_ReturnsValidationError(int payerId)
     {
-        var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository(), new FakeLocationRepository());
-
-        var result = await useCase.ExecuteAsync(ValidCommand() with { PayerId = payerId, PayerName = null });
-
+        var result = await CreateUseCase().ExecuteAsync(ValidCommand() with { PayerId = payerId, PayerName = null });
         Assert.True(result.IsFailed);
         Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.PayerRequired);
     }
@@ -87,30 +68,26 @@ public sealed class AddTransactionTests
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public async Task ExecuteAsync_InvalidCounterpartyId_ThrowsArgumentException(int counterpartyId)
+    public async Task ExecuteAsync_InvalidCounterpartyId_ReturnsValidationError(int counterpartyId)
     {
-        var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository(), new FakeLocationRepository());
-
-        var result = await useCase.ExecuteAsync(ValidCommand() with { CounterpartyId = counterpartyId, CounterpartyName = null });
-
+        var result = await CreateUseCase().ExecuteAsync(ValidCommand() with { CounterpartyId = counterpartyId, CounterpartyName = null });
         Assert.True(result.IsFailed);
         Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.CounterpartyRequired);
     }
 
     [Fact]
-    public async Task ExecuteAsync_NewCounterpartyName_AddsPartyAndUsesIt()
+    public async Task ExecuteAsync_NewCounterpartyName_DoesNotCreateParty()
     {
         var parties = new FakePartyRepository([new() { Id = 1, Name = "Me" }]);
-        var useCase = new AddTransaction(new FakeTransactionRepository(), parties, new FakeLocationRepository());
+        var result = await new AddTransaction(new FakeTransactionRepository(), parties, new FakeLocationRepository())
+            .ExecuteAsync(ValidCommand() with { CounterpartyId = null, CounterpartyName = "NewShop" });
 
-        var result = await useCase.ExecuteAsync(ValidCommand() with
-        {
-            CounterpartyId = null,
-            CounterpartyName = "Żabka"
-        });
-
-        Assert.True(result.IsSuccess);
-        Assert.Equal("Żabka", result.Value.CounterpartyName);
-        Assert.Contains(await parties.GetAllAsync(), party => party.Name == "Żabka");
+        Assert.True(result.IsFailed);
+        Assert.DoesNotContain(await parties.GetAllAsync(), party => party.Name == "NewShop");
     }
+
+    private static AddTransaction CreateUseCase() => new(
+        new FakeTransactionRepository(),
+        new FakePartyRepository([new() { Id = 1, Name = "Me" }, new() { Id = 2, Name = "Shop" }]),
+        new FakeLocationRepository([new Location { Id = 1, Name = "Shop" }]));
 }

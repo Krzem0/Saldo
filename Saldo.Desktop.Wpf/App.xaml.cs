@@ -96,6 +96,9 @@ public partial class App : System.Windows.Application
 
         services.AddScoped<AddTransaction>();
         services.AddScoped<EditTransaction>();
+        services.AddScoped<AddCategory>();
+        services.AddScoped<AddParty>();
+        services.AddScoped<AddLocation>();
         services.AddScoped<DeleteTransaction>();
         services.AddScoped<ListTransactions>();
         services.AddScoped<GetSummary>();

@@ -9,6 +9,7 @@ public static class ErrorCodes
         public const string CategoryRequired = "Transaction.CategoryRequired";
         public const string PayerRequired = "Transaction.PayerRequired";
         public const string CounterpartyRequired = "Transaction.CounterpartyRequired";
+        public const string LocationInvalid = "Transaction.LocationInvalid";
         public const string NotFound = "Transaction.NotFound";
     }
 }

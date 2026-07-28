@@ -27,6 +27,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     private MonthlySummaryDto? _summary;
     private TransactionDto? _selectedTransaction;
     private bool _isLoading;
+    private TransactionDraft? _newTransactionDraft;
 
     public sealed class MonthItem : ViewModelBase
     {
@@ -229,10 +230,19 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     private async Task AddAsync()
     {
         var (categories, parties, locations, defaults) = await LoadNewTransactionDataAsync();
-        var dialogVm = new AddEditTransactionViewModel(_scopeFactory, Localization, categories, parties, locations, defaults);
+        var dialogVm = new AddEditTransactionViewModel(
+            _scopeFactory, _dialogService, Localization, categories, parties, locations, defaults,
+            draft: _newTransactionDraft);
 
         if (_dialogService.ShowAddEditTransaction(dialogVm) == true)
+        {
+            _newTransactionDraft = null;
             await LoadAsync();
+        }
+        else
+        {
+            _newTransactionDraft = dialogVm.CreateDraft();
+        }
     }
 
     private async Task EditAsync()
@@ -240,10 +250,14 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
         if (SelectedTransaction is null) return;
 
         var (categories, parties, locations) = await LoadReferenceDataAsync();
-        var dialogVm = new AddEditTransactionViewModel(_scopeFactory, Localization, categories, parties, locations, existing: SelectedTransaction);
+        var dialogVm = new AddEditTransactionViewModel(
+            _scopeFactory, _dialogService, Localization, categories, parties, locations,
+            existing: SelectedTransaction);
 
         if (_dialogService.ShowAddEditTransaction(dialogVm) == true)
+        {
             await LoadAsync();
+        }
     }
 
     private async Task DeleteAsync()

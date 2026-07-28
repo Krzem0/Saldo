@@ -12,7 +12,7 @@ public sealed class EditTransactionTests
     private static async Task<(EditTransaction UseCase, FakeTransactionRepository Repo, int Id)> SetupAsync()
     {
         var repo = new FakeTransactionRepository();
-        var locations = new FakeLocationRepository();
+        var locations = new FakeLocationRepository([new Location { Id = 1, Name = "Office" }]);
         var parties = new FakePartyRepository([
             new() { Id = 1, Name = "Me" },
             new() { Id = 2, Name = "Employer" }

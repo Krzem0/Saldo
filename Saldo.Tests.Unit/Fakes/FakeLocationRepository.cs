@@ -5,8 +5,14 @@ namespace Saldo.Tests.Unit.Fakes;
 
 internal sealed class FakeLocationRepository : ILocationRepository
 {
-    private readonly List<Location> _store = [];
-    private int _nextId = 1;
+    private readonly List<Location> _store;
+    private int _nextId;
+
+    public FakeLocationRepository(IEnumerable<Location>? seed = null)
+    {
+        _store = seed?.ToList() ?? [];
+        _nextId = _store.Count == 0 ? 1 : _store.Max(location => location.Id) + 1;
+    }
 
     public Task<Location?> GetByIdAsync(int id, CancellationToken ct = default)
         => Task.FromResult(_store.FirstOrDefault(location => location.Id == id));

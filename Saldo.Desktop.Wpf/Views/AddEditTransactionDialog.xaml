@@ -6,7 +6,8 @@
         Width="420" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        ShowInTaskbar="False">
+        ShowInTaskbar="False"
+        Closing="Window_Closing">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -65,10 +66,15 @@
         <!-- Counterparty -->
         <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Counterparty]}"/>
         <StackPanel Grid.Row="2" Grid.Column="1">
-            <controls:AutocompleteComboBox ItemsSource="{Binding Parties}"
-                                           SelectedItem="{Binding SelectedCounterparty}"
-                                           Text="{Binding CounterpartyText, UpdateSourceTrigger=PropertyChanged}"
-                                           DisplayMemberPath="Name"/>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Parties}"
+                                               SelectedItem="{Binding SelectedCounterparty}"
+                                               Text="{Binding CounterpartyText, UpdateSourceTrigger=PropertyChanged}"
+                                               DisplayMemberPath="Name"/>
+                <Button Grid.Column="1" Content="+" Command="{Binding AddCounterpartyCommand}" Width="28" Margin="6,5,0,5"
+                        ToolTip="{Binding Source={StaticResource Localization}, Path=[AddPartyTooltip]}"/>
+            </Grid>
             <TextBlock Text="{Binding CounterpartyError}" Style="{StaticResource FieldErrorStyle}"
                        Visibility="{Binding HasCounterpartyError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
@@ -81,20 +87,34 @@
         <!-- Category -->
         <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Category]}"/>
         <StackPanel Grid.Row="4" Grid.Column="1">
-            <controls:AutocompleteComboBox ItemsSource="{Binding Categories}"
-                                           SelectedItem="{Binding SelectedCategory}"
-                                           DisplayMemberPath="Name"/>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Categories}"
+                                               SelectedItem="{Binding SelectedCategory}"
+                                               Text="{Binding CategoryText, UpdateSourceTrigger=PropertyChanged}"
+                                               DisplayMemberPath="Name"/>
+                <Button Grid.Column="1" Content="+" Command="{Binding AddCategoryCommand}" Width="28" Margin="6,5,0,5"
+                        ToolTip="{Binding Source={StaticResource Localization}, Path=[AddCategoryTooltip]}"/>
+            </Grid>
             <TextBlock Text="{Binding CategoryError}" Style="{StaticResource FieldErrorStyle}"
                        Visibility="{Binding HasCategoryError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
 
         <!-- Location -->
         <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Location]}"/>
-        <controls:AutocompleteComboBox Grid.Row="5" Grid.Column="1"
-                                       ItemsSource="{Binding Locations}"
-                                       SelectedItem="{Binding SelectedLocation}"
-                                       Text="{Binding LocationText, UpdateSourceTrigger=PropertyChanged}"
-                                       DisplayMemberPath="Name"/>
+        <StackPanel Grid.Row="5" Grid.Column="1">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Locations}"
+                                               SelectedItem="{Binding SelectedLocation}"
+                                               Text="{Binding LocationText, UpdateSourceTrigger=PropertyChanged}"
+                                               DisplayMemberPath="Name"/>
+                <Button Grid.Column="1" Content="+" Command="{Binding AddLocationCommand}" Width="28" Margin="6,5,0,5"
+                        ToolTip="{Binding Source={StaticResource Localization}, Path=[AddLocationTooltip]}"/>
+            </Grid>
+            <TextBlock Text="{Binding LocationError}" Style="{StaticResource FieldErrorStyle}"
+                       Visibility="{Binding HasLocationError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        </StackPanel>
 
         <!-- Type -->
         <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Type]}"/>
@@ -106,10 +126,15 @@
         <!-- Payer -->
         <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Payer]}"/>
         <StackPanel Grid.Row="7" Grid.Column="1">
-            <controls:AutocompleteComboBox ItemsSource="{Binding Parties}"
-                                           SelectedItem="{Binding SelectedPayer}"
-                                           Text="{Binding PayerText, UpdateSourceTrigger=PropertyChanged}"
-                                           DisplayMemberPath="Name"/>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Parties}"
+                                               SelectedItem="{Binding SelectedPayer}"
+                                               Text="{Binding PayerText, UpdateSourceTrigger=PropertyChanged}"
+                                               DisplayMemberPath="Name"/>
+                <Button Grid.Column="1" Content="+" Command="{Binding AddPayerCommand}" Width="28" Margin="6,5,0,5"
+                        ToolTip="{Binding Source={StaticResource Localization}, Path=[AddPartyTooltip]}"/>
+            </Grid>
             <TextBlock Text="{Binding PayerError}" Style="{StaticResource FieldErrorStyle}"
                        Visibility="{Binding HasPayerError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
@@ -128,7 +153,7 @@
             <Button Content="{Binding Source={StaticResource Localization}, Path=[Save]}" Command="{Binding SaveCommand}"
                     Width="80" Padding="0,5" Margin="0,0,8,0" IsDefault="True"/>
             <Button Content="{Binding Source={StaticResource Localization}, Path=[Cancel]}" Click="Cancel_Click"
-                    Width="80" Padding="0,5" IsCancel="True"/>
+                    Width="80" Padding="0,5"/>
         </StackPanel>
     </Grid>
 </Window>

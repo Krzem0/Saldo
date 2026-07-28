@@ -22,7 +22,12 @@ public sealed class WpfDialogService : IDialogService
 
     private static void SetOwner(Window dialog)
     {
-        if (System.Windows.Application.Current?.MainWindow is { } owner)
+        var owner = System.Windows.Application.Current?.Windows
+            .OfType<Window>()
+            .FirstOrDefault(window => window.IsActive)
+            ?? System.Windows.Application.Current?.MainWindow;
+
+        if (owner is not null)
         {
             dialog.Owner = owner;
         }

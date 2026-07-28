@@ -1,17 +1,22 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using Saldo.Application.Interfaces;
+using Saldo.Application.Errors;
 using Saldo.Domain.Entities;
 using Saldo.Infrastructure.Sqlite.Persistence;
+using Microsoft.Extensions.Logging;
 
 namespace Saldo.Infrastructure.Sqlite.Repositories;
 
 public sealed class PartyRepository : IPartyRepository
 {
     private readonly SaldoDbContext _context;
+    private readonly ILogger<PartyRepository> _logger;
 
-    public PartyRepository(SaldoDbContext context)
+    public PartyRepository(SaldoDbContext context, ILogger<PartyRepository> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<Party?> GetByIdAsync(int id, CancellationToken ct = default) =>
@@ -39,8 +44,19 @@ public sealed class PartyRepository : IPartyRepository
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
-        await _context.Parties
-            .Where(p => p.Id == id)
-            .ExecuteDeleteAsync(ct);
+        try
+        {
+            await _context.Parties
+                .Where(p => p.Id == id)
+                .ExecuteDeleteAsync(ct);
+        }
+        catch (SqliteException ex) when (IsForeignKeyViolation(ex))
+        {
+            _logger.LogWarning(ex, "Party {PartyId} cannot be deleted because it is in use.", id);
+            throw new ReferenceEntityInUseException(ex);
+        }
     }
+
+    private static bool IsForeignKeyViolation(SqliteException exception) =>
+        exception.SqliteErrorCode == 19 && exception.Message.Contains("FOREIGN KEY", StringComparison.OrdinalIgnoreCase);
 }
