@@ -1,4 +1,5 @@
 using Saldo.Application.Interfaces;
+using Saldo.Application.Errors;
 using Saldo.Domain.Entities;
 
 namespace Saldo.Application.UseCases;
@@ -11,7 +12,13 @@ public sealed class AddLocation
 
     public async Task<Location> ExecuteAsync(string name, CancellationToken ct = default)
     {
-        var location = new Location { Name = NormalizeName(name) };
+        var normalizedName = NormalizeName(name);
+        if ((await _locations.GetAllAsync(ct)).Any(location => string.Equals(location.Name, normalizedName, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new DuplicateReferenceException("location", normalizedName);
+        }
+
+        var location = new Location { Name = normalizedName };
         await _locations.AddAsync(location, ct);
         return location;
     }

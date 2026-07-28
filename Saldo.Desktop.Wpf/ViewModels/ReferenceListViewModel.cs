@@ -93,7 +93,10 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         }
         catch (Exception ex)
         {
-           MessageBox.Show(ex.Message, string.Format(CultureInfo.CurrentCulture, T("AddErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
+           var message = ex is DuplicateReferenceException duplicate
+               ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
+               : ex.Message;
+           MessageBox.Show(message, string.Format(CultureInfo.CurrentCulture, T("AddErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

@@ -62,6 +62,7 @@
   <data name="UpdateErrorTemplate" xml:space="preserve"><value>Failed to update {0}.</value></data>
   <data name="DeleteErrorTemplate" xml:space="preserve"><value>Failed to delete {0}.</value></data>
   <data name="DeleteInUseErrorTemplate" xml:space="preserve"><value>Cannot delete “{0}” because it is used by existing transactions.</value></data>
+  <data name="DuplicateReferenceErrorTemplate" xml:space="preserve"><value>An item named “{0}” already exists. Select it from the list instead of adding it again.</value></data>
   <data name="StartupFailedMessage" xml:space="preserve"><value>Application startup failed. See the log for details.</value></data>
   <data name="UnhandledUiErrorMessage" xml:space="preserve"><value>An unexpected error occurred. See the log for details.</value></data>
   <data name="TransactionsLoadError" xml:space="preserve"><value>Failed to load transactions.</value></data>

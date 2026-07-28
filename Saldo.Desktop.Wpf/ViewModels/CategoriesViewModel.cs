@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Saldo.Application.Interfaces;
+using Saldo.Application.UseCases;
 using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Services;
 using Saldo.Domain.Entities;
@@ -19,7 +20,7 @@ public sealed class CategoriesViewModel : ReferenceListViewModel<Category>
     protected override string GetName(Category item) => item.Name;
 
     protected override Task AddCoreAsync(IServiceScope scope, string name, CancellationToken ct)
-        => scope.ServiceProvider.GetRequiredService<ICategoryRepository>().AddAsync(new Category { Name = name }, ct);
+        => scope.ServiceProvider.GetRequiredService<AddCategory>().ExecuteAsync(name, ct);
 
     protected override async Task UpdateCoreAsync(IServiceScope scope, Category item, string name, CancellationToken ct)
     {

@@ -1,4 +1,5 @@
 using Saldo.Application.Interfaces;
+using Saldo.Application.Errors;
 using Saldo.Domain.Entities;
 
 namespace Saldo.Application.UseCases;
@@ -11,7 +12,13 @@ public sealed class AddCategory
 
     public async Task<Category> ExecuteAsync(string name, CancellationToken ct = default)
     {
-        var category = new Category { Name = NormalizeName(name) };
+        var normalizedName = NormalizeName(name);
+        if ((await _categories.GetAllAsync(ct)).Any(category => string.Equals(category.Name, normalizedName, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new DuplicateReferenceException("category", normalizedName);
+        }
+
+        var category = new Category { Name = normalizedName };
         await _categories.AddAsync(category, ct);
         return category;
     }

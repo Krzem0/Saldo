@@ -62,6 +62,7 @@
   <data name="UpdateErrorTemplate" xml:space="preserve"><value>Nie udało się zaktualizować {0}.</value></data>
   <data name="DeleteErrorTemplate" xml:space="preserve"><value>Nie udało się usunąć {0}.</value></data>
   <data name="DeleteInUseErrorTemplate" xml:space="preserve"><value>Nie można usunąć elementu „{0}”, ponieważ jest używany przez istniejące transakcje.</value></data>
+  <data name="DuplicateReferenceErrorTemplate" xml:space="preserve"><value>Element o nazwie „{0}” już istnieje. Wybierz go z listy zamiast dodawać ponownie.</value></data>
   <data name="StartupFailedMessage" xml:space="preserve"><value>Nie udało się uruchomić aplikacji. Szczegóły zapisano w logu.</value></data>
   <data name="UnhandledUiErrorMessage" xml:space="preserve"><value>Wystąpił nieoczekiwany błąd. Szczegóły zapisano w logu.</value></data>
   <data name="TransactionsLoadError" xml:space="preserve"><value>Nie udało się wczytać transakcji.</value></data>

@@ -1,4 +1,5 @@
 using Saldo.Application.Interfaces;
+using Saldo.Application.Errors;
 using Saldo.Domain.Entities;
 
 namespace Saldo.Application.UseCases;
@@ -11,7 +12,13 @@ public sealed class AddParty
 
     public async Task<Party> ExecuteAsync(string name, CancellationToken ct = default)
     {
-        var party = new Party { Name = NormalizeName(name) };
+        var normalizedName = NormalizeName(name);
+        if ((await _parties.GetAllAsync(ct)).Any(party => string.Equals(party.Name, normalizedName, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new DuplicateReferenceException("party", normalizedName);
+        }
+
+        var party = new Party { Name = normalizedName };
         await _parties.AddAsync(party, ct);
         return party;
     }

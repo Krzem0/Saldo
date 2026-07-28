@@ -263,7 +263,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, T("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            ShowReferenceError(ex);
         }
     }
 
@@ -292,7 +292,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, T("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            ShowReferenceError(ex);
         }
     }
 
@@ -312,8 +312,16 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, T("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            ShowReferenceError(ex);
         }
+    }
+
+    private void ShowReferenceError(Exception exception)
+    {
+        var message = exception is DuplicateReferenceException duplicate
+            ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
+            : exception.Message;
+        MessageBox.Show(message, T("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
     private void ApplyDefaults(NewTransactionDefaultsDto defaults)
