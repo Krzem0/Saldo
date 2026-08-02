@@ -23,7 +23,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Button Grid.Column="0" Content="‹" Command="{Binding PreviousMonthCommand}" Padding="10,4" FontSize="18"/>
+            <Button Grid.Column="0" Content="&lt;" Command="{Binding PreviousMonthCommand}" Style="{StaticResource MonthNavigationButtonStyle}"/>
 
             <!-- Clickable month label + picker popup -->
             <Grid Grid.Column="1" HorizontalAlignment="Center">
@@ -151,7 +151,7 @@
                 </Popup>
             </Grid>
 
-            <Button Grid.Column="2" Content="›" Command="{Binding NextMonthCommand}" Padding="10,4" FontSize="18"/>
+            <Button Grid.Column="2" Content="&gt;" Command="{Binding NextMonthCommand}" Style="{StaticResource MonthNavigationButtonStyle}"/>
         </Grid>
 
         <!-- Summary bar -->
@@ -188,8 +188,10 @@
         </Border>
 
         <!-- Transaction list -->
-        <DataGrid Grid.Row="2"
-                  ItemsSource="{Binding Transactions}"
+        <DataGrid x:Name="TransactionGrid"
+                  Grid.Row="2"
+                  ItemsSource="{Binding Transactions, NotifyOnTargetUpdated=True}"
+                  TargetUpdated="TransactionGrid_TargetUpdated"
                   SelectedItem="{Binding SelectedTransaction}"
                   AutoGenerateColumns="False"
                   IsReadOnly="True"
@@ -200,8 +202,11 @@
             <DataGrid.Columns>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Date]}"
                                     Binding="{Binding Date, StringFormat={}{0:dd.MM.yyyy}}"
+                                    SortMemberPath="Date"
+                                    SortDirection="Descending"
                                     Width="90"/>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Amount]}"
+                                    SortMemberPath="Amount"
                                     Width="110">
                     <DataGridTextColumn.Binding>
                         <MultiBinding Converter="{StaticResource LocalizedNumberConverter}">
@@ -243,8 +248,8 @@
 
         <!-- Action buttons -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,6,8,8">
-             <Button Content="{Binding Source={StaticResource Localization}, Path=[Edit]}"   Command="{Binding EditCommand}"   Padding="14,5" Margin="0,0,6,0"/>
-             <Button Content="{Binding Source={StaticResource Localization}, Path=[Delete]}" Command="{Binding DeleteCommand}" Padding="14,5"/>
+             <Button Content="{Binding Source={StaticResource Localization}, Path=[Edit]}"   Command="{Binding EditCommand}"   Style="{StaticResource SecondaryActionButtonStyle}" Margin="0,0,8,0"/>
+             <Button Content="{Binding Source={StaticResource Localization}, Path=[Delete]}" Command="{Binding DeleteCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
         </StackPanel>
     </Grid>
 </UserControl>

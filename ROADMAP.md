@@ -6,6 +6,7 @@ This document tracks planned work. Implemented behavior and architectural decisi
 
 - [ ] Sorting and filtering on the transaction list
 - [ ] Dedicated monthly summary screen
+- [ ] All-transactions history with date range, search, filters, database-side sorting, and pagination
 
 ## App Reliability
 

@@ -126,7 +126,7 @@ public sealed class TransactionRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetByMonthAsync_OrdersByDate()
+    public async Task GetByMonthAsync_OrdersByDateDescending()
     {
         var (cat, pay, cnt, loc) = await SeedReferencesAsync();
         await _sut.AddAsync(MakeTransaction(cat, pay, cnt, loc, date: new DateOnly(2025, 6, 20)));
@@ -134,8 +134,8 @@ public sealed class TransactionRepositoryTests : IDisposable
 
         var result = await _sut.GetByMonthAsync(2025, 6);
 
-        Assert.Equal(new DateOnly(2025, 6, 5), result[0].Date);
-        Assert.Equal(new DateOnly(2025, 6, 20), result[1].Date);
+        Assert.Equal(new DateOnly(2025, 6, 20), result[0].Date);
+        Assert.Equal(new DateOnly(2025, 6, 5), result[1].Date);
     }
 
     [Fact]

@@ -13,7 +13,11 @@ internal sealed class FakeTransactionRepository : ITransactionRepository
 
     public Task<IReadOnlyList<Transaction>> GetByMonthAsync(int year, int month, CancellationToken ct = default)
         => Task.FromResult<IReadOnlyList<Transaction>>(
-            _store.Where(t => t.Date.Year == year && t.Date.Month == month).ToList());
+            _store
+                .Where(t => t.Date.Year == year && t.Date.Month == month)
+                .OrderByDescending(t => t.Date)
+                .ThenByDescending(t => t.Id)
+                .ToList());
 
     public Task AddAsync(Transaction transaction, CancellationToken ct = default)
     {

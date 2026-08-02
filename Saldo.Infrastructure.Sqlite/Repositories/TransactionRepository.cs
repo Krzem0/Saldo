@@ -39,7 +39,8 @@ public sealed class TransactionRepository : ITransactionRepository
                 .ThenInclude(tt => tt.Tag)
             .AsNoTracking()
             .Where(t => t.Date >= start && t.Date <= end)
-            .OrderBy(t => t.Date)
+            .OrderByDescending(t => t.Date)
+            .ThenByDescending(t => t.Id)
             .ToListAsync(ct);
     }
 
