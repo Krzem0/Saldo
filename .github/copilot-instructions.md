@@ -42,6 +42,8 @@ If you generate code that violates these rules, refactor it.
 - Return simple result DTOs appropriate for UI consumption.
 - Use exceptions only for unexpected technical failures or broken invariants.
 - When a use case needs diagnostics, inject `ILogger<T>` and keep logging focused on technical events and successful operations; do not log expected validation failures as errors.
+- Reference items must be added through explicit add workflows; transaction save must not create categories, parties, or locations implicitly.
+- Add workflows should reject duplicate reference names with a user-friendly outcome before exposing database constraint errors.
 
 ## Infrastructure (SQLite)
 - Only `Saldo.Infrastructure.Sqlite` talks to SQLite.
@@ -57,6 +59,8 @@ If you generate code that violates these rules, refactor it.
 - Map validation property metadata to controls and show localized messages next to affected fields.
 - Show errors without a field in a form-level summary.
 - Do not display raw technical error codes to users.
+- Keep temporary drafts and confirmation before discarding edit changes in the GUI layer only.
+- Format amounts according to the selected UI culture. Transaction type may drive GUI-only visual cues, but colors and formatted strings do not belong in Application or Domain.
 - Use async commands where IO is involved.
 - Avoid static singletons. Prefer DI.
 - The WPF shell uses `Microsoft.Extensions.Logging` with Serilog writing to `%AppData%\Saldo\Logs\saldo-.log`.

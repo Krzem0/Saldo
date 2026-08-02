@@ -22,6 +22,8 @@ Responsible for:
 - Localization display concerns
 - Parsing UI-specific input representations, such as converting amount text to `decimal`
 - Presenting validation feedback returned by Application
+- Keeping temporary GUI state, such as a new-transaction draft
+- Formatting amounts for the selected culture and applying UI-only visual cues based on transaction type
 
 Contains:
 
@@ -37,6 +39,7 @@ Rules:
 - UI input parsing must not become a second copy of business validation
 - Field-level errors should be displayed next to their controls; errors without a field should be displayed in a form-level summary
 - UI labels may be localized, but domain values should not depend on translated text
+- GUI-specific state and visual conventions must not leak into Application or Domain
 
 ### 2) Application (Use Cases)
 
@@ -65,7 +68,9 @@ Rules:
 - Validation errors include the command property name when the error can be assigned to a field
 - May enforce workflow rules such as:
   - category must be chosen from an existing dictionary value
-  - party and location may be created inline when saving a transaction
+  - payer and counterparty must be chosen from existing party values
+  - location is optional, but when provided it must be chosen from an existing location value
+  - reference items are added through explicit `AddCategory`, `AddParty`, or `AddLocation` workflows, never implicitly while saving a transaction
 
 ### 3) Domain (Core)
 
@@ -142,8 +147,10 @@ Rules:
 - The default app language is chosen from the system culture
 - Initial seed values may depend on the current culture
 - `Category` is a controlled dictionary
-- `Party` and `Location` are reusable dictionaries that may be extended inline while saving a transaction
-- Matching for inline-created parties and locations should avoid duplicates caused by casing or diacritics where possible
+- `Party` and `Location` are reusable dictionaries that can be extended through explicit add workflows from their tabs or the transaction form's `+` buttons
+- Add workflows reject duplicate reference names before a database constraint error reaches the user
+- `TransactionDraft` is WPF-only temporary state for a new transaction and does not survive an application restart; editing an existing transaction asks before discarding unsaved changes instead
+- Amount formatting and the transaction-type colors in the list are Presentation concerns; another GUI must implement its own equivalent rendering from `Amount` and `Transaction.Type`
 
 ## Validation and Error Contract
 

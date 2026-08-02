@@ -22,11 +22,14 @@
 
 ## UX Rules Worth Knowing
 
-- `Category` is selected from existing values only, with autocomplete support
-- `Party` and `Location` use autocomplete, but can also be created inline while saving a transaction
+- `Category`, `Party`, and `Location` are selected from existing values, with autocomplete support
+- Reference data can be added explicitly from the transaction form with `+`; saving a transaction never creates a reference item implicitly
+- Duplicate category, party, and location names are rejected with a user-friendly message
 - New transaction defaults are resolved outside the GUI, in the Application layer
+- A new transaction form keeps an in-memory draft when it is cancelled; editing an existing transaction instead asks before discarding changes
 - User-facing labels are localized, while domain values remain stable in English
 - Transaction form validation is displayed next to the relevant field; errors that cannot be assigned to a field are shown in a form-level summary
+- The WPF transaction list formats amounts using the selected language and uses subtle amount-cell colors to distinguish expenses from income
 
 ## Tech Stack
 
@@ -58,7 +61,8 @@
 - The WPF UI uses resource-based translations
 - Supported cultures currently include `pl-PL` and `en-US`
 - The app chooses its default language from the current system culture at startup
-- Some seed data is culture-aware, for example the initial self party value (`Ja` / `Me`)
+- Some seed data is culture-aware, for example the initial self party value (`Ja` / `Me`); it is chosen only for a new, empty database and is not translated later
+- Number formatting in the WPF UI follows the currently selected culture
 - New user-facing text should be added through localization resources instead of hardcoded strings
 
 ## Status
