@@ -242,8 +242,7 @@
         </DataGrid>
 
         <!-- Action buttons -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8,6,8,8">
-             <Button Content="{Binding Source={StaticResource Localization}, Path=[Add]}"  Command="{Binding AddCommand}"    Padding="14,5" Margin="0,0,6,0"/>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,6,8,8">
              <Button Content="{Binding Source={StaticResource Localization}, Path=[Edit]}"   Command="{Binding EditCommand}"   Padding="14,5" Margin="0,0,6,0"/>
              <Button Content="{Binding Source={StaticResource Localization}, Path=[Delete]}" Command="{Binding DeleteCommand}" Padding="14,5"/>
         </StackPanel>

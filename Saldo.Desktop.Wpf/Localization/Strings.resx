@@ -14,6 +14,11 @@
   </resheader>
   <data name="AppTitle" xml:space="preserve"><value>Saldo</value></data>
   <data name="LanguageLabel" xml:space="preserve"><value>Język</value></data>
+  <data name="Navigation_Main" xml:space="preserve"><value>GŁÓWNE</value></data>
+  <data name="Navigation_ReferenceData" xml:space="preserve"><value>SŁOWNIKI</value></data>
+  <data name="SettingsTitle" xml:space="preserve"><value>Ustawienia</value></data>
+  <data name="SettingsDescription" xml:space="preserve"><value>Dostosuj aplikację do swoich preferencji.</value></data>
+  <data name="SettingsLanguageDescription" xml:space="preserve"><value>Język interfejsu i format liczb.</value></data>
   <data name="TabTransactions" xml:space="preserve"><value>Transakcje</value></data>
   <data name="TabCategories" xml:space="preserve"><value>Kategorie</value></data>
   <data name="TabMembers" xml:space="preserve"><value>Osoby</value></data>

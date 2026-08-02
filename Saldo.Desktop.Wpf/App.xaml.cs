@@ -113,6 +113,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<CategoriesViewModel>();
         services.AddTransient<PartiesViewModel>();
         services.AddTransient<LocationsViewModel>();
+        services.AddTransient<SettingsViewModel>();
         services.AddTransient<MainWindow>();
     }
 
