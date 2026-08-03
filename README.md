@@ -19,6 +19,7 @@
 - Local persistence with SQLite
 - UI localization based on resource files
 - Default app language based on the system culture
+- Light, dark, and system appearance themes for the WPF UI
 
 ## UX Rules Worth Knowing
 
@@ -64,6 +65,12 @@
 - Some seed data is culture-aware, for example the initial self party value (`Ja` / `Me`); it is chosen only for a new, empty database and is not translated later
 - Number formatting in the WPF UI follows the currently selected culture
 - New user-facing text should be added through localization resources instead of hardcoded strings
+
+## Appearance
+
+- The WPF UI supports `System`, `Light`, and `Dark` appearance themes
+- `System` is the default and follows the Windows app theme while Saldo is running
+- The selected language and theme are currently session-only and reset when the app is closed
 
 ## Status
 

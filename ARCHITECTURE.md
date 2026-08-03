@@ -24,6 +24,7 @@ Responsible for:
 - Presenting validation feedback returned by Application
 - Keeping temporary GUI state, such as a new-transaction draft
 - Formatting amounts for the selected culture and applying UI-only visual cues based on transaction type
+- Applying GUI-specific appearance themes through WPF resource dictionaries
 
 Contains:
 
@@ -31,6 +32,7 @@ Contains:
 - ViewModels
 - UI-specific services (dialogs, notifications)
 - WPF-only controls such as autocomplete widgets
+- WPF-only services such as `ThemeService` and light/dark theme resource dictionaries
 
 Rules:
 
@@ -40,6 +42,7 @@ Rules:
 - Field-level errors should be displayed next to their controls; errors without a field should be displayed in a form-level summary
 - UI labels may be localized, but domain values should not depend on translated text
 - GUI-specific state and visual conventions must not leak into Application or Domain
+- Theme colors should be referenced through dynamic theme resources rather than hardcoded in views
 
 ### 2) Application (Use Cases)
 
@@ -151,6 +154,7 @@ Rules:
 - Add workflows reject duplicate reference names before a database constraint error reaches the user
 - `TransactionDraft` is WPF-only temporary state for a new transaction and does not survive an application restart; editing an existing transaction asks before discarding unsaved changes instead
 - Amount formatting and the transaction-type colors in the list are Presentation concerns; another GUI must implement its own equivalent rendering from `Amount` and `Transaction.Type`
+- Appearance selection is a Presentation concern. The current WPF `ThemeService` supports system, light, and dark themes without persisting the choice yet
 
 ## Validation and Error Contract
 

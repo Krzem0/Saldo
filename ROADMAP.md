@@ -10,13 +10,14 @@ This document tracks planned work. Implemented behavior and architectural decisi
 
 ## App Reliability
 
+- [ ] Persist user preferences, including language and appearance theme
 - [ ] Backup folder configuration
 - [ ] Backup and restore to a single file
 - [ ] Packaging and installer
 
 ## Later
 
-- [ ] Visual refresh of the WPF UI: shared typography, spacing, colors, controls, forms, and table styles
+- [ ] Further WPF visual polish and accessibility review
 - [ ] Recurring transactions
 - [ ] CSV import and export
 - [ ] Tags and advanced filters
