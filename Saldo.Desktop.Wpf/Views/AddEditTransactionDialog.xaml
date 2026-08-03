@@ -7,8 +7,9 @@
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
+        Background="{DynamicResource SurfaceBrush}"
         Closing="Window_Closing">
-    <Grid Margin="16">
+    <Grid Margin="24" Background="{DynamicResource SurfaceBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -31,22 +32,90 @@
             <Style TargetType="TextBlock">
                 <Setter Property="VerticalAlignment" Value="Center"/>
                 <Setter Property="Margin" Value="0,5"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
             </Style>
             <Style TargetType="TextBox">
                 <Setter Property="Margin" Value="0,5"/>
                 <Setter Property="Padding" Value="4,3"/>
+                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
             </Style>
-            <Style TargetType="ComboBox">
+            <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
                 <Setter Property="Margin" Value="0,5"/>
+                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
             </Style>
             <Style TargetType="DatePicker">
                 <Setter Property="Margin" Value="0,5"/>
+                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="DatePicker">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="4">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="30"/>
+                                    </Grid.ColumnDefinitions>
+                                    <DatePickerTextBox x:Name="PART_TextBox"
+                                                       Background="{TemplateBinding Background}"
+                                                       Foreground="{TemplateBinding Foreground}"
+                                                       BorderThickness="0"
+                                                       Padding="6,3"/>
+                                    <Button x:Name="PART_Button" Grid.Column="1"
+                                            Background="{DynamicResource ControlBrush}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="1,0,0,0"
+                                            Foreground="{TemplateBinding Foreground}"
+                                            Content="&#x1F4C5;"/>
+                                    <Popup x:Name="PART_Popup" Placement="Bottom" AllowsTransparency="True"
+                                           IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                           PlacementTarget="{Binding ElementName=PART_Button}">
+                                        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource ControlBorderBrush}"
+                                                BorderThickness="1" CornerRadius="4" Margin="0,2,0,0">
+                                            <Calendar x:Name="PART_Calendar" Background="{DynamicResource SurfaceBrush}"
+                                                      Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style TargetType="DatePickerTextBox">
+                <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="DatePickerTextBox">
+                            <Border Background="{TemplateBinding Background}"
+                                    Padding="{TemplateBinding Padding}">
+                                <ScrollViewer x:Name="PART_ContentHost"
+                                              VerticalContentAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
             <Style x:Key="FieldErrorStyle" TargetType="TextBlock">
-                <Setter Property="Foreground" Value="#B3261E"/>
+                <Setter Property="Foreground" Value="{DynamicResource ValidationTextBrush}"/>
                 <Setter Property="FontSize" Value="11"/>
                 <Setter Property="Margin" Value="4,-2,0,4"/>
                 <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
+            <Style x:Key="QuickAddButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+                <Setter Property="Width" Value="30"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
             </Style>
         </Grid.Resources>
 
@@ -72,7 +141,7 @@
                                                SelectedItem="{Binding SelectedCounterparty}"
                                                Text="{Binding CounterpartyText, UpdateSourceTrigger=PropertyChanged}"
                                                DisplayMemberPath="Name"/>
-                <Button Grid.Column="1" Content="+" Command="{Binding AddCounterpartyCommand}" Width="28" Margin="6,5,0,5"
+                <Button Grid.Column="1" Content="+" Command="{Binding AddCounterpartyCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,5,0,5"
                         ToolTip="{Binding Source={StaticResource Localization}, Path=[AddPartyTooltip]}"/>
             </Grid>
             <TextBlock Text="{Binding CounterpartyError}" Style="{StaticResource FieldErrorStyle}"
@@ -93,7 +162,7 @@
                                                SelectedItem="{Binding SelectedCategory}"
                                                Text="{Binding CategoryText, UpdateSourceTrigger=PropertyChanged}"
                                                DisplayMemberPath="Name"/>
-                <Button Grid.Column="1" Content="+" Command="{Binding AddCategoryCommand}" Width="28" Margin="6,5,0,5"
+                <Button Grid.Column="1" Content="+" Command="{Binding AddCategoryCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,5,0,5"
                         ToolTip="{Binding Source={StaticResource Localization}, Path=[AddCategoryTooltip]}"/>
             </Grid>
             <TextBlock Text="{Binding CategoryError}" Style="{StaticResource FieldErrorStyle}"
@@ -109,7 +178,7 @@
                                                SelectedItem="{Binding SelectedLocation}"
                                                Text="{Binding LocationText, UpdateSourceTrigger=PropertyChanged}"
                                                DisplayMemberPath="Name"/>
-                <Button Grid.Column="1" Content="+" Command="{Binding AddLocationCommand}" Width="28" Margin="6,5,0,5"
+                <Button Grid.Column="1" Content="+" Command="{Binding AddLocationCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,5,0,5"
                         ToolTip="{Binding Source={StaticResource Localization}, Path=[AddLocationTooltip]}"/>
             </Grid>
             <TextBlock Text="{Binding LocationError}" Style="{StaticResource FieldErrorStyle}"
@@ -120,8 +189,13 @@
         <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Type]}"/>
         <ComboBox Grid.Row="6" Grid.Column="1"
                   ItemsSource="{Binding Types}"
-                  SelectedItem="{Binding SelectedType}"
-                  DisplayMemberPath="Label"/>
+                  SelectedItem="{Binding SelectedType}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Label}" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
 
         <!-- Payer -->
         <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Payer]}"/>
@@ -132,7 +206,7 @@
                                                SelectedItem="{Binding SelectedPayer}"
                                                Text="{Binding PayerText, UpdateSourceTrigger=PropertyChanged}"
                                                DisplayMemberPath="Name"/>
-                <Button Grid.Column="1" Content="+" Command="{Binding AddPayerCommand}" Width="28" Margin="6,5,0,5"
+                <Button Grid.Column="1" Content="+" Command="{Binding AddPayerCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,5,0,5"
                         ToolTip="{Binding Source={StaticResource Localization}, Path=[AddPartyTooltip]}"/>
             </Grid>
             <TextBlock Text="{Binding PayerError}" Style="{StaticResource FieldErrorStyle}"
@@ -142,18 +216,18 @@
         <!-- Errors not associated with a specific field -->
         <Border Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2"
                 Margin="0,8,0,0" Padding="10,8"
-                Background="#FFF4F2" BorderBrush="#B3261E" BorderThickness="1" CornerRadius="3"
+                Background="{DynamicResource ValidationBackgroundBrush}" BorderBrush="{DynamicResource ValidationTextBrush}" BorderThickness="1" CornerRadius="4"
                 Visibility="{Binding HasValidationSummary, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <TextBlock Text="{Binding ValidationSummary}" Foreground="#B3261E" TextWrapping="Wrap" Margin="0"/>
+            <TextBlock Text="{Binding ValidationSummary}" Foreground="{DynamicResource ValidationTextBrush}" TextWrapping="Wrap" Margin="0"/>
         </Border>
 
         <!-- Buttons -->
         <StackPanel Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2"
                     Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="{Binding Source={StaticResource Localization}, Path=[Save]}" Command="{Binding SaveCommand}"
-                    Width="80" Padding="0,5" Margin="0,0,8,0" IsDefault="True"/>
+                    Width="80" Padding="0,5" Margin="0,0,8,0" IsDefault="True" Style="{StaticResource PrimaryActionButtonStyle}"/>
             <Button Content="{Binding Source={StaticResource Localization}, Path=[Cancel]}" Click="Cancel_Click"
-                    Width="80" Padding="0,5"/>
+                    Width="80" Padding="0,5" Style="{StaticResource SecondaryActionButtonStyle}"/>
         </StackPanel>
     </Grid>
 </Window>

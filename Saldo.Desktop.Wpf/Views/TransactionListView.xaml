@@ -6,6 +6,33 @@
     <UserControl.Resources>
         <localization:TransactionTypeToTextConverter x:Key="TransactionTypeToTextConverter"/>
         <localization:LocalizedNumberConverter x:Key="LocalizedNumberConverter"/>
+        <Style x:Key="TransactionGridHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="{DynamicResource ControlBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="TransactionGridCellStyle" TargetType="DataGridCell">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource GridLineBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SelectionBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="TransactionGridRowStyle" TargetType="DataGridRow">
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        </Style>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -27,33 +54,59 @@
 
             <!-- Clickable month label + picker popup -->
             <Grid Grid.Column="1" HorizontalAlignment="Center">
-                <Button x:Name="MonthPickerButton"
-                        Command="{Binding OpenMonthPickerCommand}"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Cursor="Hand"
-                        Padding="8,2">
-                    <Button.Template>
-                        <ControlTemplate TargetType="Button">
-                            <Border Background="{TemplateBinding Background}"
-                                    CornerRadius="4"
-                                    Padding="{TemplateBinding Padding}">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#E3F2FD"/>
-                                </Trigger>
-                                <Trigger Property="IsPressed" Value="True">
-                                    <Setter Property="Background" Value="#BBDEFB"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                    <TextBlock Text="{Binding MonthLabel}"
-                               FontSize="16" FontWeight="Bold"
-                               VerticalAlignment="Center"/>
-                </Button>
+                <StackPanel>
+                    <Button x:Name="MonthPickerButton"
+                            Command="{Binding OpenMonthPickerCommand}"
+                            Background="{DynamicResource ControlBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="1"
+                            Foreground="{DynamicResource PrimaryBrush}"
+                            Cursor="Hand"
+                            Padding="10,5">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        CornerRadius="4"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="{DynamicResource ControlPressedBrush}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding MonthLabel}"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                            <Path Data="M 0 0 L 6 6 L 12 0 Z"
+                                  Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  Width="12"
+                                  Height="6"
+                                  Margin="8,0,0,0"
+                                  VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Content="{Binding Source={StaticResource Localization}, Path=[CurrentMonth]}"
+                            Command="{Binding CurrentMonthCommand}"
+                            HorizontalAlignment="Center"
+                            Margin="0,3,0,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+                                <Setter Property="Padding" Value="10,4"/>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
 
                 <Popup IsOpen="{Binding IsMonthPickerOpen, Mode=TwoWay}"
                        PlacementTarget="{Binding ElementName=MonthPickerButton}"
@@ -61,8 +114,8 @@
                        StaysOpen="False"
                        AllowsTransparency="True"
                        PopupAnimation="Fade">
-                    <Border Background="White"
-                            BorderBrush="#BDBDBD"
+                    <Border Background="{DynamicResource SurfaceBrush}"
+                            BorderBrush="{DynamicResource SurfaceBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="6"
                             Padding="10">
@@ -87,8 +140,8 @@
                                          HorizontalContentAlignment="Center"
                                          VerticalContentAlignment="Center"
                                          BorderThickness="1"
-                                         BorderBrush="#D0D0D0"
-                                         Background="White"
+                                         BorderBrush="{DynamicResource ControlBorderBrush}"
+                                         Background="{DynamicResource SurfaceBrush}"
                                          Padding="4,2"
                                          Margin="6,0"
                                          Width="90"/>
@@ -115,8 +168,8 @@
                                                 Margin="2" Padding="4,6" Cursor="Hand" FontSize="12">
                                             <Button.Style>
                                                 <Style TargetType="Button">
-                                                    <Setter Property="Background" Value="White"/>
-                                                    <Setter Property="BorderBrush" Value="#E0E0E0"/>
+                                                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
                                                     <Setter Property="Template">
                                                         <Setter.Value>
                                                             <ControlTemplate TargetType="Button">
@@ -129,11 +182,11 @@
                                                                 </Border>
                                                                 <ControlTemplate.Triggers>
                                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                                        <Setter Property="Background" Value="#E3F2FD"/>
-                                                                        <Setter Property="BorderBrush" Value="#1E88E5"/>
+                                                                        <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                                                                        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
                                                                     </Trigger>
                                                                     <Trigger Property="IsPressed" Value="True">
-                                                                        <Setter Property="Background" Value="#BBDEFB"/>
+                                                                        <Setter Property="Background" Value="{DynamicResource ControlPressedBrush}"/>
                                                                     </Trigger>
                                                                 </ControlTemplate.Triggers>
                                                             </ControlTemplate>
@@ -155,51 +208,85 @@
         </Grid>
 
         <!-- Summary bar -->
-        <Border Grid.Row="1" Background="#F0F4F8" Padding="12,6" Margin="8,0,8,4" CornerRadius="4">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Income]}" FontWeight="SemiBold" Margin="0,0,4,0"/>
-                <TextBlock Foreground="#2E7D32" FontWeight="SemiBold" Margin="0,0,20,0">
-                    <TextBlock.Text>
-                        <MultiBinding Converter="{StaticResource LocalizedNumberConverter}">
-                            <Binding Path="Summary.TotalIncome"/>
-                            <Binding Source="{StaticResource Localization}" Path="CurrentCulture"/>
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
-                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Expense]}" FontWeight="SemiBold" Margin="0,0,4,0"/>
-                <TextBlock Foreground="#C62828" FontWeight="SemiBold" Margin="0,0,20,0">
-                    <TextBlock.Text>
-                        <MultiBinding Converter="{StaticResource LocalizedNumberConverter}">
-                            <Binding Path="Summary.TotalExpense"/>
-                            <Binding Source="{StaticResource Localization}" Path="CurrentCulture"/>
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
-                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Balance]}" FontWeight="SemiBold" Margin="0,0,4,0"/>
-                <TextBlock FontWeight="Bold">
-                    <TextBlock.Text>
-                        <MultiBinding Converter="{StaticResource LocalizedNumberConverter}">
-                            <Binding Path="Summary.Balance"/>
-                            <Binding Source="{StaticResource Localization}" Path="CurrentCulture"/>
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
-            </StackPanel>
+        <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" Padding="6" Margin="8,0,8,6" CornerRadius="6">
+            <Grid HorizontalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Background="{DynamicResource SuccessBackgroundBrush}" CornerRadius="4" Padding="12,6" Margin="0,0,4,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Income]}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,6,0"/>
+                        <TextBlock Foreground="{DynamicResource SuccessTextBrush}" FontWeight="Bold">
+                            <TextBlock.Text>
+                                <MultiBinding Converter="{StaticResource LocalizedNumberConverter}">
+                                    <Binding Path="Summary.TotalIncome"/>
+                                    <Binding Source="{StaticResource Localization}" Path="CurrentCulture"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Background="{DynamicResource ExpenseBackgroundBrush}" CornerRadius="4" Padding="12,6" Margin="0,0,4,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Expense]}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,6,0"/>
+                        <TextBlock Foreground="{DynamicResource ExpenseTextBrush}" FontWeight="Bold">
+                            <TextBlock.Text>
+                                <MultiBinding Converter="{StaticResource LocalizedNumberConverter}">
+                                    <Binding Path="Summary.TotalExpense"/>
+                                    <Binding Source="{StaticResource Localization}" Path="CurrentCulture"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Background="{DynamicResource SummaryBalanceBrush}" CornerRadius="4" Padding="12,6">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Balance]}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,6,0"/>
+                        <TextBlock Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="Bold">
+                            <TextBlock.Text>
+                                <MultiBinding Converter="{StaticResource LocalizedNumberConverter}">
+                                    <Binding Path="Summary.Balance"/>
+                                    <Binding Source="{StaticResource Localization}" Path="CurrentCulture"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
 
         <!-- Transaction list -->
-        <DataGrid x:Name="TransactionGrid"
-                  Grid.Row="2"
-                  ItemsSource="{Binding Transactions, NotifyOnTargetUpdated=True}"
-                  TargetUpdated="TransactionGrid_TargetUpdated"
-                  SelectedItem="{Binding SelectedTransaction}"
-                  AutoGenerateColumns="False"
-                  IsReadOnly="True"
-                  SelectionMode="Single"
-                  GridLinesVisibility="Horizontal"
-                  AlternatingRowBackground="#FAFAFA"
-                  Margin="8,0,8,0">
-            <DataGrid.Columns>
+        <Border Grid.Row="2"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource SurfaceBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Margin="8,0,8,0"
+                ClipToBounds="True">
+            <Grid>
+                <DataGrid x:Name="TransactionGrid"
+                          ItemsSource="{Binding Transactions, NotifyOnTargetUpdated=True}"
+                          TargetUpdated="TransactionGrid_TargetUpdated"
+                          SelectedItem="{Binding SelectedTransaction}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          HeadersVisibility="Column"
+                          RowHeaderWidth="0"
+                          GridLinesVisibility="Horizontal"
+                          HorizontalGridLinesBrush="{DynamicResource GridLineBrush}"
+                          AlternatingRowBackground="{DynamicResource ControlBrush}"
+                          Background="Transparent"
+                          BorderThickness="0"
+                          ColumnHeaderStyle="{StaticResource TransactionGridHeaderStyle}"
+                          CellStyle="{StaticResource TransactionGridCellStyle}"
+                          RowStyle="{StaticResource TransactionGridRowStyle}">
+                    <DataGrid.Columns>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Date]}"
                                     Binding="{Binding Date, StringFormat={}{0:dd.MM.yyyy}}"
                                     SortMemberPath="Date"
@@ -215,18 +302,18 @@
                         </MultiBinding>
                     </DataGridTextColumn.Binding>
                     <DataGridTextColumn.CellStyle>
-                        <Style TargetType="DataGridCell">
+                        <Style TargetType="DataGridCell" BasedOn="{StaticResource TransactionGridCellStyle}">
                             <Setter Property="ToolTip"
                                     Value="{Binding Type, Converter={StaticResource TransactionTypeToTextConverter}}"/>
                             <Setter Property="ToolTipService.InitialShowDelay" Value="200"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Type}"
                                              Value="{x:Static domainEnums:TransactionType.Expense}">
-                                    <Setter Property="Background" Value="#FCEFF1"/>
+                                    <Setter Property="Background" Value="{DynamicResource ExpenseBackgroundBrush}"/>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding Type}"
                                              Value="{x:Static domainEnums:TransactionType.Income}">
-                                    <Setter Property="Background" Value="#ECF8EF"/>
+                                    <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -243,8 +330,27 @@
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Description]}" Binding="{Binding Description}"     Width="*"/>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Location]}"     Binding="{Binding Location}"        Width="120"/>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Payer]}"       Binding="{Binding PayerName}"       Width="110"/>
-            </DataGrid.Columns>
-        </DataGrid>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[TransactionList_Empty]}"
+                           Foreground="{DynamicResource MutedTextBrush}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           IsHitTestVisible="False">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Transactions.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+        </Border>
 
         <!-- Action buttons -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,6,8,8">

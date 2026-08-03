@@ -63,6 +63,12 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
     protected abstract Task DeleteCoreAsync(IServiceScope scope, T item, CancellationToken ct);
 
     protected string EntityDisplayName => T(EntityDisplayNameKey);
+    public string Title => EntityDisplayName;
+
+    protected override void OnCultureChanged()
+    {
+        OnPropertyChanged(nameof(Title));
+    }
 
     private async Task LoadAsync()
     {

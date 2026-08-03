@@ -42,6 +42,8 @@ public partial class App : System.Windows.Application
             System.Windows.Application.Current.Resources["Localization"] = _localization;
             ConfigureServices(services, _localization);
             _serviceProvider = services.BuildServiceProvider();
+            var themeService = _serviceProvider.GetRequiredService<IThemeService>();
+            System.Windows.Application.Current.Resources["ThemeService"] = themeService;
 
             var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
             logger.LogInformation("Saldo is starting.");
@@ -105,6 +107,7 @@ public partial class App : System.Windows.Application
         services.AddScoped<GetNewTransactionDefaults>();
 
         services.AddSingleton<IDialogService, WpfDialogService>();
+        services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton(localization);
         services.AddSingleton<ILocalizationService>(localization);
 
@@ -248,4 +251,3 @@ public partial class App : System.Windows.Application
         base.OnExit(e);
     }
 }
-

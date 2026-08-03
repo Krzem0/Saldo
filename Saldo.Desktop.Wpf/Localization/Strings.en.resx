@@ -19,6 +19,11 @@
   <data name="SettingsTitle" xml:space="preserve"><value>Settings</value></data>
   <data name="SettingsDescription" xml:space="preserve"><value>Adjust the app to your preferences.</value></data>
   <data name="SettingsLanguageDescription" xml:space="preserve"><value>Interface language and number formatting.</value></data>
+  <data name="ThemeLabel" xml:space="preserve"><value>Theme</value></data>
+  <data name="ThemeDescription" xml:space="preserve"><value>Application appearance. The selection is not saved after closing yet.</value></data>
+  <data name="Theme_System" xml:space="preserve"><value>System</value></data>
+  <data name="Theme_Light" xml:space="preserve"><value>Light</value></data>
+  <data name="Theme_Dark" xml:space="preserve"><value>Dark</value></data>
   <data name="TabTransactions" xml:space="preserve"><value>Transactions</value></data>
   <data name="TabCategories" xml:space="preserve"><value>Categories</value></data>
   <data name="TabMembers" xml:space="preserve"><value>People</value></data>
@@ -31,6 +36,8 @@
   <data name="Add" xml:space="preserve"><value>Add</value></data>
   <data name="Edit" xml:space="preserve"><value>Edit</value></data>
   <data name="Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="ReferenceList_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="ReferenceList_Empty" xml:space="preserve"><value>No items yet. Add the first one to get started.</value></data>
   <data name="Date" xml:space="preserve"><value>Date</value></data>
   <data name="Amount" xml:space="preserve"><value>Amount</value></data>
   <data name="Category" xml:space="preserve"><value>Category</value></data>
@@ -45,6 +52,7 @@
   <data name="Type_Expense" xml:space="preserve"><value>Expense</value></data>
   <data name="Type_Income" xml:space="preserve"><value>Income</value></data>
   <data name="Summary_Income" xml:space="preserve"><value>Income</value></data>
+  <data name="CurrentMonth" xml:space="preserve"><value>Current month</value></data>
   <data name="Summary_Expense" xml:space="preserve"><value>Expense</value></data>
   <data name="Summary_Balance" xml:space="preserve"><value>Balance</value></data>
   <data name="Transaction_AddTitle" xml:space="preserve"><value>Add transaction</value></data>
@@ -71,6 +79,7 @@
   <data name="StartupFailedMessage" xml:space="preserve"><value>Application startup failed. See the log for details.</value></data>
   <data name="UnhandledUiErrorMessage" xml:space="preserve"><value>An unexpected error occurred. See the log for details.</value></data>
   <data name="TransactionsLoadError" xml:space="preserve"><value>Failed to load transactions.</value></data>
+  <data name="TransactionList_Empty" xml:space="preserve"><value>No transactions in the selected month.</value></data>
   <data name="TransactionType_Expense" xml:space="preserve"><value>Expense</value></data>
   <data name="TransactionType_Income" xml:space="preserve"><value>Income</value></data>
   <data name="Validation_TransactionIdMustBePositive" xml:space="preserve"><value>Transaction id must be positive.</value></data>

@@ -64,6 +64,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     public int Year  { get => _year;  private set => SetField(ref _year,  value); }
     public int Month { get => _month; private set => SetField(ref _month, value); }
     public string MonthLabel => new DateOnly(Year, Month, 1).ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+    public bool IsCurrentMonth => Year == DateTime.Today.Year && Month == DateTime.Today.Month;
 
     public bool IsMonthPickerOpen
     {
@@ -131,6 +132,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     public ICommand LoadCommand              { get; }
     public ICommand PreviousMonthCommand     { get; }
     public ICommand NextMonthCommand         { get; }
+    public ICommand CurrentMonthCommand      { get; }
     public ICommand OpenMonthPickerCommand   { get; }
     public ICommand PreviousPickerYearCommand { get; }
     public ICommand NextPickerYearCommand    { get; }
@@ -155,6 +157,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
         LoadCommand               = new AsyncRelayCommand(LoadAsync);
         PreviousMonthCommand      = new RelayCommand(PreviousMonth);
         NextMonthCommand          = new RelayCommand(NextMonth);
+        CurrentMonthCommand       = new RelayCommand(GoToCurrentMonth, () => !IsCurrentMonth);
         OpenMonthPickerCommand    = new RelayCommand(OpenMonthPicker);
         PreviousPickerYearCommand = new RelayCommand(() => PickerYear--);
         NextPickerYearCommand     = new RelayCommand(() => PickerYear++);
@@ -181,8 +184,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
         Month = month;
         Year  = PickerYear;
         IsMonthPickerOpen = false;
-        OnPropertyChanged(nameof(MonthLabel));
-        LoadCommand.Execute(null);
+        RefreshSelectedMonth();
     }
 
     private async Task LoadAsync()
@@ -214,8 +216,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
         var d = new DateOnly(Year, Month, 1).AddMonths(-1);
         Year = d.Year;
         Month = d.Month;
-        OnPropertyChanged(nameof(MonthLabel));
-        LoadCommand.Execute(null);
+        RefreshSelectedMonth();
     }
 
     private void NextMonth()
@@ -223,7 +224,21 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
         var d = new DateOnly(Year, Month, 1).AddMonths(1);
         Year = d.Year;
         Month = d.Month;
+        RefreshSelectedMonth();
+    }
+
+    private void GoToCurrentMonth()
+    {
+        Year = DateTime.Today.Year;
+        Month = DateTime.Today.Month;
+        RefreshSelectedMonth();
+    }
+
+    private void RefreshSelectedMonth()
+    {
         OnPropertyChanged(nameof(MonthLabel));
+        OnPropertyChanged(nameof(IsCurrentMonth));
+        CommandManager.InvalidateRequerySuggested();
         LoadCommand.Execute(null);
     }
 

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using Saldo.Desktop.Wpf.Localization;
+using Saldo.Desktop.Wpf.Services;
 using Saldo.Desktop.Wpf.ViewModels;
 
 namespace Saldo.Desktop.Wpf.Views;
@@ -13,6 +14,15 @@ public partial class AddEditTransactionDialog : Window
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+        SourceInitialized += OnSourceInitialized;
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        if (System.Windows.Application.Current.Resources["ThemeService"] is IThemeService themeService)
+        {
+            ThemeService.ApplyWindowTitleBarTheme(this, themeService.SelectedTheme);
+        }
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)

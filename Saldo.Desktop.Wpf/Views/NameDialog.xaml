@@ -5,14 +5,9 @@
         MinWidth="320"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
-        ShowInTaskbar="False">
-    <Window.Resources>
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="16,6"/>
-            <Setter Property="MinWidth" Value="80"/>
-        </Style>
-    </Window.Resources>
-    <Grid Margin="16">
+        ShowInTaskbar="False"
+        Background="{DynamicResource SurfaceBrush}">
+    <Grid Margin="24" Background="{DynamicResource SurfaceBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="8"/>
@@ -20,11 +15,14 @@
         </Grid.RowDefinitions>
 
         <TextBox x:Name="NameBox" Grid.Row="0" MinWidth="260"
+                 Padding="8,5"
                  Text="{Binding EnteredName, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="{Binding Source={StaticResource Localization}, Path=[Save]}" IsDefault="True" Click="Save_Click" Margin="0,0,8,0"/>
-            <Button Content="{Binding Source={StaticResource Localization}, Path=[Cancel]}" IsCancel="True"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Save]}" IsDefault="True" Click="Save_Click"
+                    Style="{StaticResource PrimaryActionButtonStyle}" Padding="16,6" Margin="0,0,8,0" MinWidth="80"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Cancel]}" IsCancel="True"
+                    Style="{StaticResource SecondaryActionButtonStyle}" Padding="16,6" MinWidth="80"/>
         </StackPanel>
     </Grid>
 </Window>
