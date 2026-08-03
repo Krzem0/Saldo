@@ -132,6 +132,7 @@
                                         Command="{Binding PreviousPickerYearCommand}"
                                         Padding="8,2" BorderThickness="0"
                                         Background="Transparent" Cursor="Hand"
+                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                         FontSize="18"/>
                                 <TextBox Grid.Column="1"
                                          Text="{Binding PickerYearText, UpdateSourceTrigger=LostFocus}"
@@ -149,6 +150,7 @@
                                         Command="{Binding NextPickerYearCommand}"
                                         Padding="8,2" BorderThickness="0"
                                         Background="Transparent" Cursor="Hand"
+                                        Foreground="{DynamicResource PrimaryTextBrush}"
                                         FontSize="18"/>
                             </Grid>
 
@@ -170,6 +172,7 @@
                                                 <Style TargetType="Button">
                                                     <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
                                                     <Setter Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
                                                     <Setter Property="Template">
                                                         <Setter.Value>
                                                             <ControlTemplate TargetType="Button">

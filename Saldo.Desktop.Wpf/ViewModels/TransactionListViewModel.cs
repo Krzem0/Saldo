@@ -279,11 +279,11 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     {
         if (SelectedTransaction is null) return;
 
-        var confirm = MessageBox.Show(
-            string.Format(CultureInfo.CurrentCulture, T("DeleteConfirmTemplate"), $"{SelectedTransaction.Date:dd.MM.yyyy}, {SelectedTransaction.Amount:N2}"),
-            T("DeleteTransactionTitle"), MessageBoxButton.YesNo, MessageBoxImage.Question);
+        var confirm = _dialogService.ConfirmDelete(
+            T("DeleteTransactionTitle"),
+            string.Format(CultureInfo.CurrentCulture, T("DeleteConfirmTemplate"), $"{SelectedTransaction.Date:dd.MM.yyyy}, {SelectedTransaction.Amount:N2}"));
 
-        if (confirm != MessageBoxResult.Yes) return;
+        if (!confirm) return;
 
         try
         {

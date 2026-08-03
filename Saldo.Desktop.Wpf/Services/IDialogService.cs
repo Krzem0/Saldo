@@ -8,4 +8,6 @@ public interface IDialogService
 
     /// <summary>Shows a simple single-field name input dialog. Returns the entered name or null when cancelled.</summary>
     string? ShowNameDialog(string title, string? initialValue = null);
+
+    bool ConfirmDelete(string title, string message);
 }

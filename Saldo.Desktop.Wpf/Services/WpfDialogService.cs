@@ -20,6 +20,13 @@ public sealed class WpfDialogService : IDialogService
         return dialog.ShowDialog() == true ? dialog.EnteredName : null;
     }
 
+    public bool ConfirmDelete(string title, string message)
+    {
+        var dialog = new DeleteConfirmationDialog(title, message);
+        SetOwner(dialog);
+        return dialog.ShowDialog() == true;
+    }
+
     private static void SetOwner(Window dialog)
     {
         var owner = System.Windows.Application.Current?.Windows

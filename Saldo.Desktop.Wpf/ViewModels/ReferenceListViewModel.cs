@@ -127,11 +127,10 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
     private async Task DeleteAsync()
     {
         if (SelectedItem is null) return;
-        var confirm = MessageBox.Show(
-         string.Format(CultureInfo.CurrentCulture, T("DeleteConfirmTemplate"), GetName(SelectedItem)),
+        var confirm = DialogService.ConfirmDelete(
             string.Format(CultureInfo.CurrentCulture, T("DeleteEntityTitleTemplate"), EntityDisplayName),
-            MessageBoxButton.YesNo, MessageBoxImage.Warning);
-        if (confirm != MessageBoxResult.Yes) return;
+            string.Format(CultureInfo.CurrentCulture, T("DeleteConfirmTemplate"), GetName(SelectedItem)));
+        if (!confirm) return;
 
         try
         {
