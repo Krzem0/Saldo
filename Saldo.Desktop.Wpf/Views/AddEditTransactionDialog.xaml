@@ -3,31 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:Saldo.Desktop.Wpf.Controls"
         Title="{Binding Title}"
-        Width="420" SizeToContent="Height"
+        Width="520" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         Background="{DynamicResource SurfaceBrush}"
         Closing="Window_Closing">
-    <Grid Margin="24" Background="{DynamicResource SurfaceBrush}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="16"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="110"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <Grid.Resources>
+    <StackPanel Margin="24" Background="{DynamicResource SurfaceBrush}">
+        <StackPanel.Resources>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <Style TargetType="TextBlock">
                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -68,6 +51,7 @@
                                                        Background="{TemplateBinding Background}"
                                                        Foreground="{TemplateBinding Foreground}"
                                                        BorderThickness="0"
+                                                       HorizontalContentAlignment="Center"
                                                        Padding="6,3"/>
                                     <Button x:Name="PART_Button" Grid.Column="1"
                                             Background="{DynamicResource ControlBrush}"
@@ -100,6 +84,7 @@
                             <Border Background="{TemplateBinding Background}"
                                     Padding="{TemplateBinding Padding}">
                                 <ScrollViewer x:Name="PART_ContentHost"
+                                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                                               VerticalContentAlignment="Center"/>
                             </Border>
                         </ControlTemplate>
@@ -109,104 +94,110 @@
             <Style x:Key="FieldErrorStyle" TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{DynamicResource ValidationTextBrush}"/>
                 <Setter Property="FontSize" Value="11"/>
-                <Setter Property="Margin" Value="4,-2,0,4"/>
+                <Setter Property="Margin" Value="0,3,0,0"/>
                 <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
+            <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Margin" Value="0,0,0,4"/>
             </Style>
             <Style x:Key="QuickAddButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
                 <Setter Property="Width" Value="30"/>
                 <Setter Property="Padding" Value="0"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
             </Style>
-        </Grid.Resources>
+        </StackPanel.Resources>
 
-        <!-- Date -->
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Date]}"/>
-        <DatePicker Grid.Row="0" Grid.Column="1"
-                    SelectedDate="{Binding Date}"/>
+        <Grid Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Date]}" Style="{StaticResource FieldLabelStyle}"/>
+                <DatePicker SelectedDate="{Binding Date}" Margin="0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Margin="4,0">
+                <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Amount]}" Style="{StaticResource FieldLabelStyle}"/>
+                <TextBox Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0"
+                         MinHeight="30"
+                         HorizontalContentAlignment="Right"
+                         controls:AmountInputBehavior.IsEnabled="True"/>
+                <TextBlock Text="{Binding AmountError}" Style="{StaticResource FieldErrorStyle}"
+                           Visibility="{Binding HasAmountError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Margin="8,0,0,0">
+                <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Type]}" Style="{StaticResource FieldLabelStyle}"/>
+                <ComboBox ItemsSource="{Binding Types}" SelectedItem="{Binding SelectedType}" Margin="0" MinHeight="30" HorizontalContentAlignment="Center">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate><TextBlock Text="{Binding Label}" Foreground="{DynamicResource PrimaryTextBrush}"/></DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+        </Grid>
 
-        <!-- Amount -->
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Amount]}"/>
-        <StackPanel Grid.Row="1" Grid.Column="1">
-            <TextBox Text="{Binding AmountText, UpdateSourceTrigger=PropertyChanged}"/>
-            <TextBlock Text="{Binding AmountError}" Style="{StaticResource FieldErrorStyle}"
-                       Visibility="{Binding HasAmountError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-        </StackPanel>
-
-        <!-- Counterparty -->
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Counterparty]}"/>
-        <StackPanel Grid.Row="2" Grid.Column="1">
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Counterparty]}" Style="{StaticResource FieldLabelStyle}"/>
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Parties}"
                                                SelectedItem="{Binding SelectedCounterparty}"
                                                Text="{Binding CounterpartyText, UpdateSourceTrigger=PropertyChanged}"
                                                DisplayMemberPath="Name"/>
-                <Button Grid.Column="1" Content="+" Command="{Binding AddCounterpartyCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,5,0,5"
+                <Button Grid.Column="1" Content="+" Command="{Binding AddCounterpartyCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,0,0,0"
                         ToolTip="{Binding Source={StaticResource Localization}, Path=[AddPartyTooltip]}"/>
             </Grid>
             <TextBlock Text="{Binding CounterpartyError}" Style="{StaticResource FieldErrorStyle}"
                        Visibility="{Binding HasCounterpartyError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
 
-        <!-- Description -->
-        <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Description]}"/>
-        <TextBox Grid.Row="3" Grid.Column="1"
-                 Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"/>
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Description]}" Style="{StaticResource FieldLabelStyle}"/>
+            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0"/>
+        </StackPanel>
 
-        <!-- Category -->
-        <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Category]}"/>
-        <StackPanel Grid.Row="4" Grid.Column="1">
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Category]}" Style="{StaticResource FieldLabelStyle}"/>
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Categories}"
                                                SelectedItem="{Binding SelectedCategory}"
                                                Text="{Binding CategoryText, UpdateSourceTrigger=PropertyChanged}"
                                                DisplayMemberPath="Name"/>
-                <Button Grid.Column="1" Content="+" Command="{Binding AddCategoryCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,5,0,5"
+                <Button Grid.Column="1" Content="+" Command="{Binding AddCategoryCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,0,0,0"
                         ToolTip="{Binding Source={StaticResource Localization}, Path=[AddCategoryTooltip]}"/>
             </Grid>
             <TextBlock Text="{Binding CategoryError}" Style="{StaticResource FieldErrorStyle}"
                        Visibility="{Binding HasCategoryError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
 
-        <!-- Location -->
-        <TextBlock Grid.Row="5" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Location]}"/>
-        <StackPanel Grid.Row="5" Grid.Column="1">
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Location]}" Style="{StaticResource FieldLabelStyle}"/>
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Locations}"
                                                SelectedItem="{Binding SelectedLocation}"
                                                Text="{Binding LocationText, UpdateSourceTrigger=PropertyChanged}"
                                                DisplayMemberPath="Name"/>
-                <Button Grid.Column="1" Content="+" Command="{Binding AddLocationCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,5,0,5"
+                <Button Grid.Column="1" Content="+" Command="{Binding AddLocationCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,0,0,0"
                         ToolTip="{Binding Source={StaticResource Localization}, Path=[AddLocationTooltip]}"/>
             </Grid>
             <TextBlock Text="{Binding LocationError}" Style="{StaticResource FieldErrorStyle}"
                        Visibility="{Binding HasLocationError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
 
-        <!-- Type -->
-        <TextBlock Grid.Row="6" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Type]}"/>
-        <ComboBox Grid.Row="6" Grid.Column="1"
-                  ItemsSource="{Binding Types}"
-                  SelectedItem="{Binding SelectedType}">
-            <ComboBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Label}" Foreground="{DynamicResource PrimaryTextBrush}"/>
-                </DataTemplate>
-            </ComboBox.ItemTemplate>
-        </ComboBox>
-
-        <!-- Payer -->
-        <TextBlock Grid.Row="7" Grid.Column="0" Text="{Binding Source={StaticResource Localization}, Path=[Payer]}"/>
-        <StackPanel Grid.Row="7" Grid.Column="1">
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Payer]}" Style="{StaticResource FieldLabelStyle}"/>
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Parties}"
                                                SelectedItem="{Binding SelectedPayer}"
                                                Text="{Binding PayerText, UpdateSourceTrigger=PropertyChanged}"
                                                DisplayMemberPath="Name"/>
-                <Button Grid.Column="1" Content="+" Command="{Binding AddPayerCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,5,0,5"
+                <Button Grid.Column="1" Content="+" Command="{Binding AddPayerCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,0,0,0"
                         ToolTip="{Binding Source={StaticResource Localization}, Path=[AddPartyTooltip]}"/>
             </Grid>
             <TextBlock Text="{Binding PayerError}" Style="{StaticResource FieldErrorStyle}"
@@ -214,20 +205,19 @@
         </StackPanel>
 
         <!-- Errors not associated with a specific field -->
-        <Border Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2"
-                Margin="0,8,0,0" Padding="10,8"
+        <Border Margin="0,0,0,16" Padding="10,8"
                 Background="{DynamicResource ValidationBackgroundBrush}" BorderBrush="{DynamicResource ValidationTextBrush}" BorderThickness="1" CornerRadius="4"
                 Visibility="{Binding HasValidationSummary, Converter={StaticResource BooleanToVisibilityConverter}}">
             <TextBlock Text="{Binding ValidationSummary}" Foreground="{DynamicResource ValidationTextBrush}" TextWrapping="Wrap" Margin="0"/>
         </Border>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2"
+        <StackPanel
                     Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="{Binding Source={StaticResource Localization}, Path=[Save]}" Command="{Binding SaveCommand}"
                     Width="80" Padding="0,5" Margin="0,0,8,0" IsDefault="True" Style="{StaticResource PrimaryActionButtonStyle}"/>
             <Button Content="{Binding Source={StaticResource Localization}, Path=[Cancel]}" Click="Cancel_Click"
                     Width="80" Padding="0,5" Style="{StaticResource SecondaryActionButtonStyle}"/>
         </StackPanel>
-    </Grid>
+    </StackPanel>
 </Window>

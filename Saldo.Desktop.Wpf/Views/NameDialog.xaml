@@ -10,15 +10,31 @@
     <Grid Margin="24" Background="{DynamicResource SurfaceBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="8"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBox x:Name="NameBox" Grid.Row="0" MinWidth="260"
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Source={StaticResource Localization}, Path=[ReferenceList_Name]}"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,4"/>
+
+        <TextBox x:Name="NameBox" Grid.Row="1" MinWidth="260"
                  Padding="8,5"
+                 TextChanged="NameBox_TextChanged"
                  Text="{Binding EnteredName, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+        <TextBlock x:Name="NameErrorText" Grid.Row="2"
+                   Text="{Binding Source={StaticResource Localization}, Path=[Validation_NameRequired]}"
+                   Foreground="{DynamicResource ValidationTextBrush}"
+                   FontSize="11"
+                   Margin="0,3,0,0"
+                   Visibility="Collapsed"/>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="{Binding Source={StaticResource Localization}, Path=[Save]}" IsDefault="True" Click="Save_Click"
                     Style="{StaticResource PrimaryActionButtonStyle}" Padding="16,6" Margin="0,0,8,0" MinWidth="80"/>
             <Button Content="{Binding Source={StaticResource Localization}, Path=[Cancel]}" IsCancel="True"

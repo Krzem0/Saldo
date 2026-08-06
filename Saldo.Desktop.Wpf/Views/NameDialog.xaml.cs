@@ -31,7 +31,20 @@ public partial class NameDialog : Window
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(EnteredName)) return;
+        if (string.IsNullOrWhiteSpace(EnteredName))
+        {
+            NameErrorText.Visibility = Visibility.Visible;
+            return;
+        }
+
         DialogResult = true;
+    }
+
+    private void NameBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(NameBox.Text))
+        {
+            NameErrorText.Visibility = Visibility.Collapsed;
+        }
     }
 }

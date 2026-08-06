@@ -92,4 +92,5 @@
   <data name="Validation_TransactionNotFound" xml:space="preserve"><value>Transakcja nie została znaleziona.</value></data>
   <data name="Validation_AmountRequired" xml:space="preserve"><value>Kwota jest wymagana.</value></data>
   <data name="Validation_AmountMustBeNumber" xml:space="preserve"><value>Kwota musi być liczbą.</value></data>
+  <data name="Validation_NameRequired" xml:space="preserve"><value>Nazwa jest wymagana.</value></data>
 </root>
