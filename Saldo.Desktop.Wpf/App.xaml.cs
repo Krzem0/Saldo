@@ -181,41 +181,45 @@ public partial class App : System.Windows.Application
             "pl" => new SeedData(
                 [
                     "Mieszkanie",
+                    "Media i telefon",
                     "Supermarkety",
                     "Zakupy online",
                     "Posiłki w pracy",
-                    "Fast food",
+                    "Jedzenie poza domem",
+                    "Używki",
                     "Transport",
                     "Zwierzęta",
                     "Rozrywka",
                     "Wynagrodzenie",
                     "Premia",
-                    "Lokata",
+                    "Odsetki z oszczędności",
                     "Dywidendy",
                     "Inne",
                     "Zdrowie",
-                    "Darowizny i prezenty",
-                    "Pielęgnacja"
+                    "Prezenty i darowizny",
+                    "Ubiór i pielęgnacja"
                 ],
                 "Ja"),
             _ => new SeedData(
                 [
                     "Housing",
+                    "Utilities and phone",
                     "Supermarkets",
                     "Online shopping",
                     "Meals at work",
-                    "Fast food",
+                    "Dining out",
+                    "Alcohol and tobacco",
                     "Transport",
                     "Pets",
                     "Entertainment",
                     "Salary",
                     "Bonus",
-                    "Term deposit",
+                    "Interest on savings",
                     "Dividends",
                     "Other",
                     "Health",
-                    "Donations and gifts",
-                    "Personal care"
+                    "Gifts and donations",
+                    "Clothing and personal care"
                 ],
                 "Me")
         };
