@@ -9,6 +9,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="16"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -65,6 +67,22 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
             </Grid>
+        </Border>
+        <Border Grid.Row="6" Background="{DynamicResource ControlBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="20" MaxWidth="480" HorizontalAlignment="Left">
+            <StackPanel>
+                <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[BackupTitle]}"
+                           Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[BackupDescription]}"
+                           Foreground="{DynamicResource MutedTextBrush}" FontSize="12" Margin="0,4,0,12" TextWrapping="Wrap"/>
+                <WrapPanel>
+                    <Button Content="{Binding Source={StaticResource Localization}, Path=[BackupCreate]}"
+                            Command="{Binding CreateBackupCommand}" Margin="0,0,8,0"
+                            Style="{StaticResource SecondaryActionButtonStyle}" Padding="14,7"/>
+                    <Button Content="{Binding Source={StaticResource Localization}, Path=[OpenDatabaseFolder]}"
+                            Command="{Binding OpenDatabaseFolderCommand}"
+                            Style="{StaticResource SecondaryActionButtonStyle}" Padding="14,7"/>
+                </WrapPanel>
+            </StackPanel>
         </Border>
     </Grid>
 </UserControl>

@@ -86,6 +86,7 @@ public partial class App : System.Windows.Application
         var dataDir = System.IO.Path.Combine(appData, "Saldo");
         System.IO.Directory.CreateDirectory(dataDir);
         var dbPath = System.IO.Path.Combine(dataDir, "saldo.db");
+        services.AddSingleton<IDatabaseFolderService>(new WindowsDatabaseFolderService(dataDir));
 
         services.AddDbContext<SaldoDbContext>(o => o.UseSqlite($"Data Source={dbPath}"));
 
@@ -94,6 +95,7 @@ public partial class App : System.Windows.Application
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IPartyRepository, PartyRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
+        services.AddScoped<IDatabaseBackupService, SqliteDatabaseBackupService>();
 
         services.AddScoped<IValidator<AddTransactionCommand>, AddTransactionCommandValidator>();
         services.AddScoped<IValidator<EditTransactionCommand>, EditTransactionCommandValidator>();

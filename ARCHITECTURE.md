@@ -60,6 +60,7 @@ Contains:
 - `AddCategory` and `EditCategory`, sharing category name and color normalization
 - DTOs used by ViewModels
 - Repository abstractions
+- `IDatabaseBackupService`, exposing backup creation independently of the GUI and storage implementation
 - FluentValidation validators for use-case commands
 - Stable error codes and validation-result mapping
 
@@ -111,12 +112,23 @@ Contains:
 - Entity configurations
 - Repository implementations
 - Initial schema migration and model snapshot
+- `SqliteDatabaseBackupService`, using dedicated SQLite connections and the online backup API to create a consistent snapshot including committed WAL data
 
 Rules:
 
 - Implements interfaces defined in the Application layer
 - No UI code
 - During the current single-instance local development phase, schema changes update the initial migration, its designer, and the model snapshot. Incremental upgrade migrations are deferred until deployed databases need to be preserved across schema versions
+
+### Database Backups
+
+- Settings chooses a destination using an owned Windows save dialog and invokes `IDatabaseBackupService` through a scoped service
+- Opening the database folder in Explorer is a WPF service (`IDatabaseFolderService`), configured with the same data directory as the database; it introduces no Windows shell dependency into Application or Infrastructure
+- Backup runs off the UI thread with a dedicated read-only source connection; it does not share an EF Core connection with other workflows
+- The snapshot is written to a temporary file in the destination folder and switched to DELETE journal mode so the backup is self-contained
+- Only a completed snapshot replaces the selected destination. Failed or cancelled operations preserve previous backups and clean up the temporary file
+- Destination validation prevents replacing the active database or its WAL, SHM, and journal files
+- Backup success and failure are logged and shown through localized messages. Restore is deferred
 
 ## Conceptual Data Model
 
@@ -202,6 +214,7 @@ Rules:
 - Integration tests for SQLite persistence
 - Color tests cover normalization, rejection before writes, optional-color persistence, and adding, changing, or clearing colors as reflected in existing transaction DTOs
 - Integration tests use disposable SQLite files named `saldo-test-{GUID}.db` in the temporary directory. Color integration tests apply the initial migration to a fresh database; other repository tests currently use `EnsureCreated()`. Tests do not access the application's `%AppData%\Saldo\saldo.db`
+- Backup integration tests verify standalone snapshots from an open WAL database, persisted references and tags, migration history and database integrity, replacement of previous backups, and protection against invalid destinations, failure, and cancellation
 - Minimal GUI testing, with most business behavior verified outside WPF
 
 ## Future Extensions

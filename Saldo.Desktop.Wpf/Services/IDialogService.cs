@@ -12,4 +12,6 @@ public interface IDialogService
     CategoryDialogResult? ShowCategoryDialog(string title, string? initialName = null, string? initialColorCode = null);
 
     bool ConfirmDelete(string title, string message);
+
+    string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter);
 }

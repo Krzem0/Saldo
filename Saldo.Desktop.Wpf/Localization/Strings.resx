@@ -96,4 +96,13 @@
   <data name="Validation_AmountRequired" xml:space="preserve"><value>Kwota jest wymagana.</value></data>
   <data name="Validation_AmountMustBeNumber" xml:space="preserve"><value>Kwota musi być liczbą.</value></data>
   <data name="Validation_NameRequired" xml:space="preserve"><value>Nazwa jest wymagana.</value></data>
+  <data name="BackupTitle" xml:space="preserve"><value>Kopia zapasowa</value></data>
+  <data name="BackupDescription" xml:space="preserve"><value>Zapisz kopię wszystkich danych do pliku w wybranym miejscu.</value></data>
+  <data name="BackupCreate" xml:space="preserve"><value>Utwórz kopię zapasową</value></data>
+  <data name="BackupFileFilter" xml:space="preserve"><value>Baza danych SQLite (*.db)|*.db</value></data>
+  <data name="BackupSuccessMessage" xml:space="preserve"><value>Kopia zapasowa została zapisana:
+{0}</value></data>
+  <data name="BackupFailedMessage" xml:space="preserve"><value>Nie udało się utworzyć kopii zapasowej. Wybierz plik inny niż używana baza danych i sprawdź uprawnienia do folderu. Szczegóły zapisano w logu.</value></data>
+  <data name="OpenDatabaseFolder" xml:space="preserve"><value>Otwórz folder z bazą</value></data>
+  <data name="OpenDatabaseFolderFailed" xml:space="preserve"><value>Nie udało się otworzyć folderu z bazą danych. Szczegóły zapisano w logu.</value></data>
 </root>

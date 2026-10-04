@@ -6,13 +6,13 @@ This document tracks planned work. Implemented behavior and architectural decisi
 
 - [ ] Extend transaction-list sorting and add filters (default date-descending ordering and date/amount header sorting already exist)
 - [ ] Dedicated monthly summary screen
-- [ ] All-transactions history with date range, search, filters, database-side sorting, and pagination
+- [ ] Add a separate all-transactions history tab alongside the existing monthly transaction tab, with date-range selection, search, filters, database-side sorting, and pagination
 
 ## App Reliability
 
 - [ ] Persist user preferences, including language and appearance theme
-- [ ] Backup folder configuration
-- [ ] Backup and restore to a single file
+- [ ] Persist a preferred backup folder
+- [ ] Restore from a single-file database backup (manual backup creation is available in Settings)
 - [ ] Packaging and installer
 
 ## Later
@@ -20,7 +20,7 @@ This document tracks planned work. Implemented behavior and architectural decisi
 - [ ] Further WPF visual polish and accessibility review
 - [ ] Recurring transactions
 - [ ] CSV import and export
-- [ ] Tags and advanced filters
+- [ ] Complete tag support in WPF (management, transaction selection and display) and add tag filtering; the domain model, persistence, and transaction use cases already support tags
 - [ ] Charts and trends
 
 ## Second UI

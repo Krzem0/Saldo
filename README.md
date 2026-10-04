@@ -17,6 +17,7 @@
 - Parties managed as a reusable dictionary
 - Locations managed as a reusable dictionary
 - Local persistence with SQLite
+- Manual database backups to a user-selected file
 - UI localization based on resource files
 - Default app language based on the system culture
 - Light, dark, and system appearance themes for the WPF UI
@@ -76,6 +77,16 @@
 - The WPF UI supports `System`, `Light`, and `Dark` appearance themes
 - `System` is the default and follows the Windows app theme while Saldo is running
 - The selected language and theme are currently session-only and reset when the app is closed
+
+## Backups
+
+- In Settings, use **Create backup** to choose where to save a timestamp-named `.db` file
+- **Open database folder** opens the application's data folder in Windows Explorer, where backups saved alongside the database can be managed
+- The save dialog initially opens the application's data folder, so a backup can be saved alongside the active database or in another location
+- Backups use SQLite's online backup mechanism and can be created while the app is running; the result is a standalone file containing all saved data
+- Choosing an existing backup prompts before overwriting it. The active database and its SQLite sidecar files cannot be selected as backup destinations
+- A previous backup is replaced only after the new snapshot is complete
+- Restore, automatic backups, and a persisted preferred backup folder are not implemented yet
 
 ## Status
 

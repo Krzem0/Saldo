@@ -34,12 +34,34 @@ public sealed class WpfDialogService : IDialogService
         return dialog.ShowDialog() == true;
     }
 
-    private static void SetOwner(Window dialog)
+    public string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter)
     {
-        var owner = System.Windows.Application.Current?.Windows
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = title,
+            FileName = suggestedFileName,
+            DefaultExt = ".db",
+            Filter = filter,
+            AddExtension = true,
+            OverwritePrompt = true,
+            CheckPathExists = true,
+            InitialDirectory = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Saldo")
+        };
+        var owner = GetActiveOwner();
+        var accepted = owner is null ? dialog.ShowDialog() : dialog.ShowDialog(owner);
+        return accepted == true ? dialog.FileName : null;
+    }
+
+    private static Window? GetActiveOwner()
+        => System.Windows.Application.Current?.Windows
             .OfType<Window>()
             .FirstOrDefault(window => window.IsActive)
             ?? System.Windows.Application.Current?.MainWindow;
+
+    private static void SetOwner(Window dialog)
+    {
+        var owner = GetActiveOwner();
 
         if (owner is not null)
         {

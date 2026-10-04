@@ -96,4 +96,13 @@
   <data name="Validation_AmountRequired" xml:space="preserve"><value>Amount is required.</value></data>
   <data name="Validation_AmountMustBeNumber" xml:space="preserve"><value>Amount must be a number.</value></data>
   <data name="Validation_NameRequired" xml:space="preserve"><value>Name is required.</value></data>
+  <data name="BackupTitle" xml:space="preserve"><value>Backup</value></data>
+  <data name="BackupDescription" xml:space="preserve"><value>Save a copy of all your data to a file in a location you choose.</value></data>
+  <data name="BackupCreate" xml:space="preserve"><value>Create backup</value></data>
+  <data name="BackupFileFilter" xml:space="preserve"><value>SQLite database (*.db)|*.db</value></data>
+  <data name="BackupSuccessMessage" xml:space="preserve"><value>Backup saved:
+{0}</value></data>
+  <data name="BackupFailedMessage" xml:space="preserve"><value>Could not create the backup. Choose a file different from the active database and check folder permissions. Details were written to the log.</value></data>
+  <data name="OpenDatabaseFolder" xml:space="preserve"><value>Open database folder</value></data>
+  <data name="OpenDatabaseFolderFailed" xml:space="preserve"><value>Could not open the database folder. Details were written to the log.</value></data>
 </root>
