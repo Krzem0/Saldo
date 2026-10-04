@@ -250,14 +250,14 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
     private async Task AddCategoryAsync()
     {
-        var name = _dialogService.ShowNameDialog(
+        var categoryInput = _dialogService.ShowCategoryDialog(
             string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Category")));
-        if (name is null) return;
+        if (categoryInput is null) return;
 
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
-            var category = await scope.ServiceProvider.GetRequiredService<AddCategory>().ExecuteAsync(name);
+            var category = await scope.ServiceProvider.GetRequiredService<AddCategory>().ExecuteAsync(categoryInput.Name, categoryInput.ColorCode);
             Categories.Add(category);
             SelectedCategory = category;
         }

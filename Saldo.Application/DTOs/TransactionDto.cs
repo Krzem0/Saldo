@@ -9,6 +9,7 @@ public sealed record TransactionDto(
     decimal Amount,
     int CategoryId,
     string CategoryName,
+    string? CategoryColorCode,
     int PayerId,
     string PayerName,
     int CounterpartyId,

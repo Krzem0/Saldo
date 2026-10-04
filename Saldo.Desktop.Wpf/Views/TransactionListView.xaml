@@ -6,6 +6,7 @@
     <UserControl.Resources>
         <localization:TransactionTypeToTextConverter x:Key="TransactionTypeToTextConverter"/>
         <localization:LocalizedNumberConverter x:Key="LocalizedNumberConverter"/>
+        <localization:CategoryColorBrushConverter x:Key="CategoryColorBrushConverter"/>
         <Style x:Key="TransactionGridHeaderStyle" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="{DynamicResource ControlBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
@@ -354,7 +355,20 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Counterparty]}" Binding="{Binding CounterpartyName}" Width="140"/>
-                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Category]}"    Binding="{Binding CategoryName}"    Width="120"/>
+                 <DataGridTemplateColumn Header="{Binding Source={StaticResource Localization}, Path=[Category]}" Width="120"
+                                         CellStyle="{StaticResource TransactionGridCellStyle}">
+                     <DataGridTemplateColumn.CellTemplate>
+                         <DataTemplate>
+                             <Border Background="{Binding CategoryColorCode, Converter={StaticResource CategoryColorBrushConverter}}"
+                                     CornerRadius="3"
+                                     Padding="4,1">
+                                 <TextBlock Text="{Binding CategoryName}"
+                                            TextTrimming="CharacterEllipsis"
+                                            Foreground="{DynamicResource PrimaryTextBrush}"/>
+                             </Border>
+                         </DataTemplate>
+                     </DataGridTemplateColumn.CellTemplate>
+                 </DataGridTemplateColumn>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Description]}" Binding="{Binding Description}"     Width="*"/>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Location]}"     Binding="{Binding Location}"        Width="120"/>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Payer]}"       Binding="{Binding PayerName}"       Width="110"/>

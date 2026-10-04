@@ -10,7 +10,7 @@ internal sealed class TestDatabase : IDisposable
 
     public SaldoDbContext Context { get; }
 
-    public TestDatabase()
+    public TestDatabase(bool useMigrations = false)
     {
         _path = Path.Combine(Path.GetTempPath(), $"saldo-test-{Guid.NewGuid():N}.db");
 
@@ -19,7 +19,14 @@ internal sealed class TestDatabase : IDisposable
             .Options;
 
         Context = new SaldoDbContext(options);
-        Context.Database.EnsureCreated();
+        if (useMigrations)
+        {
+            Context.Database.Migrate();
+        }
+        else
+        {
+            Context.Database.EnsureCreated();
+        }
     }
 
     public void Dispose()

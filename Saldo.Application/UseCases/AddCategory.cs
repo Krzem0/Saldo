@@ -10,20 +10,21 @@ public sealed class AddCategory
 
     public AddCategory(ICategoryRepository categories) => _categories = categories;
 
-    public async Task<Category> ExecuteAsync(string name, CancellationToken ct = default)
+    public async Task<Category> ExecuteAsync(string name, string? colorCode = null, CancellationToken ct = default)
     {
-        var normalizedName = NormalizeName(name);
+        var normalizedName = CategoryInputNormalizer.NormalizeName(name);
+        var normalizedColorCode = CategoryInputNormalizer.NormalizeColorCode(colorCode);
         if ((await _categories.GetAllAsync(ct)).Any(category => string.Equals(category.Name, normalizedName, StringComparison.OrdinalIgnoreCase)))
         {
             throw new DuplicateReferenceException("category", normalizedName);
         }
 
-        var category = new Category { Name = normalizedName };
+        var category = new Category
+        {
+            Name = normalizedName,
+            ColorCode = normalizedColorCode
+        };
         await _categories.AddAsync(category, ct);
         return category;
     }
-
-    private static string NormalizeName(string name) => string.IsNullOrWhiteSpace(name)
-        ? throw new ArgumentException("Name cannot be empty.", nameof(name))
-        : name.Trim();
 }

@@ -19,10 +19,10 @@ public sealed class PartiesViewModel : ReferenceListViewModel<Party>
 
     protected override string GetName(Party item) => item.Name;
 
-    protected override Task AddCoreAsync(IServiceScope scope, string name, CancellationToken ct)
+    protected override Task AddCoreAsync(IServiceScope scope, string name, string? colorCode, CancellationToken ct)
         => scope.ServiceProvider.GetRequiredService<AddParty>().ExecuteAsync(name, ct);
 
-    protected override async Task UpdateCoreAsync(IServiceScope scope, Party item, string name, CancellationToken ct)
+    protected override async Task UpdateCoreAsync(IServiceScope scope, Party item, string name, string? colorCode, CancellationToken ct)
     {
         item.Name = name;
         await scope.ServiceProvider.GetRequiredService<IPartyRepository>().UpdateAsync(item, ct);

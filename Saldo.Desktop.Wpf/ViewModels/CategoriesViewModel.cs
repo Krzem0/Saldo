@@ -19,14 +19,23 @@ public sealed class CategoriesViewModel : ReferenceListViewModel<Category>
 
     protected override string GetName(Category item) => item.Name;
 
-    protected override Task AddCoreAsync(IServiceScope scope, string name, CancellationToken ct)
-        => scope.ServiceProvider.GetRequiredService<AddCategory>().ExecuteAsync(name, ct);
-
-    protected override async Task UpdateCoreAsync(IServiceScope scope, Category item, string name, CancellationToken ct)
+    protected override ReferenceItemInput? ShowAddDialog()
     {
-        item.Name = name;
-        await scope.ServiceProvider.GetRequiredService<ICategoryRepository>().UpdateAsync(item, ct);
+        var result = DialogService.ShowCategoryDialog(string.Format(System.Globalization.CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName));
+        return result is null ? null : new ReferenceItemInput(result.Name, result.ColorCode);
     }
+
+    protected override ReferenceItemInput? ShowEditDialog(Category item)
+    {
+        var result = DialogService.ShowCategoryDialog(string.Format(System.Globalization.CultureInfo.CurrentCulture, T("EditEntityTitleTemplate"), EntityDisplayName), item.Name, item.ColorCode);
+        return result is null ? null : new ReferenceItemInput(result.Name, result.ColorCode);
+    }
+
+    protected override Task AddCoreAsync(IServiceScope scope, string name, string? colorCode, CancellationToken ct)
+        => scope.ServiceProvider.GetRequiredService<AddCategory>().ExecuteAsync(name, colorCode, ct);
+
+    protected override Task UpdateCoreAsync(IServiceScope scope, Category item, string name, string? colorCode, CancellationToken ct)
+        => scope.ServiceProvider.GetRequiredService<EditCategory>().ExecuteAsync(item.Id, name, colorCode, ct);
 
     protected override Task DeleteCoreAsync(IServiceScope scope, Category item, CancellationToken ct)
         => scope.ServiceProvider.GetRequiredService<ICategoryRepository>().DeleteAsync(item.Id, ct);

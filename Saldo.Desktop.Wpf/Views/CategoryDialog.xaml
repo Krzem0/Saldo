@@ -1,0 +1,71 @@
+<Window x:Class="Saldo.Desktop.Wpf.Views.CategoryDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        SizeToContent="WidthAndHeight"
+        MinWidth="320"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        Background="{DynamicResource SurfaceBrush}">
+    <Grid Margin="24" Background="{DynamicResource SurfaceBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Source={StaticResource Localization}, Path=[ReferenceList_Name]}"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,4"/>
+        <TextBox x:Name="NameBox" Grid.Row="1" MinWidth="260"
+                 Padding="8,5"
+                 TextChanged="NameBox_TextChanged"
+                 Text="{Binding EnteredName, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}"/>
+        <TextBlock x:Name="NameErrorText" Grid.Row="2"
+                   Text="{Binding Source={StaticResource Localization}, Path=[Validation_NameRequired]}"
+                   Foreground="{DynamicResource ValidationTextBrush}"
+                   FontSize="11"
+                   Margin="0,3,0,0"
+                   Visibility="Collapsed"/>
+
+        <TextBlock Grid.Row="4"
+                   Text="{Binding Source={StaticResource Localization}, Path=[CategoryColor]}"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,4"/>
+        <Grid Grid.Row="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Click="ChooseColor_Click"
+                    Style="{StaticResource SecondaryActionButtonStyle}"
+                    HorizontalContentAlignment="Left" Padding="10,7" MinHeight="36">
+                <StackPanel Orientation="Horizontal">
+                    <Border x:Name="ColorPreview" Width="20" Height="20" CornerRadius="3"
+                            BorderBrush="{DynamicResource SurfaceBorderBrush}"
+                            BorderThickness="1" Margin="0,0,10,0"/>
+                    <TextBlock x:Name="ColorCodeText" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button x:Name="ClearColorButton" Grid.Column="1" Click="ClearColor_Click"
+                    Content="{Binding Source={StaticResource Localization}, Path=[CategoryColorClear]}"
+                    Style="{StaticResource SecondaryActionButtonStyle}"
+                    Padding="14,7" Margin="8,0,0,0" MinHeight="36" MinWidth="82"/>
+        </Grid>
+
+        <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Save]}" IsDefault="True" Click="Save_Click"
+                    Style="{StaticResource PrimaryActionButtonStyle}" Padding="16,6" Margin="0,0,8,0" MinWidth="80"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Cancel]}" IsCancel="True"
+                    Style="{StaticResource SecondaryActionButtonStyle}" Padding="16,6" MinWidth="80"/>
+        </StackPanel>
+    </Grid>
+</Window>

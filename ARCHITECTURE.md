@@ -33,6 +33,7 @@ Contains:
 - UI-specific services (dialogs, notifications)
 - WPF-only controls such as autocomplete widgets
 - WPF-only services such as `ThemeService` and light/dark theme resource dictionaries
+- `CategoryDialog`, using the native Windows color picker through WinForms interop, and `CategoryColorBrushConverter` for transaction-list rendering
 
 Rules:
 
@@ -56,6 +57,7 @@ Responsible for:
 Contains:
 
 - Use cases such as `AddTransaction`, `EditTransaction`, `DeleteTransaction`, `ListTransactions`, `GetSummary`, `GetNewTransactionDefaults`
+- `AddCategory` and `EditCategory`, sharing category name and color normalization
 - DTOs used by ViewModels
 - Repository abstractions
 - FluentValidation validators for use-case commands
@@ -67,7 +69,8 @@ Rules:
 - No UI concepts
 - Add/edit transaction use cases validate their commands before resolving references or writing data
 - Shared transaction rules are defined once and reused by add/edit command validators
-- Expected validation failures are returned as `Result<T>` errors rather than exceptions
+- Expected transaction validation failures are returned as `Result<T>` errors rather than exceptions
+- Category add/edit use cases validate optional colors before writing data, using the same `#RRGGBB` rule and uppercase normalization; empty values become `null`
 - Validation errors include the command property name when the error can be assigned to a field
 - May enforce workflow rules such as:
   - category must be chosen from an existing dictionary value
@@ -113,6 +116,7 @@ Rules:
 
 - Implements interfaces defined in the Application layer
 - No UI code
+- During the current single-instance local development phase, schema changes update the initial migration, its designer, and the model snapshot. Incremental upgrade migrations are deferred until deployed databases need to be preserved across schema versions
 
 ## Conceptual Data Model
 
@@ -132,6 +136,7 @@ Rules:
 
 - Id
 - Name
+- ColorCode (optional uppercase `#RRGGBB`, stored as nullable text with a maximum length of 7)
 
 ### Party
 
@@ -150,6 +155,9 @@ Rules:
 - The default app language is chosen from the system culture
 - Initial seed values may depend on the current culture
 - `Category` is a controlled dictionary
+- Category colors are persisted data independent of WPF; `TransactionDto.CategoryColorCode` carries the current category color to Presentation when transactions are loaded
+- WPF renders the category color as a translucent background behind its name in the transaction list; the reference list and transaction-form category selector currently show names only
+- The native color picker receives the category dialog's HWND through an `IWin32Window` adapter, explicitly associating it with its WPF owner for modal behavior and activation
 - `Party` and `Location` are reusable dictionaries that can be extended through explicit add workflows from their tabs or the transaction form's `+` buttons
 - Add workflows reject duplicate reference names before a database constraint error reaches the user
 - `TransactionDraft` is WPF-only temporary state for a new transaction and does not survive an application restart; editing an existing transaction asks before discarding unsaved changes instead
@@ -158,7 +166,8 @@ Rules:
 
 ## Validation and Error Contract
 
-- FluentValidation in `Saldo.Application` is the source of truth for business rules at the use-case boundary
+- FluentValidation in `Saldo.Application` is the source of truth for transaction business rules at the use-case boundary
+- Category name and color rules currently use a shared Application normalizer and reject invalid input with `ArgumentException`; they do not yet use the transaction validation-result contract
 - The WPF layer may validate representation-specific input before command creation, for example whether amount text can be parsed as `decimal`
 - Parsing does not replace business validation; the resulting command is still validated by Application
 - Validation failures use stable technical codes such as `Transaction.CategoryRequired`
@@ -191,6 +200,8 @@ Rules:
 - Unit tests for Application and Domain behavior
 - Validator and use-case tests should verify stable error codes and relevant property metadata
 - Integration tests for SQLite persistence
+- Color tests cover normalization, rejection before writes, optional-color persistence, and adding, changing, or clearing colors as reflected in existing transaction DTOs
+- Integration tests use disposable SQLite files named `saldo-test-{GUID}.db` in the temporary directory. Color integration tests apply the initial migration to a fresh database; other repository tests currently use `EnsureCreated()`. Tests do not access the application's `%AppData%\Saldo\saldo.db`
 - Minimal GUI testing, with most business behavior verified outside WPF
 
 ## Future Extensions

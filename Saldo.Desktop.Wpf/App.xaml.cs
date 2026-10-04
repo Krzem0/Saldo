@@ -10,6 +10,7 @@ using Saldo.Domain.Entities;
 using Saldo.Infrastructure.Sqlite.Persistence;
 using Saldo.Infrastructure.Sqlite.Repositories;
 using Serilog;
+using Serilog.Events;
 using System.Globalization;
 using System.Windows;
 using FluentValidation;
@@ -76,7 +77,8 @@ public partial class App : System.Windows.Application
         services.AddLogging(logging =>
         {
             logging.ClearProviders();
-            logging.SetMinimumLevel(LogLevel.Debug);
+            logging.SetMinimumLevel(LogLevel.Information);
+            logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
             logging.AddSerilog(Log.Logger, dispose: false);
         });
 
@@ -99,6 +101,7 @@ public partial class App : System.Windows.Application
         services.AddScoped<AddTransaction>();
         services.AddScoped<EditTransaction>();
         services.AddScoped<AddCategory>();
+        services.AddScoped<EditCategory>();
         services.AddScoped<AddParty>();
         services.AddScoped<AddLocation>();
         services.AddScoped<DeleteTransaction>();
@@ -127,7 +130,8 @@ public partial class App : System.Windows.Application
         System.IO.Directory.CreateDirectory(logDir);
 
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Debug()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .WriteTo.File(
                 System.IO.Path.Combine(logDir, "saldo-.log"),

@@ -13,7 +13,7 @@
 
 - Income and expense transactions
 - Monthly transaction list and summary
-- Categories managed as a controlled dictionary
+- Categories managed as a controlled dictionary with optional colors
 - Parties managed as a reusable dictionary
 - Locations managed as a reusable dictionary
 - Local persistence with SQLite
@@ -31,6 +31,9 @@
 - User-facing labels are localized, while domain values remain stable in English
 - Transaction form validation is displayed next to the relevant field; errors that cannot be assigned to a field are shown in a form-level summary
 - The WPF transaction list formats amounts using the selected language and uses subtle amount-cell colors to distinguish expenses from income
+- Monthly transactions are sorted by date descending by default; date and amount columns also support sorting from their headers
+- Category colors can be selected or cleared when adding or editing a category, including adding one from the transaction form
+- The category dialog uses the native Windows color picker; the transaction list shows category names with a subtle background based on the saved color
 
 ## Tech Stack
 
@@ -44,7 +47,8 @@
 
 ## Error Handling and Validation
 
-- Business validation is defined with FluentValidation and always executed at the Application use-case boundary
+- Transaction business validation is defined with FluentValidation and executed at the Application use-case boundary
+- Category add/edit use cases share validation and normalization for optional colors: `#RRGGBB`, stored in uppercase, or `null` for no color; invalid codes are rejected with `ArgumentException`
 - The UI handles input-format concerns that exist only in a text-based form, such as parsing an amount to `decimal`
 - Validation failures carry stable error codes and, where applicable, the affected property name
 - The UI localizes these codes and displays field errors inline, with a form-level summary as a fallback
@@ -55,6 +59,7 @@
 
 - The WPF shell uses `Microsoft.Extensions.Logging` with Serilog
 - Logs are written to `%AppData%\Saldo\Logs\saldo-.log` with daily rolling files
+- The default minimum level is `Information`, with EF Core logging restricted to `Warning` and above
 - Use `ILogger<T>` for technical diagnostics; keep expected validation failures in `Result<T>`
 
 ## Localization

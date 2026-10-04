@@ -4,6 +4,7 @@ public sealed class Category
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    public string? ColorCode { get; set; }
 
     // Optional: jeśli chcesz rozróżniać kategorie pod Income/Expense, dodaj później.
     // public TransactionType? AppliesTo { get; set; }

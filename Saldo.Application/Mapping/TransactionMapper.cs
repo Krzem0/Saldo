@@ -12,6 +12,7 @@ internal static class TransactionMapper
         t.Amount,
         t.CategoryId,
         t.Category?.Name ?? string.Empty,
+        t.Category?.ColorCode,
         t.PayerId,
         t.Payer?.Name ?? string.Empty,
         t.CounterpartyId,

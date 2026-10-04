@@ -10,6 +10,8 @@ using Saldo.Application.Errors;
 
 namespace Saldo.Desktop.Wpf.ViewModels;
 
+public sealed record ReferenceItemInput(string Name, string? ColorCode = null);
+
 /// <summary>Generic ViewModel for a simple name-based reference list (Category / Member / Counterparty).</summary>
 public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T : class
 {
@@ -58,9 +60,21 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
     protected abstract string EntityDisplayNameKey { get; }
     protected abstract Task<IReadOnlyList<T>> GetAllAsync(IServiceScope scope, CancellationToken ct);
     protected abstract string GetName(T item);
-    protected abstract Task AddCoreAsync(IServiceScope scope, string name, CancellationToken ct);
-    protected abstract Task UpdateCoreAsync(IServiceScope scope, T item, string name, CancellationToken ct);
+    protected abstract Task AddCoreAsync(IServiceScope scope, string name, string? colorCode, CancellationToken ct);
+    protected abstract Task UpdateCoreAsync(IServiceScope scope, T item, string name, string? colorCode, CancellationToken ct);
     protected abstract Task DeleteCoreAsync(IServiceScope scope, T item, CancellationToken ct);
+
+    protected virtual ReferenceItemInput? ShowAddDialog()
+    {
+        var name = DialogService.ShowNameDialog(string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName));
+        return name is null ? null : new ReferenceItemInput(name);
+    }
+
+    protected virtual ReferenceItemInput? ShowEditDialog(T item)
+    {
+        var name = DialogService.ShowNameDialog(string.Format(CultureInfo.CurrentCulture, T("EditEntityTitleTemplate"), EntityDisplayName), GetName(item));
+        return name is null ? null : new ReferenceItemInput(name);
+    }
 
     protected string EntityDisplayName => T(EntityDisplayNameKey);
     public string Title => EntityDisplayName;
@@ -88,13 +102,13 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
 
     private async Task AddAsync()
     {
-        var name = DialogService.ShowNameDialog(string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName));
-        if (name is null) return;
+        var input = ShowAddDialog();
+        if (input is null) return;
 
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
-            await AddCoreAsync(scope, name.Trim(), CancellationToken.None);
+            await AddCoreAsync(scope, input.Name.Trim(), input.ColorCode, CancellationToken.None);
             await LoadAsync();
         }
         catch (Exception ex)
@@ -109,13 +123,13 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
     private async Task EditAsync()
     {
         if (SelectedItem is null) return;
-        var name = DialogService.ShowNameDialog(string.Format(CultureInfo.CurrentCulture, T("EditEntityTitleTemplate"), EntityDisplayName), GetName(SelectedItem));
-        if (name is null) return;
+        var input = ShowEditDialog(SelectedItem);
+        if (input is null) return;
 
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
-            await UpdateCoreAsync(scope, SelectedItem, name.Trim(), CancellationToken.None);
+            await UpdateCoreAsync(scope, SelectedItem, input.Name.Trim(), input.ColorCode, CancellationToken.None);
             await LoadAsync();
         }
         catch (Exception ex)

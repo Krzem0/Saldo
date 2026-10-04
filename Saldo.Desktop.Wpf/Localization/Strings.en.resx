@@ -41,6 +41,9 @@
   <data name="Date" xml:space="preserve"><value>Date</value></data>
   <data name="Amount" xml:space="preserve"><value>Amount</value></data>
   <data name="Category" xml:space="preserve"><value>Category</value></data>
+  <data name="CategoryColor" xml:space="preserve"><value>Color</value></data>
+  <data name="CategoryColorNone" xml:space="preserve"><value>No color</value></data>
+  <data name="CategoryColorClear" xml:space="preserve"><value>Clear</value></data>
   <data name="Counterparty" xml:space="preserve"><value>Counterparty</value></data>
   <data name="Description" xml:space="preserve"><value>Description</value></data>
   <data name="Location" xml:space="preserve"><value>Location</value></data>

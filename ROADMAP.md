@@ -4,7 +4,7 @@ This document tracks planned work. Implemented behavior and architectural decisi
 
 ## Next
 
-- [ ] Sorting and filtering on the transaction list
+- [ ] Extend transaction-list sorting and add filters (default date-descending ordering and date/amount header sorting already exist)
 - [ ] Dedicated monthly summary screen
 - [ ] All-transactions history with date range, search, filters, database-side sorting, and pagination
 
@@ -27,4 +27,4 @@ This document tracks planned work. Implemented behavior and architectural decisi
 
 - [ ] Create a second frontend reusing Application and Infrastructure through DI
 - [ ] Reuse stable validation codes and property metadata
-- [ ] Recreate documented presentation conventions, including drafts and amount/type rendering
+- [ ] Recreate documented presentation conventions, including drafts, amount/type rendering, and category colors
