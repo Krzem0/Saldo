@@ -33,6 +33,7 @@
   <data name="ErrorTitle" xml:space="preserve"><value>Błąd</value></data>
   <data name="Save" xml:space="preserve"><value>Zapisz</value></data>
   <data name="Cancel" xml:space="preserve"><value>Anuluj</value></data>
+  <data name="Close" xml:space="preserve"><value>Zamknij</value></data>
   <data name="Add" xml:space="preserve"><value>Dodaj</value></data>
   <data name="Edit" xml:space="preserve"><value>Edytuj</value></data>
   <data name="Delete" xml:space="preserve"><value>Usuń</value></data>
@@ -41,9 +42,9 @@
   <data name="Date" xml:space="preserve"><value>Data</value></data>
   <data name="Amount" xml:space="preserve"><value>Kwota</value></data>
   <data name="Category" xml:space="preserve"><value>Kategoria</value></data>
-  <data name="CategoryColor" xml:space="preserve"><value>Kolor</value></data>
-  <data name="CategoryColorNone" xml:space="preserve"><value>Bez koloru</value></data>
-  <data name="CategoryColorClear" xml:space="preserve"><value>Wyczyść</value></data>
+  <data name="ReferenceColor" xml:space="preserve"><value>Kolor</value></data>
+  <data name="ReferenceColorNone" xml:space="preserve"><value>Bez koloru</value></data>
+  <data name="ReferenceColorClear" xml:space="preserve"><value>Wyczyść</value></data>
   <data name="Counterparty" xml:space="preserve"><value>Odbiorca</value></data>
   <data name="Description" xml:space="preserve"><value>Opis</value></data>
   <data name="Location" xml:space="preserve"><value>Miejsce</value></data>
@@ -61,8 +62,13 @@
   <data name="Transaction_AddTitle" xml:space="preserve"><value>Dodaj transakcję</value></data>
   <data name="Transaction_EditTitle" xml:space="preserve"><value>Edytuj transakcję</value></data>
   <data name="Transaction_AddDraftTitle" xml:space="preserve"><value>Dodaj transakcję — szkic</value></data>
+  <data name="Transaction_RestoredDraftMessage" xml:space="preserve"><value>Przywrócono szkic niezapisanej transakcji. Możesz kontynuować lub wyczyścić formularz.</value></data>
+  <data name="Clear" xml:space="preserve"><value>Wyczyść</value></data>
+  <data name="Transaction_ClearTooltip" xml:space="preserve"><value>Usuń szkic i przywróć domyślne wartości formularza</value></data>
   <data name="Transaction_UnsavedChangesTitle" xml:space="preserve"><value>Niezapisane zmiany</value></data>
   <data name="Transaction_UnsavedChangesMessage" xml:space="preserve"><value>Transakcja ma niezapisane zmiany. Czy chcesz zapisać je przed zamknięciem?</value></data>
+  <data name="Transaction_DiscardChanges" xml:space="preserve"><value>Odrzuć</value></data>
+  <data name="Transaction_ContinueEditing" xml:space="preserve"><value>Edytuj dalej</value></data>
   <data name="Entity_Category" xml:space="preserve"><value>Kategoria</value></data>
   <data name="Entity_Member" xml:space="preserve"><value>Osoba</value></data>
   <data name="Entity_Counterparty" xml:space="preserve"><value>Odbiorca</value></data>
@@ -105,4 +111,9 @@
   <data name="BackupFailedMessage" xml:space="preserve"><value>Nie udało się utworzyć kopii zapasowej. Wybierz plik inny niż używana baza danych i sprawdź uprawnienia do folderu. Szczegóły zapisano w logu.</value></data>
   <data name="OpenDatabaseFolder" xml:space="preserve"><value>Otwórz folder z bazą</value></data>
   <data name="OpenDatabaseFolderFailed" xml:space="preserve"><value>Nie udało się otworzyć folderu z bazą danych. Szczegóły zapisano w logu.</value></data>
+  <data name="Tags" xml:space="preserve"><value>Tagi</value></data>
+  <data name="Entity_Tag" xml:space="preserve"><value>tag</value></data>
+  <data name="AddTagTooltip" xml:space="preserve"><value>Dodaj tag</value></data>
+  <data name="TagsEmpty" xml:space="preserve"><value>Brak tagów</value></data>
+  <data name="Validation_TagNameInvalid" xml:space="preserve"><value>Nazwa tagu musi mieć od 1 do 50 znaków.</value></data>
 </root>

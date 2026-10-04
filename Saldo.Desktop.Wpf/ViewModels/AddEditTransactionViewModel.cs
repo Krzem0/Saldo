@@ -26,7 +26,9 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     private readonly IDialogService _dialogService;
     private readonly IReadOnlyList<TypeItem> _types;
     private bool _isRestoredDraft;
+    private bool _showRestoredDraftNotice;
     private TransactionDraft? _initialDraft;
+    private readonly TransactionDraft _emptyDraft;
 
     private DateTime _date = DateTime.Today;
     private TypeItem _selectedType;
@@ -82,6 +84,10 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     public IReadOnlyList<TypeItem> Types => _types;
 
     public int? TransactionId { get; private set; }
+    public bool IsNewTransaction => !TransactionId.HasValue;
+    public bool IsRestoredDraft => _isRestoredDraft;
+    public bool ShowRestoredDraftNotice => _showRestoredDraftNotice;
+    public bool HasDraftContent => !DraftsMatch(_emptyDraft, CreateDraft());
     public string Title => _isRestoredDraft
         ? T("Transaction_AddDraftTitle")
         : TransactionId.HasValue ? T("Transaction_EditTitle") : T("Transaction_AddTitle");
@@ -173,6 +179,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     public ObservableCollection<Category> Categories { get; private set; }
     public ObservableCollection<Party> Parties { get; private set; }
     public ObservableCollection<Location> Locations { get; private set; }
+    public ObservableCollection<SelectableTag> Tags { get; }
 
     public string AmountError => GetErrorText(nameof(AmountText));
     public string CategoryError => GetErrorText(nameof(SelectedCategory));
@@ -191,10 +198,12 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     public event Action<bool>? RequestClose;
 
     public ICommand SaveCommand { get; }
+    public ICommand ClearCommand { get; }
     public ICommand AddCategoryCommand { get; }
     public ICommand AddPayerCommand { get; }
     public ICommand AddCounterpartyCommand { get; }
     public ICommand AddLocationCommand { get; }
+    public ICommand AddTagCommand { get; }
 
     public AddEditTransactionViewModel(
         IServiceScopeFactory scopeFactory,
@@ -203,6 +212,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         IReadOnlyList<Category> categories,
         IReadOnlyList<Party> parties,
         IReadOnlyList<Location> locations,
+        IReadOnlyList<Tag> tags,
         NewTransactionDefaultsDto? defaults = null,
         TransactionDto? existing = null,
         TransactionDraft? draft = null)
@@ -213,6 +223,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         Categories = new ObservableCollection<Category>(categories);
         Parties = new ObservableCollection<Party>(parties);
         Locations = new ObservableCollection<Location>(locations);
+        Tags = new ObservableCollection<SelectableTag>(tags.Select(tag => new SelectableTag(tag.Id, tag.Name, tag.ColorCode)));
         _types =
         [
             new TypeItem(TransactionType.Expense, localization),
@@ -225,6 +236,8 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             ApplyDefaults(defaults);
         }
 
+        _emptyDraft = CreateDraft();
+
         if (existing is not null)
         {
             PopulateFrom(existing);
@@ -234,14 +247,92 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         if (draft is not null)
         {
             _isRestoredDraft = true;
+            _showRestoredDraftNotice = true;
             ApplyDraft(draft);
         }
 
         SaveCommand = new AsyncRelayCommand(SaveAsync);
+        ClearCommand = new RelayCommand(Clear, () => IsNewTransaction && HasDraftContent);
         AddCategoryCommand = new AsyncRelayCommand(AddCategoryAsync);
         AddPayerCommand = new AsyncRelayCommand(AddPayerAsync);
         AddCounterpartyCommand = new AsyncRelayCommand(AddCounterpartyAsync);
         AddLocationCommand = new AsyncRelayCommand(AddLocationAsync);
+        AddTagCommand = new AsyncRelayCommand(AddTagAsync);
+        PropertyChanged += OnFormChanged;
+        foreach (var tag in Tags) tag.PropertyChanged += OnFormChanged;
+    }
+
+    private void OnFormChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is SelectableTag && e.PropertyName == nameof(SelectableTag.IsSelected)
+            || sender == this && e.PropertyName is nameof(Date) or nameof(SelectedType)
+                or nameof(AmountText) or nameof(SelectedCategory) or nameof(CategoryText)
+                or nameof(SelectedPayer) or nameof(PayerText) or nameof(SelectedCounterparty)
+                or nameof(CounterpartyText) or nameof(SelectedLocation) or nameof(LocationText)
+                or nameof(Description))
+        {
+            DismissRestoredDraftNotice();
+        }
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    private void DismissRestoredDraftNotice()
+    {
+        if (!_showRestoredDraftNotice) return;
+        _showRestoredDraftNotice = false;
+        OnPropertyChanged(nameof(ShowRestoredDraftNotice));
+    }
+
+    private void Clear()
+    {
+        if (!IsNewTransaction) return;
+
+        Date = _emptyDraft.Date;
+        SelectedType = Types.First(type => type.Value == _emptyDraft.Type);
+        AmountText = string.Empty;
+        SelectedCategory = null;
+        CategoryText = string.Empty;
+        SelectedPayer = Parties.FirstOrDefault(party => party.Id == _emptyDraft.PayerId);
+        PayerText = _emptyDraft.PayerText;
+        SelectedCounterparty = null;
+        CounterpartyText = string.Empty;
+        SelectedLocation = null;
+        LocationText = string.Empty;
+        Description = null;
+        SelectTags([]);
+        ApplyValidationErrors([]);
+        _isRestoredDraft = false;
+        DismissRestoredDraftNotice();
+        OnPropertyChanged(nameof(IsRestoredDraft));
+        OnPropertyChanged(nameof(Title));
+    }
+
+    private async Task AddTagAsync()
+    {
+        var input = _dialogService.ShowReferenceColorDialog(
+            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Tag")));
+        if (input is null) return;
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var tag = await scope.ServiceProvider.GetRequiredService<AddTag>().ExecuteAsync(input.Name, input.ColorCode);
+            var selectableTag = new SelectableTag(tag.Id, tag.Name, tag.ColorCode) { IsSelected = true };
+            selectableTag.PropertyChanged += OnFormChanged;
+            Tags.Add(selectableTag);
+            DismissRestoredDraftNotice();
+            CommandManager.InvalidateRequerySuggested();
+        }
+        catch (Exception ex)
+        {
+            ShowReferenceError(ex);
+        }
+    }
+
+    private IReadOnlyList<int> SelectedTagIds => Tags.Where(tag => tag.IsSelected).Select(tag => tag.Id).Order().ToArray();
+
+    private void SelectTags(IReadOnlyList<int> ids)
+    {
+        foreach (var tag in Tags) tag.IsSelected = ids.Contains(tag.Id);
     }
 
     private Task AddPayerAsync() => AddPartyAsync(true);
@@ -250,7 +341,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
     private async Task AddCategoryAsync()
     {
-        var categoryInput = _dialogService.ShowCategoryDialog(
+        var categoryInput = _dialogService.ShowReferenceColorDialog(
             string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Category")));
         if (categoryInput is null) return;
 
@@ -320,7 +411,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     {
         var message = exception is DuplicateReferenceException duplicate
             ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
-            : exception.Message;
+            : exception is InvalidTagNameException ? T("Validation_TagNameInvalid") : exception.Message;
         MessageBox.Show(message, T("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
     }
 
@@ -351,6 +442,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             : null;
         _description = t.Description;
         _locationText = t.Location ?? string.Empty;
+        SelectTags(t.TagIds);
     }
 
     public TransactionDraft CreateDraft() => new()
@@ -367,10 +459,27 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         CounterpartyText = CounterpartyText,
         LocationId = SelectedLocation?.Id,
         LocationText = LocationText,
-        Description = Description
+        Description = Description,
+        TagIds = SelectedTagIds
     };
 
     public bool HasUnsavedChanges => _initialDraft is not null && !DraftsMatch(_initialDraft, CreateDraft());
+
+    public bool CanClose()
+    {
+        if (!HasUnsavedChanges) return true;
+
+        var choice = _dialogService.ConfirmUnsavedChanges(
+            T("Transaction_UnsavedChangesTitle"), T("Transaction_UnsavedChangesMessage"));
+        if (choice == UnsavedChangesChoice.Save)
+        {
+            SaveCommand.Execute(null);
+            // Only a successful save raises RequestClose; validation failures keep the form open.
+            return false;
+        }
+
+        return choice == UnsavedChangesChoice.Discard;
+    }
 
     private static bool DraftsMatch(TransactionDraft left, TransactionDraft right) =>
         left.TransactionId == right.TransactionId
@@ -385,7 +494,8 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         && left.CounterpartyText == right.CounterpartyText
         && left.LocationId == right.LocationId
         && left.LocationText == right.LocationText
-        && left.Description == right.Description;
+        && left.Description == right.Description
+        && left.TagIds.Order().SequenceEqual(right.TagIds.Order());
 
     private void ApplyDraft(TransactionDraft draft)
     {
@@ -410,6 +520,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             : null;
         _locationText = draft.LocationText;
         _description = draft.Description;
+        SelectTags(draft.TagIds);
     }
 
     private async Task SaveAsync()
@@ -444,7 +555,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
                 ResolvePartyName(SelectedCounterparty, CounterpartyText),
                 Description,
                 ResolveLocationName(),
-                []);
+                SelectedTagIds);
 
             var result = await scope.ServiceProvider.GetRequiredService<EditTransaction>().ExecuteAsync(cmd);
             if (result.IsFailed)
@@ -468,7 +579,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
                 ResolvePartyName(SelectedCounterparty, CounterpartyText),
                 Description,
                 ResolveLocationName(),
-                []);
+                SelectedTagIds);
 
             var result = await scope.ServiceProvider.GetRequiredService<AddTransaction>().ExecuteAsync(cmd);
             if (result.IsFailed)

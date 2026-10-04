@@ -8,14 +8,14 @@ using DrawingColor = System.Drawing.Color;
 
 namespace Saldo.Desktop.Wpf.Views;
 
-public partial class CategoryDialog : Window
+public partial class ReferenceColorDialog : Window
 {
     private readonly ILocalizationService _localization;
     private string? _selectedColorCode;
 
     public string EnteredName { get; set; }
 
-    public CategoryDialog(string title, string? initialName, string? initialColorCode)
+    public ReferenceColorDialog(string title, string? initialName, string? initialColorCode)
     {
         InitializeComponent();
         Title = title;
@@ -34,7 +34,7 @@ public partial class CategoryDialog : Window
         };
     }
 
-    public CategoryDialogResult Result => new(EnteredName, _selectedColorCode);
+    public ReferenceColorDialogResult Result => new(EnteredName, _selectedColorCode);
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
@@ -73,7 +73,7 @@ public partial class CategoryDialog : Window
                 : System.Drawing.ColorTranslator.FromHtml(_selectedColorCode)
         };
 
-        // WinForms requires an HWND owner; use this category dialog so the native
+        // WinForms requires an HWND owner; use this reference dialog so the native
         // picker stays above it, disables it while open, and returns activation to it.
         var owner = new NativeWindowOwner(new WindowInteropHelper(this).EnsureHandle());
         if (dialog.ShowDialog(owner) != Forms.DialogResult.OK)
@@ -96,7 +96,7 @@ public partial class CategoryDialog : Window
         ColorPreview.Background = string.IsNullOrWhiteSpace(_selectedColorCode)
             ? Brushes.Transparent
             : CreateBrush(_selectedColorCode);
-        ColorCodeText.Text = _selectedColorCode ?? _localization["CategoryColorNone"];
+        ColorCodeText.Text = _selectedColorCode ?? _localization["ReferenceColorNone"];
         ClearColorButton.IsEnabled = !string.IsNullOrWhiteSpace(_selectedColorCode);
     }
 

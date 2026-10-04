@@ -103,6 +103,8 @@ public partial class App : System.Windows.Application
         services.AddScoped<AddTransaction>();
         services.AddScoped<EditTransaction>();
         services.AddScoped<AddCategory>();
+        services.AddScoped<AddTag>();
+        services.AddScoped<EditTag>();
         services.AddScoped<EditCategory>();
         services.AddScoped<AddParty>();
         services.AddScoped<AddLocation>();
@@ -119,6 +121,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<MainViewModel>();
         services.AddTransient<TransactionListViewModel>();
         services.AddTransient<CategoriesViewModel>();
+        services.AddTransient<TagsViewModel>();
         services.AddTransient<PartiesViewModel>();
         services.AddTransient<LocationsViewModel>();
         services.AddTransient<SettingsViewModel>();

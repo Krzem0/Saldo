@@ -20,6 +20,7 @@ internal static class TransactionMapper
         t.LocationId,
         t.Location?.Name,
         t.Description,
-        t.Tags.Select(tt => tt.Tag?.Name ?? string.Empty).ToList()
+        t.Tags.OrderBy(tt => tt.TagId).Select(tt => tt.Tag?.Name ?? string.Empty).ToList(),
+        t.Tags.OrderBy(tt => tt.TagId).Select(tt => tt.TagId).ToList()
     );
 }

@@ -17,5 +17,6 @@ public sealed record TransactionDto(
     int? LocationId,
     string? Location,
     string? Description,
-    IReadOnlyList<string> Tags
+    IReadOnlyList<string> Tags,
+    IReadOnlyList<int> TagIds
 );

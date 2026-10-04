@@ -244,9 +244,9 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
 
     private async Task AddAsync()
     {
-        var (categories, parties, locations, defaults) = await LoadNewTransactionDataAsync();
+        var (categories, parties, locations, tags, defaults) = await LoadNewTransactionDataAsync();
         var dialogVm = new AddEditTransactionViewModel(
-            _scopeFactory, _dialogService, Localization, categories, parties, locations, defaults,
+            _scopeFactory, _dialogService, Localization, categories, parties, locations, tags, defaults,
             draft: _newTransactionDraft);
 
         if (_dialogService.ShowAddEditTransaction(dialogVm) == true)
@@ -256,7 +256,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
         }
         else
         {
-            _newTransactionDraft = dialogVm.CreateDraft();
+            _newTransactionDraft = dialogVm.HasDraftContent ? dialogVm.CreateDraft() : null;
         }
     }
 
@@ -264,9 +264,9 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     {
         if (SelectedTransaction is null) return;
 
-        var (categories, parties, locations) = await LoadReferenceDataAsync();
+        var (categories, parties, locations, tags) = await LoadReferenceDataAsync();
         var dialogVm = new AddEditTransactionViewModel(
-            _scopeFactory, _dialogService, Localization, categories, parties, locations,
+            _scopeFactory, _dialogService, Localization, categories, parties, locations, tags,
             existing: SelectedTransaction);
 
         if (_dialogService.ShowAddEditTransaction(dialogVm) == true)
@@ -307,27 +307,23 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
         }
     }
 
-    private async Task<(IReadOnlyList<Domain.Entities.Category>, IReadOnlyList<Domain.Entities.Party>, IReadOnlyList<Domain.Entities.Location>)> LoadReferenceDataAsync()
+    private async Task<(IReadOnlyList<Domain.Entities.Category>, IReadOnlyList<Domain.Entities.Party>, IReadOnlyList<Domain.Entities.Location>, IReadOnlyList<Domain.Entities.Tag>)> LoadReferenceDataAsync()
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var categoriesTask = scope.ServiceProvider.GetRequiredService<ICategoryRepository>().GetAllAsync();
-        var partiesTask = scope.ServiceProvider.GetRequiredService<IPartyRepository>().GetAllAsync();
-        var locationsTask = scope.ServiceProvider.GetRequiredService<ILocationRepository>().GetAllAsync();
-        await Task.WhenAll(categoriesTask, partiesTask, locationsTask);
-        return (await categoriesTask, await partiesTask, await locationsTask);
+        // Repositories in one scope share a DbContext, so load them sequentially.
+        var categories = await scope.ServiceProvider.GetRequiredService<ICategoryRepository>().GetAllAsync();
+        var parties = await scope.ServiceProvider.GetRequiredService<IPartyRepository>().GetAllAsync();
+        var locations = await scope.ServiceProvider.GetRequiredService<ILocationRepository>().GetAllAsync();
+        var tags = await scope.ServiceProvider.GetRequiredService<ITagRepository>().GetAllAsync();
+        return (categories, parties, locations, tags);
     }
 
-    private async Task<(IReadOnlyList<Domain.Entities.Category>, IReadOnlyList<Domain.Entities.Party>, IReadOnlyList<Domain.Entities.Location>, NewTransactionDefaultsDto)> LoadNewTransactionDataAsync()
+    private async Task<(IReadOnlyList<Domain.Entities.Category>, IReadOnlyList<Domain.Entities.Party>, IReadOnlyList<Domain.Entities.Location>, IReadOnlyList<Domain.Entities.Tag>, NewTransactionDefaultsDto)> LoadNewTransactionDataAsync()
     {
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var categoriesTask = scope.ServiceProvider.GetRequiredService<ICategoryRepository>().GetAllAsync();
-        var partiesTask = scope.ServiceProvider.GetRequiredService<IPartyRepository>().GetAllAsync();
-        var locationsTask = scope.ServiceProvider.GetRequiredService<ILocationRepository>().GetAllAsync();
-        var defaultsTask = scope.ServiceProvider.GetRequiredService<GetNewTransactionDefaults>().ExecuteAsync();
-
-        await Task.WhenAll(categoriesTask, partiesTask, locationsTask, defaultsTask);
-
-        return (await categoriesTask, await partiesTask, await locationsTask, await defaultsTask);
+        var (categories, parties, locations, tags) = await LoadReferenceDataAsync();
+        var defaults = await scope.ServiceProvider.GetRequiredService<GetNewTransactionDefaults>().ExecuteAsync();
+        return (categories, parties, locations, tags, defaults);
     }
 
     protected override void OnCultureChanged()

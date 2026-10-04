@@ -21,13 +21,13 @@ public sealed class CategoriesViewModel : ReferenceListViewModel<Category>
 
     protected override ReferenceItemInput? ShowAddDialog()
     {
-        var result = DialogService.ShowCategoryDialog(string.Format(System.Globalization.CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName));
+        var result = DialogService.ShowReferenceColorDialog(string.Format(System.Globalization.CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName));
         return result is null ? null : new ReferenceItemInput(result.Name, result.ColorCode);
     }
 
     protected override ReferenceItemInput? ShowEditDialog(Category item)
     {
-        var result = DialogService.ShowCategoryDialog(string.Format(System.Globalization.CultureInfo.CurrentCulture, T("EditEntityTitleTemplate"), EntityDisplayName), item.Name, item.ColorCode);
+        var result = DialogService.ShowReferenceColorDialog(string.Format(System.Globalization.CultureInfo.CurrentCulture, T("EditEntityTitleTemplate"), EntityDisplayName), item.Name, item.ColorCode);
         return result is null ? null : new ReferenceItemInput(result.Name, result.ColorCode);
     }
 

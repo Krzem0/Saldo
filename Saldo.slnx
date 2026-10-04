@@ -15,4 +15,5 @@
   <Project Path="Saldo.Infrastructure.Sqlite/Saldo.Infrastructure.Sqlite.csproj" Id="a84627c7-9494-45bb-904b-e162ad31522e" />
   <Project Path="Saldo.Tests.Integration/Saldo.Tests.Integration.csproj" Id="feecb95f-abc9-41a7-982f-c401ab02923a" />
   <Project Path="Saldo.Tests.Unit/Saldo.Tests.Unit.csproj" Id="068824ae-09fc-4421-bc60-b7d334b0180d" />
+  <Project Path="Saldo.Tests.Wpf/Saldo.Tests.Wpf.csproj" />
 </Solution>

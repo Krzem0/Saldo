@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Windows;
-using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Services;
 using Saldo.Desktop.Wpf.ViewModels;
 
@@ -58,26 +57,5 @@ public partial class AddEditTransactionDialog : Window
     }
 
     private bool CanClose()
-    {
-        if (DataContext is not AddEditTransactionViewModel vm || !vm.HasUnsavedChanges)
-        {
-            return true;
-        }
-
-        var localization = System.Windows.Application.Current?.Resources["Localization"] as ILocalizationService;
-        var result = MessageBox.Show(
-            localization?["Transaction_UnsavedChangesMessage"] ?? "There are unsaved changes. Save them before closing?",
-            localization?["Transaction_UnsavedChangesTitle"] ?? "Unsaved changes",
-            MessageBoxButton.YesNoCancel,
-            MessageBoxImage.Warning,
-            MessageBoxResult.Yes);
-
-        if (result == MessageBoxResult.Yes)
-        {
-            vm.SaveCommand.Execute(null);
-            return false;
-        }
-
-        return result == MessageBoxResult.No;
-    }
+        => DataContext is not AddEditTransactionViewModel vm || vm.CanClose();
 }

@@ -23,6 +23,9 @@
         <DataTemplate DataType="{x:Type viewModels:SettingsViewModel}">
             <views:SettingsView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type viewModels:TagsViewModel}">
+            <views:ReferenceListView/>
+        </DataTemplate>
 
         <Style x:Key="NavigationItemStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
@@ -123,6 +126,11 @@
                                      Content="{Binding Source={StaticResource Localization}, Path=[TabLocations]}"
                                      Command="{Binding ShowLocationsCommand}"
                                      IsChecked="{Binding IsLocationsSelected, Mode=OneWay}"
+                                     Style="{StaticResource NavigationItemStyle}"/>
+                        <RadioButton GroupName="Navigation"
+                                     Content="{Binding Source={StaticResource Localization}, Path=[Tags]}"
+                                     Command="{Binding ShowTagsCommand}"
+                                     IsChecked="{Binding IsTagsSelected, Mode=OneWay}"
                                      Style="{StaticResource NavigationItemStyle}"/>
                     </StackPanel>
 

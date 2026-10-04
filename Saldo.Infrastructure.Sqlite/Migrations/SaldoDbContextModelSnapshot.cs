@@ -80,6 +80,10 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("Saldo.Domain.Entities.Tag", b =>
                 {
+                    b.Property<string>("ColorCode")
+                        .HasMaxLength(7)
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");

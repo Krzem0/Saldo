@@ -77,7 +77,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
     }
 
     protected string EntityDisplayName => T(EntityDisplayNameKey);
-    public string Title => EntityDisplayName;
+    public virtual string Title => EntityDisplayName;
 
     protected override void OnCultureChanged()
     {
@@ -115,7 +115,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         {
            var message = ex is DuplicateReferenceException duplicate
                ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
-               : ex.Message;
+               : ex is InvalidTagNameException ? T("Validation_TagNameInvalid") : ex.Message;
            MessageBox.Show(message, string.Format(CultureInfo.CurrentCulture, T("AddErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -134,7 +134,10 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         }
         catch (Exception ex)
         {
-         MessageBox.Show(ex.Message, string.Format(CultureInfo.CurrentCulture, T("UpdateErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
+         var message = ex is DuplicateReferenceException duplicate
+             ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
+             : ex is InvalidTagNameException ? T("Validation_TagNameInvalid") : ex.Message;
+         MessageBox.Show(message, string.Format(CultureInfo.CurrentCulture, T("UpdateErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

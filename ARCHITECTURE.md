@@ -33,7 +33,7 @@ Contains:
 - UI-specific services (dialogs, notifications)
 - WPF-only controls such as autocomplete widgets
 - WPF-only services such as `ThemeService` and light/dark theme resource dictionaries
-- `CategoryDialog`, using the native Windows color picker through WinForms interop, and `CategoryColorBrushConverter` for transaction-list rendering
+- `ReferenceColorDialog`, shared by categories and tags and using the native Windows color picker through WinForms interop, and `CategoryColorBrushConverter` for transaction-list rendering
 
 Rules:
 
@@ -58,6 +58,7 @@ Contains:
 
 - Use cases such as `AddTransaction`, `EditTransaction`, `DeleteTransaction`, `ListTransactions`, `GetSummary`, `GetNewTransactionDefaults`
 - `AddCategory` and `EditCategory`, sharing category name and color normalization
+- `AddTag` and `EditTag`, sharing tag-name validation and duplicate checks
 - DTOs used by ViewModels
 - Repository abstractions
 - `IDatabaseBackupService`, exposing backup creation independently of the GUI and storage implementation
@@ -160,6 +161,12 @@ Rules:
 - Id
 - Name
 
+### Tag and TransactionTag
+
+- `Tag`: Id, Name (required, up to 50 characters), and optional ColorCode (`#RRGGBB`)
+- `TransactionTag`: TransactionId and TagId, forming a many-to-many association
+- Transaction commands carry selected tag IDs; `TransactionDto` exposes tag IDs and names so Presentation can display labels and preserve identity after renames
+
 ## Important Behavioral Rules
 
 - `Transaction.Type` is a domain enum and is translated only in the UI
@@ -171,8 +178,20 @@ Rules:
 - WPF renders the category color as a translucent background behind its name in the transaction list; the reference list and transaction-form category selector currently show names only
 - The native color picker receives the category dialog's HWND through an `IWin32Window` adapter, explicitly associating it with its WPF owner for modal behavior and activation
 - `Party` and `Location` are reusable dictionaries that can be extended through explicit add workflows from their tabs or the transaction form's `+` buttons
+- Tags are an optional reusable dictionary independent of categories and parties. Add/edit tag use cases normalize names and reject case-insensitive duplicates; invalid names and duplicates are presented with localized messages
+  - Optional colors are normalized and validated on add/edit with the same Application validator as category colors. The nullable ColorCode column is included in the initial migration and EF model snapshot
+  - The shared name/color dialog supports tag dictionary add/edit and transaction quick add, including removing a previously chosen color
+- WPF supports a Tags page, multiple chip selections and quick add in transaction forms, and tag labels on the monthly transaction list
+  - `TagChipStyles.xaml` gives CheckBox controls a rounded chip template while retaining selection bindings and keyboard/automation behavior. Unselected chips use an outline; selected chips use the tag color or a dynamically resolved theme accent. Text on the fill uses black or white according to relative luminance and contrast. Keyboard focus has a separate outline; hover does not change the selection appearance
+- A fresh form selects no tags by default. Quick add selects the new tag and preserves existing selections; editing and restored drafts keep their saved selections
+- Selected tag IDs are included in drafts and unsaved-change detection. Saving a transaction sends the actual selection, including an empty selection when tags are deliberately removed
+- Deletion of a tag used by transactions is blocked by the repository before SQLite's cascade deletion can remove associations
+- Transaction updates replace tag associations and scalar fields within one database transaction; a failed write rolls back both. Only scalar transaction data is attached before inserting tag links to avoid EF tracking conflicts
+- Reference data for a form is loaded sequentially because repositories in a scope share an EF Core DbContext
 - Add workflows reject duplicate reference names before a database constraint error reaches the user
 - `TransactionDraft` is WPF-only temporary state for a new transaction and does not survive an application restart; editing an existing transaction asks before discarding unsaved changes instead
+  - Unsaved edits use a themed WPF dialog through `IDialogService`, offering Save, Discard changes, and Continue editing. Escape or closing the prompt keeps the editor open; failed validation also prevents closing after Save
+  - A restored draft is indicated in the form as well as the window title. The notice above the buttons disappears after the first field or tag selection change; the draft itself is retained. Clear is available only for new transactions and resets fields, validation errors, and tag selections to the fresh-form state. The list retains a draft on cancellation only when the form differs from its initial defaults
 - Amount formatting and the transaction-type colors in the list are Presentation concerns; another GUI must implement its own equivalent rendering from `Amount` and `Transaction.Type`
 - Appearance selection is a Presentation concern. The current WPF `ThemeService` supports system, light, and dark themes without persisting the choice yet
 
@@ -216,6 +235,8 @@ Rules:
 - Integration tests use disposable SQLite files named `saldo-test-{GUID}.db` in the temporary directory. Color integration tests apply the initial migration to a fresh database; other repository tests currently use `EnsureCreated()`. Tests do not access the application's `%AppData%\Saldo\saldo.db`
 - Backup integration tests verify standalone snapshots from an open WAL database, persisted references and tags, migration history and database integrity, replacement of previous backups, and protection against invalid destinations, failure, and cancellation
 - Minimal GUI testing, with most business behavior verified outside WPF
+- `Saldo.Tests.Wpf` verifies tag selection, draft restoration, rename handling, unsaved-change detection, and tag IDs passed by the form's save command without opening application windows. STA rendering tests exercise the actual chip template, both themes, selection bindings, theme changes, and text contrast
+- Tag integration tests cover dictionary validation, optional color persistence through the initial migration, invalid-color rejection on add/edit, multi-tag transactions, rename/update/removal, blocked deletion of used tags, and rollback after a failed transaction update
 
 ## Future Extensions
 

@@ -53,10 +53,16 @@ public sealed class TransactionRepository : ITransactionRepository
 
     public async Task UpdateAsync(Transaction transaction, CancellationToken ct = default)
     {
+        await using var databaseTransaction = await _context.Database.BeginTransactionAsync(ct);
+        var tags = transaction.Tags.ToList();
         // Delete-and-reinsert tags to avoid tracking conflicts
         await _context.TransactionTags
             .Where(tt => tt.TransactionId == transaction.Id)
             .ExecuteDeleteAsync(ct);
+
+        foreach (var link in _context.ChangeTracker.Entries<TransactionTag>()
+            .Where(entry => entry.Entity.TransactionId == transaction.Id).ToList())
+            link.State = EntityState.Detached;
 
         // The caller may pass an entity still tracked after an earlier insert.
         // Detach it before clearing navigations so EF does not interpret that as
@@ -71,12 +77,14 @@ public sealed class TransactionRepository : ITransactionRepository
         // no-tracking queries, so attaching their navigation objects could make EF
         // try to insert them again (or track two Party objects with the same key).
         ClearReferenceNavigations(transaction);
+        // Attach only scalar transaction data; tag links are inserted separately below.
+        transaction.Tags = [];
 
         // Attach transaction and mark scalar fields as modified
         _context.Transactions.Attach(transaction).State = EntityState.Modified;
 
         // Add new tags explicitly with FK set
-        foreach (var tag in transaction.Tags)
+        foreach (var tag in tags)
         {
             _context.TransactionTags.Add(new TransactionTag
             {
@@ -86,6 +94,7 @@ public sealed class TransactionRepository : ITransactionRepository
         }
 
         await _context.SaveChangesAsync(ct);
+        await databaseTransaction.CommitAsync(ct);
     }
 
     private static void ClearReferenceNavigations(Transaction transaction)

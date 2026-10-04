@@ -16,6 +16,8 @@ internal sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
             .IsRequired()
             .HasMaxLength(50);
 
+        e.Property(x => x.ColorCode).HasMaxLength(7);
+
         e.HasIndex(x => x.Name)
             .IsUnique();
     }

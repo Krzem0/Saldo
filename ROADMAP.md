@@ -20,7 +20,7 @@ This document tracks planned work. Implemented behavior and architectural decisi
 - [ ] Further WPF visual polish and accessibility review
 - [ ] Recurring transactions
 - [ ] CSV import and export
-- [ ] Complete tag support in WPF (management, transaction selection and display) and add tag filtering; the domain model, persistence, and transaction use cases already support tags
+- [ ] Add tag filtering and summaries (tag management, transaction selection, display, and draft preservation are implemented)
 - [ ] Charts and trends
 
 ## Second UI

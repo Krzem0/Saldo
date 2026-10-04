@@ -21,4 +21,5 @@ public sealed class TransactionDraft
     public int? LocationId { get; init; }
     public string LocationText { get; init; } = string.Empty;
     public string? Description { get; init; }
+    public IReadOnlyList<int> TagIds { get; init; } = [];
 }

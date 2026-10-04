@@ -369,6 +369,23 @@
                          </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                  </DataGridTemplateColumn>
+                 <DataGridTemplateColumn Header="{Binding Source={StaticResource Localization}, Path=[Tags]}" Width="150" CanUserSort="False">
+                     <DataGridTemplateColumn.CellTemplate>
+                         <DataTemplate>
+                             <ItemsControl ItemsSource="{Binding Tags}">
+                                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                 <ItemsControl.ItemTemplate>
+                                     <DataTemplate>
+                                         <Border Background="{DynamicResource ControlBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}"
+                                                 BorderThickness="1" CornerRadius="3" Padding="4,1" Margin="0,1,4,1">
+                                             <TextBlock Text="{Binding}" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap"/>
+                                         </Border>
+                                     </DataTemplate>
+                                 </ItemsControl.ItemTemplate>
+                             </ItemsControl>
+                         </DataTemplate>
+                     </DataGridTemplateColumn.CellTemplate>
+                 </DataGridTemplateColumn>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Description]}" Binding="{Binding Description}"     Width="*"/>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Location]}"     Binding="{Binding Location}"        Width="120"/>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Payer]}"       Binding="{Binding PayerName}"       Width="110"/>

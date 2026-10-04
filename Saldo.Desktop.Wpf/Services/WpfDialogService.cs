@@ -20,9 +20,9 @@ public sealed class WpfDialogService : IDialogService
         return dialog.ShowDialog() == true ? dialog.EnteredName : null;
     }
 
-    public CategoryDialogResult? ShowCategoryDialog(string title, string? initialName = null, string? initialColorCode = null)
+    public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null)
     {
-        var dialog = new CategoryDialog(title, initialName, initialColorCode);
+        var dialog = new ReferenceColorDialog(title, initialName, initialColorCode);
         SetOwner(dialog);
         return dialog.ShowDialog() == true ? dialog.Result : null;
     }
@@ -32,6 +32,14 @@ public sealed class WpfDialogService : IDialogService
         var dialog = new DeleteConfirmationDialog(title, message);
         SetOwner(dialog);
         return dialog.ShowDialog() == true;
+    }
+
+    public UnsavedChangesChoice ConfirmUnsavedChanges(string title, string message)
+    {
+        var dialog = new UnsavedChangesDialog(title, message);
+        SetOwner(dialog);
+        dialog.ShowDialog();
+        return dialog.Choice;
     }
 
     public string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter)
