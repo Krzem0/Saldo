@@ -53,13 +53,14 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
 
         LoadCommand = new AsyncRelayCommand(LoadAsync);
         AddCommand = new AsyncRelayCommand(AddAsync);
-        EditCommand = new AsyncRelayCommand(EditAsync, () => SelectedItem is not null);
-        DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => SelectedItem is not null);
+        EditCommand = new AsyncRelayCommand(EditAsync, () => !IsLoading && SelectedItem is not null);
+        DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => !IsLoading && SelectedItem is not null);
     }
 
     protected abstract string EntityDisplayNameKey { get; }
     protected abstract Task<IReadOnlyList<T>> GetAllAsync(IServiceScope scope, CancellationToken ct);
     protected abstract string GetName(T item);
+    protected abstract int GetId(T item);
     protected abstract Task AddCoreAsync(IServiceScope scope, string name, string? colorCode, CancellationToken ct);
     protected abstract Task UpdateCoreAsync(IServiceScope scope, T item, string name, string? colorCode, CancellationToken ct);
     protected abstract Task DeleteCoreAsync(IServiceScope scope, T item, CancellationToken ct);
@@ -78,6 +79,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
 
     protected string EntityDisplayName => T(EntityDisplayNameKey);
     public virtual string Title => EntityDisplayName;
+    public virtual bool HasColorColumn => false;
 
     protected override void OnCultureChanged()
     {
@@ -91,13 +93,23 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
             var list = await GetAllAsync(scope, CancellationToken.None);
+            var selectedId = SelectedItem is null ? (int?)null : GetId(SelectedItem);
+            // Reloading creates new entity instances. Never retain a selection outside Items;
+            // restore by identity after the view has processed the collection replacement.
+            SelectedItem = null;
             Items = new ObservableCollection<T>(list);
+            SelectedItem = (selectedId.HasValue ? Items.FirstOrDefault(item => GetId(item) == selectedId.Value) : null)
+                ?? Items.FirstOrDefault();
         }
         catch (Exception ex)
         {
           MessageBox.Show(ex.Message, string.Format(CultureInfo.CurrentCulture, T("LoadErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
         }
-        finally { IsLoading = false; }
+        finally
+        {
+            IsLoading = false;
+            CommandManager.InvalidateRequerySuggested();
+        }
     }
 
     private async Task AddAsync()

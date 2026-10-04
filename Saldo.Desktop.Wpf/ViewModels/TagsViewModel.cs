@@ -13,6 +13,8 @@ public sealed class TagsViewModel(IServiceScopeFactory scopeFactory, IDialogServ
     protected override string EntityDisplayNameKey => "Entity_Tag";
     public override string Title => T("Tags");
     protected override string GetName(Tag item) => item.Name;
+    protected override int GetId(Tag item) => item.Id;
+    public override bool HasColorColumn => true;
     protected override ReferenceItemInput? ShowAddDialog()
     {
         var result = DialogService.ShowReferenceColorDialog(

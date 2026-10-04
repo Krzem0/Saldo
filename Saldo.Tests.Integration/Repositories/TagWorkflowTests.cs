@@ -124,7 +124,7 @@ public sealed class TagWorkflowTests
     {
         using var db = new TestDatabase();
         var tags = new TagRepository(db.Context);
-        var iwona = await new AddTag(tags).ExecuteAsync("Dla Iwony");
+        var iwona = await new AddTag(tags).ExecuteAsync("Dla Iwony", "#8E44AD");
         var holiday = await new AddTag(tags).ExecuteAsync("Wakacje");
         var category = new Category { Name = "Używki" };
         var party = new Party { Name = "Ja" };
@@ -140,12 +140,15 @@ public sealed class TagWorkflowTests
         Assert.True(added.IsSuccess);
         Assert.Equal(new[] { iwona.Id, holiday.Id }, added.Value.TagIds);
         Assert.Equal(new[] { "Dla Iwony", "Wakacje" }, added.Value.Tags);
+        Assert.Equal(new TransactionTagDto(iwona.Id, "Dla Iwony", "#8E44AD"), added.Value.TagDetails[0]);
+        Assert.Equal(new TransactionTagDto(holiday.Id, "Wakacje", null), added.Value.TagDetails[1]);
         await Assert.ThrowsAsync<ReferenceEntityInUseException>(() => tags.DeleteAsync(iwona.Id));
 
-        await new EditTag(tags).ExecuteAsync(iwona.Id, "Dla bliskich");
+        await new EditTag(tags).ExecuteAsync(iwona.Id, "Dla bliskich", "#F4C542");
         var listed = Assert.Single(await new ListTransactions(transactions).ExecuteAsync(new ListTransactionsQuery(2026, 10)));
         Assert.Contains("Dla bliskich", listed.Tags);
         Assert.Contains(iwona.Id, listed.TagIds);
+        Assert.Equal(new TransactionTagDto(iwona.Id, "Dla bliskich", "#F4C542"), listed.TagDetails[0]);
 
         var edit = new EditTransaction(transactions, parties, locations);
         EditTransactionCommand Command(IReadOnlyList<int> ids) => new(added.Value.Id,
@@ -160,6 +163,7 @@ public sealed class TagWorkflowTests
         var cleared = await edit.ExecuteAsync(Command([]));
         Assert.True(cleared.IsSuccess);
         Assert.Empty(cleared.Value.TagIds);
+        Assert.Empty(cleared.Value.TagDetails);
         Assert.Empty(await db.Context.TransactionTags.ToListAsync());
         await tags.DeleteAsync(iwona.Id);
         Assert.Null(await tags.GetByIdAsync(iwona.Id));

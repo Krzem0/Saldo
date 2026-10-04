@@ -4,6 +4,10 @@
              xmlns:localization="clr-namespace:Saldo.Desktop.Wpf.Localization"
              xmlns:domainEnums="clr-namespace:Saldo.Domain.Enums;assembly=Saldo.Domain">
     <UserControl.Resources>
+        <ResourceDictionary>
+        <ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary Source="../Themes/TagLabelTemplates.xaml"/>
+        </ResourceDictionary.MergedDictionaries>
         <localization:TransactionTypeToTextConverter x:Key="TransactionTypeToTextConverter"/>
         <localization:LocalizedNumberConverter x:Key="LocalizedNumberConverter"/>
         <localization:CategoryColorBrushConverter x:Key="CategoryColorBrushConverter"/>
@@ -34,6 +38,7 @@
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         </Style>
+        </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -372,16 +377,8 @@
                  <DataGridTemplateColumn Header="{Binding Source={StaticResource Localization}, Path=[Tags]}" Width="150" CanUserSort="False">
                      <DataGridTemplateColumn.CellTemplate>
                          <DataTemplate>
-                             <ItemsControl ItemsSource="{Binding Tags}">
+                             <ItemsControl ItemsSource="{Binding TagDetails}" ItemTemplate="{StaticResource TagLabelTemplate}">
                                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                                 <ItemsControl.ItemTemplate>
-                                     <DataTemplate>
-                                         <Border Background="{DynamicResource ControlBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}"
-                                                 BorderThickness="1" CornerRadius="3" Padding="4,1" Margin="0,1,4,1">
-                                             <TextBlock Text="{Binding}" Foreground="{DynamicResource PrimaryTextBrush}" TextWrapping="Wrap"/>
-                                         </Border>
-                                     </DataTemplate>
-                                 </ItemsControl.ItemTemplate>
                              </ItemsControl>
                          </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>

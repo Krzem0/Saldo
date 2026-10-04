@@ -19,4 +19,7 @@ public sealed record TransactionDto(
     string? Description,
     IReadOnlyList<string> Tags,
     IReadOnlyList<int> TagIds
-);
+)
+{
+    public IReadOnlyList<TransactionTagDto> TagDetails { get; init; } = [];
+}

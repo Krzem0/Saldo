@@ -36,6 +36,7 @@
 - The WPF transaction list formats amounts using the selected language and uses subtle amount-cell colors to distinguish expenses from income
 - Monthly transactions are sorted by date descending by default; date and amount columns also support sorting from their headers
 - Category colors can be selected or cleared when adding or editing a category, including adding one from the transaction form
+  - Category and tag dictionary lists have a Color column showing a swatch and HEX code, or a No color label
 - The category dialog uses the native Windows color picker; the transaction list shows category names with a subtle background based on the saved color
 - Tags describe additional context across categories, for example `Dla Iwony` / `For Iwona`; they are separate from the payer and counterparty
 - Add tags explicitly from the Tags page or the transaction form's `+` button; select them with chips and view them on the transaction list
@@ -43,7 +44,8 @@
 - Editing a transaction and restoring a new-transaction draft preserve selected tags by ID, including after a tag is renamed
 - Tag names are trimmed, limited to 50 characters, and checked for duplicates on add/edit. Tags used by transactions cannot be deleted until they are removed from those transactions
   - Tags can have an optional `#RRGGBB` color. Add/edit and quick add use the same name/color dialog as categories, with a native color picker and a clear-color action
-  - Unselected chips have an outline; selected chips use a solid custom color or the application accent, with contrasting text. Keyboard focus has a separate outline
+  - Form chips use a neutral outline when unselected and the application accent when selected, with contrasting text. Optional tag colors appear as small dots in both states. Keyboard focus has a separate outline
+  - Monthly transaction tag labels use solid custom colors with contrasting text; tags without a color use a neutral theme background
 
 ## Tech Stack
 

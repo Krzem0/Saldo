@@ -18,6 +18,7 @@ public sealed class LocationsViewModel : ReferenceListViewModel<Location>
         => scope.ServiceProvider.GetRequiredService<ILocationRepository>().GetAllAsync(ct);
 
     protected override string GetName(Location item) => item.Name;
+    protected override int GetId(Location item) => item.Id;
 
     protected override Task AddCoreAsync(IServiceScope scope, string name, string? colorCode, CancellationToken ct)
         => scope.ServiceProvider.GetRequiredService<AddLocation>().ExecuteAsync(name, ct);

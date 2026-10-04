@@ -18,6 +18,7 @@ public sealed class PartiesViewModel : ReferenceListViewModel<Party>
         => scope.ServiceProvider.GetRequiredService<IPartyRepository>().GetAllAsync(ct);
 
     protected override string GetName(Party item) => item.Name;
+    protected override int GetId(Party item) => item.Id;
 
     protected override Task AddCoreAsync(IServiceScope scope, string name, string? colorCode, CancellationToken ct)
         => scope.ServiceProvider.GetRequiredService<AddParty>().ExecuteAsync(name, ct);

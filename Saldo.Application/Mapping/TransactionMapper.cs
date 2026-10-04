@@ -22,5 +22,10 @@ internal static class TransactionMapper
         t.Description,
         t.Tags.OrderBy(tt => tt.TagId).Select(tt => tt.Tag?.Name ?? string.Empty).ToList(),
         t.Tags.OrderBy(tt => tt.TagId).Select(tt => tt.TagId).ToList()
-    );
+    )
+    {
+        TagDetails = t.Tags.OrderBy(tt => tt.TagId)
+            .Select(tt => new TransactionTagDto(tt.TagId, tt.Tag?.Name ?? string.Empty, tt.Tag?.ColorCode))
+            .ToArray()
+    };
 }

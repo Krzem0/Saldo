@@ -18,6 +18,8 @@ public sealed class CategoriesViewModel : ReferenceListViewModel<Category>
         => scope.ServiceProvider.GetRequiredService<ICategoryRepository>().GetAllAsync(ct);
 
     protected override string GetName(Category item) => item.Name;
+    protected override int GetId(Category item) => item.Id;
+    public override bool HasColorColumn => true;
 
     protected override ReferenceItemInput? ShowAddDialog()
     {

@@ -3,11 +3,14 @@ using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.ViewModels;
+using Saldo.Domain.Entities;
+using Saldo.Application.DTOs;
 
 namespace Saldo.Tests.Wpf;
 
@@ -18,26 +21,84 @@ public sealed class TagChipStyleTests
     [InlineData("DarkTheme", null)]
     [InlineData("LightTheme", "#FFFFFF")]
     [InlineData("DarkTheme", "#000000")]
+    [InlineData("LightTheme", "#8E44AD")]
+    [InlineData("DarkTheme", "#F4C542")]
+    public void MonthlyTagLabel_UsesCurrentColorOrNeutralThemeBackground(string theme, string? colorCode) => OnSta(() =>
+    {
+        var presenter = CreateTagLabel("Dla Iwony", colorCode, theme);
+        Layout(presenter);
+        var border = Descendants(presenter).OfType<Border>().Single(item => item.Name == "TagLabelBorder");
+        var text = Descendants(presenter).OfType<TextBlock>().Single(item => item.Name == "TagLabelText");
+        Assert.Equal("Dla Iwony", text.Text);
+        Assert.Equal(colorCode is null ? Color(presenter, "ControlBrush") : Parse(colorCode), ((SolidColorBrush)border.Background).Color);
+        Assert.True(Contrast(((SolidColorBrush)border.Background).Color, ((SolidColorBrush)text.Foreground).Color) >= 4.5);
+        Assert.Empty(Descendants(presenter).OfType<CheckBox>());
+        presenter.Resources.MergedDictionaries[0] = Load(theme == "LightTheme" ? "DarkTheme" : "LightTheme");
+        Layout(presenter);
+        Assert.Equal(colorCode is null ? Color(presenter, "ControlBrush") : Parse(colorCode), ((SolidColorBrush)border.Background).Color);
+    });
+
+    [Theory]
+    [InlineData("Category", "#8E44AD")]
+    [InlineData("Category", null)]
+    [InlineData("Tag", "#F4C542")]
+    [InlineData("Tag", null)]
+    [InlineData("Party", null)]
+    [InlineData("Location", null)]
+    public void DictionaryTemplates_ShowOptionalColorsOnlyForColoredEntityTypes(string entityType, string? colorCode) => OnSta(() =>
+    {
+        foreach (var theme in new[] { "LightTheme", "DarkTheme" })
+        {
+            var presenter = CreateReferenceItem(entityType, colorCode, theme);
+            Layout(presenter);
+            var swatch = Descendants(presenter).OfType<Border>().FirstOrDefault(border => border.Name == "ColorSwatch");
+            Assert.Contains(Descendants(presenter).OfType<TextBlock>(), text => text.Text == "Example");
+            if (entityType is "Category" or "Tag")
+            {
+                Assert.NotNull(swatch);
+                Assert.Equal(colorCode is null ? Colors.Transparent : Parse(colorCode), ((SolidColorBrush)swatch.Background).Color);
+                Assert.Equal(Color(presenter, "ControlBorderBrush"), ((SolidColorBrush)swatch.BorderBrush).Color);
+                Assert.Null(swatch.ToolTip);
+                var value = Descendants(presenter).OfType<StackPanel>().Single(panel => panel.Name == "ColorValue");
+                var noColor = Descendants(presenter).OfType<TextBlock>().Single(text => text.Name == "NoColorLabel");
+                Assert.Equal(colorCode is null ? Visibility.Collapsed : Visibility.Visible, value.Visibility);
+                Assert.Equal(colorCode is null ? Visibility.Visible : Visibility.Collapsed, noColor.Visibility);
+                Assert.Equal(new LocalizationService()["ReferenceColorNone"], noColor.Text);
+            }
+            else Assert.Null(swatch);
+        }
+    });
+
+    [Theory]
+    [InlineData("LightTheme", null)]
+    [InlineData("DarkTheme", null)]
+    [InlineData("LightTheme", "#FFFFFF")]
+    [InlineData("DarkTheme", "#000000")]
     [InlineData("LightTheme", "#BADA55")]
     [InlineData("DarkTheme", "#176B5A")]
-    public void Chip_SelectDeselect_UsesColorAndKeepsBinding(string theme, string? colorCode) => OnSta(() =>
+    public void Chip_SelectDeselect_UsesUniformAccentAndPreservesColorDot(string theme, string? colorCode) => OnSta(() =>
     {
         var tag = new SelectableTag(1, "Dla Iwony", colorCode);
         var chip = CreateChip(tag, theme);
         Layout(chip);
         var border = (Border)chip.Template.FindName("ChipBorder", chip);
         var label = (TextBlock)chip.Template.FindName("ChipLabel", chip);
+        var dot = (Border)chip.Template.FindName("ColorDot", chip);
         Assert.Equal(Colors.Transparent, ((SolidColorBrush)border.Background).Color);
-        Assert.Equal(colorCode is null ? Color(chip, "ControlBorderBrush") : Parse(colorCode),
+        Assert.Equal(Color(chip, "ControlBorderBrush"),
             ((SolidColorBrush)border.BorderBrush).Color);
+        Assert.Equal(colorCode is null ? Visibility.Collapsed : Visibility.Visible, dot.Visibility);
+        Assert.Equal(colorCode is null ? Colors.Transparent : Parse(colorCode), ((SolidColorBrush)dot.Background).Color);
         Assert.Equal(Color(chip, "PrimaryTextBrush"), ((SolidColorBrush)label.Foreground).Color);
 
         chip.IsChecked = true;
         Layout(chip);
 
         Assert.True(tag.IsSelected);
-        Assert.Equal(colorCode is null ? Color(chip, "PrimaryBrush") : Parse(colorCode),
+        Assert.Equal(Color(chip, "PrimaryBrush"),
             ((SolidColorBrush)border.Background).Color);
+        Assert.Equal(colorCode is null ? Visibility.Collapsed : Visibility.Visible, dot.Visibility);
+        Assert.Equal(colorCode is null ? Colors.Transparent : Parse(colorCode), ((SolidColorBrush)dot.Background).Color);
         Assert.Same(border.Background, border.BorderBrush);
         Assert.True(Contrast(((SolidColorBrush)border.Background).Color, ((SolidColorBrush)label.Foreground).Color) >= 4.5);
 
@@ -46,6 +107,7 @@ public sealed class TagChipStyleTests
         Assert.False(chip.IsChecked);
         Assert.Equal(Colors.Transparent, ((SolidColorBrush)border.Background).Color);
         Assert.Equal(Color(chip, "PrimaryTextBrush"), ((SolidColorBrush)label.Foreground).Color);
+        Assert.Equal(colorCode is null ? Colors.Transparent : Parse(colorCode), ((SolidColorBrush)dot.Background).Color);
     });
 
     [Fact]
@@ -98,6 +160,28 @@ public sealed class TagChipStyleTests
                     row.Children.Add(CreateChip(new SelectableTag(1, name, code) { IsSelected = selected }, theme));
                 panel.Children.Add(row);
             }
+            var references = new StackPanel { Margin = new Thickness(0, 14, 0, 0) };
+            var header = new Grid { Margin = new Thickness(0, 0, 0, 8) };
+            header.ColumnDefinitions.Add(new ColumnDefinition());
+            header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(140) });
+            header.Children.Add(new TextBlock { Text = "Nazwa", Foreground = (Brush)panel.FindResource("SecondaryTextBrush") });
+            var colorHeader = new TextBlock { Text = "Kolor", Foreground = (Brush)panel.FindResource("SecondaryTextBrush") };
+            Grid.SetColumn(colorHeader, 1);
+            header.Children.Add(colorHeader);
+            references.Children.Add(header);
+            foreach (var (entity, code) in new (string, string?)[]
+                { ("Category", "#8E44AD"), ("Tag", "#F4C542"), ("Tag", null) })
+            {
+                var item = CreateReferenceItem(entity, code, theme);
+                item.Margin = new Thickness(0, 4, 0, 4);
+                references.Children.Add(item);
+            }
+            panel.Children.Add(references);
+            var monthlyTags = new WrapPanel { Margin = new Thickness(0, 14, 0, 0) };
+            foreach (var (name, code) in new (string, string?)[]
+                { ("Bez koloru", null), ("Dla Iwony", "#8E44AD"), ("Wakacje", "#F4C542") })
+                monthlyTags.Children.Add(CreateTagLabel(name, code, theme));
+            panel.Children.Add(monthlyTags);
             board.Children.Add(new Border { Background = (Brush)panel.FindResource("SurfaceBrush"), Child = panel });
         }
         Layout(board);
@@ -119,6 +203,45 @@ public sealed class TagChipStyleTests
         chip.SetBinding(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty,
             new Binding(nameof(SelectableTag.IsSelected)) { Mode = BindingMode.TwoWay });
         return chip;
+    }
+
+    private static ContentPresenter CreateReferenceItem(string entity, string? code, string theme)
+    {
+        var presenter = new ContentPresenter
+        {
+            Content = entity switch
+            {
+                "Category" => (object)new Category { Name = "Example", ColorCode = code },
+                "Tag" => new Tag { Name = "Example", ColorCode = code },
+                "Party" => new Party { Name = "Example" },
+                _ => new Location { Name = "Example" }
+            }
+        };
+        presenter.Resources.MergedDictionaries.Add(Load(theme));
+        presenter.Resources["Localization"] = new LocalizationService();
+        presenter.Resources.MergedDictionaries.Add(Load("ReferenceItemTemplates"));
+        presenter.SetResourceReference(TextElement.ForegroundProperty, "PrimaryTextBrush");
+        return presenter;
+    }
+
+    private static ContentPresenter CreateTagLabel(string name, string? code, string theme)
+    {
+        var presenter = new ContentPresenter { Content = new TransactionTagDto(1, name, code) };
+        presenter.Resources.MergedDictionaries.Add(Load(theme));
+        var templates = Load("TagLabelTemplates");
+        presenter.Resources.MergedDictionaries.Add(templates);
+        presenter.ContentTemplate = (DataTemplate)templates["TagLabelTemplate"];
+        return presenter;
+    }
+
+    private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            yield return child;
+            foreach (var descendant in Descendants(child)) yield return descendant;
+        }
     }
 
     private static ResourceDictionary Load(string name) => new()
