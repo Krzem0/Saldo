@@ -113,18 +113,20 @@ public sealed class TransactionTagSelectionTests
     }
 
     [Theory]
-    [InlineData(false, null)]
-    [InlineData(true, null)]
-    [InlineData(false, " #aabbcc ")]
-    [InlineData(true, " #aabbcc ")]
-    public async Task QuickAdd_SelectsNewTagAndPreservesExistingSelection(bool alreadySelected, string? colorCode)
+    [InlineData(false, null, null)]
+    [InlineData(true, null, null)]
+    [InlineData(false, " #aabbcc ", null)]
+    [InlineData(true, " #aabbcc ", null)]
+    [InlineData(false, null, "mdi:Account")]
+    [InlineData(true, " #aabbcc ", "mdi:Gift")]
+    public async Task QuickAdd_SelectsNewTagAndPreservesExistingSelection(bool alreadySelected, string? colorCode, string? iconKey = null)
     {
         var repository = new TagRepositoryFake();
         var services = new ServiceCollection();
         services.AddSingleton(new AddTag(repository));
         using var provider = services.BuildServiceProvider();
         var viewModel = new AddEditTransactionViewModel(provider.GetRequiredService<IServiceScopeFactory>(),
-            new UnusedDialogs("Dla Iwony", colorCode: colorCode), new LocalizationService(), [], [], [], await repository.GetAllAsync());
+            new UnusedDialogs("Dla Iwony", colorCode: colorCode, iconKey: iconKey), new LocalizationService(), [], [], [], await repository.GetAllAsync());
         viewModel.Tags[0].IsSelected = alreadySelected;
         var added = new TaskCompletionSource<bool>();
         viewModel.Tags.CollectionChanged += (_, _) => added.TrySetResult(true);
@@ -136,6 +138,8 @@ public sealed class TransactionTagSelectionTests
         Assert.Equal(alreadySelected, viewModel.Tags[0].IsSelected);
         Assert.True(viewModel.Tags[1].IsSelected);
         Assert.Equal("Dla Iwony", viewModel.Tags[1].Name);
+        Assert.Equal(iconKey, viewModel.Tags[1].IconKey);
+        Assert.Equal(iconKey, (await repository.GetAllAsync())[1].IconKey);
         Assert.Equal(colorCode is null ? null : "#AABBCC", viewModel.Tags[1].ColorCode);
         Assert.Equal(colorCode is null ? null : "#AABBCC", (await repository.GetAllAsync())[1].ColorCode);
         Assert.Equal(alreadySelected ? new[] { 1, 2 } : new[] { 2 }, viewModel.CreateDraft().TagIds);
@@ -372,7 +376,7 @@ public sealed class TransactionTagSelectionTests
     }
 
     private sealed class UnusedDialogs(string? name = null,
-        UnsavedChangesChoice unsavedChanges = UnsavedChangesChoice.Cancel, string? colorCode = null) : IDialogService
+        UnsavedChangesChoice unsavedChanges = UnsavedChangesChoice.Cancel, string? colorCode = null, string? iconKey = null) : IDialogService
     {
         public int UnsavedChangesPromptCount { get; private set; }
         public UnsavedChangesChoice ConfirmUnsavedChanges(string title, string message)
@@ -383,7 +387,7 @@ public sealed class TransactionTagSelectionTests
         public bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel) => throw new NotSupportedException();
         public string? ShowNameDialog(string title, string? initialValue = null) => name;
         public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null)
-            => name is null ? null : new(name, colorCode);
+            => name is null ? null : new(name, colorCode, iconKey);
         public bool ConfirmDelete(string title, string message) => throw new NotSupportedException();
         public string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter) => throw new NotSupportedException();
     }

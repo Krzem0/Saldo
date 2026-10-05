@@ -233,7 +233,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         Categories = new ObservableCollection<Category>(categories);
         Parties = new ObservableCollection<Party>(parties);
         Locations = new ObservableCollection<Location>(locations);
-        Tags = new ObservableCollection<SelectableTag>(tags.Select(tag => new SelectableTag(tag.Id, tag.Name, tag.ColorCode)));
+        Tags = new ObservableCollection<SelectableTag>(tags.Select(tag => new SelectableTag(tag.Id, tag.Name, tag.ColorCode, tag.IconKey)));
         _types =
         [
             new TypeItem(TransactionType.Expense, localization),
@@ -320,13 +320,13 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     private async Task AddTagAsync()
     {
         var input = _dialogService.ShowReferenceColorDialog(
-            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Tag")));
+            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Tag")), allowIcons: true);
         if (input is null) return;
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
-            var tag = await scope.ServiceProvider.GetRequiredService<AddTag>().ExecuteAsync(input.Name, input.ColorCode);
-            var selectableTag = new SelectableTag(tag.Id, tag.Name, tag.ColorCode) { IsSelected = true };
+            var tag = await scope.ServiceProvider.GetRequiredService<AddTag>().ExecuteAsync(input.Name, input.ColorCode, iconKey: input.IconKey);
+            var selectableTag = new SelectableTag(tag.Id, tag.Name, tag.ColorCode, tag.IconKey) { IsSelected = true };
             selectableTag.PropertyChanged += OnFormChanged;
             Tags.Add(selectableTag);
             DismissRestoredDraftNotice();

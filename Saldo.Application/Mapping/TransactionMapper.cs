@@ -26,7 +26,7 @@ internal static class TransactionMapper
     {
         CategoryIconKey = t.Category?.IconKey,
         TagDetails = t.Tags.OrderBy(tt => tt.TagId)
-            .Select(tt => new TransactionTagDto(tt.TagId, tt.Tag?.Name ?? string.Empty, tt.Tag?.ColorCode))
+            .Select(tt => new TransactionTagDto(tt.TagId, tt.Tag?.Name ?? string.Empty, tt.Tag?.ColorCode, tt.Tag?.IconKey))
             .ToArray()
     };
 }

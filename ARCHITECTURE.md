@@ -164,7 +164,7 @@ Rules:
 
 ### Tag and TransactionTag
 
-- `Tag`: Id, Name (required, up to 50 characters), and optional ColorCode (`#RRGGBB`)
+- `Tag`: Id, Name (required, up to 50 characters), optional ColorCode (`#RRGGBB`), and optional IconKey (`mdi:<name>`, up to 100 characters)
 - `TransactionTag`: TransactionId and TagId, forming a many-to-many association
 - Transaction commands carry selected tag IDs; `TransactionDto` exposes tag IDs and names so Presentation can display labels and preserve identity after renames
 
@@ -177,15 +177,15 @@ Rules:
 - `Category` is a controlled dictionary
 - WPF dictionary lists preserve selection by entity ID after reload, rebinding to the refreshed instance so the visible selection matches edit/delete actions. If there is no selection or the selected entity no longer exists, the first available item is selected. An empty list has no selection; edit/delete are disabled during loading and when nothing is selected
 - Category colors are persisted data independent of WPF; `TransactionDto.CategoryColorCode` carries the current category color to Presentation when transactions are loaded
-- WPF renders the category color as a translucent background behind its name in the transaction list; the transaction-form category selector currently shows names only. Category dictionary entries show the name with optional color and icon, without a separate Color column. The tag dictionary uses a typed template with a separate Color column showing a solid swatch and HEX code, or a localized No color label. Other dictionary lists show names only
+- WPF renders the category color as a translucent background behind its name in the transaction list; the transaction-form category selector currently shows names only. Category dictionary entries show the name with optional color and icon, without a separate Color column. Tag dictionary entries use the same name/color/icon presentation, without a separate Color column. Other dictionary lists show names only
 - The native color picker receives the category dialog's HWND through an `IWin32Window` adapter, explicitly associating it with its WPF owner for modal behavior and activation
 - `Party` and `Location` are reusable dictionaries that can be extended through explicit add workflows from their tabs or the transaction form's `+` buttons
 - Tags are an optional reusable dictionary independent of categories and parties. Add/edit tag use cases normalize names and reject case-insensitive duplicates; invalid names and duplicates are presented with localized messages
   - Optional colors are normalized and validated on add/edit with the same Application validator as category colors. The nullable ColorCode column is included in the initial migration and EF model snapshot
-  - The shared name/color dialog supports tag dictionary add/edit and transaction quick add, including removing a previously chosen color
+  - The shared name/color dialog supports tag dictionary add/edit and transaction quick add, including choosing or clearing an independent icon with the shared MDI picker, and removing a previously chosen color
 - WPF supports a Tags page, multiple chip selections and quick add in transaction forms, and tag labels on the monthly transaction list
   - `TransactionDto.TagDetails` carries tag IDs, names, and current colors as `TransactionTagDto` records. Monthly list labels use a noninteractive template with a solid custom fill or a neutral theme background and contrasting text; the view does not query repositories to resolve colors
-  - `TagChipStyles.xaml` gives CheckBox controls a rounded chip template while retaining selection bindings and keyboard/automation behavior. Unselected chips use a neutral outline; selected chips uniformly use the dynamically resolved theme accent. A small outlined dot shows the optional tag color in both states and is hidden for tags without colors. Text on the fill uses black or white according to relative luminance and contrast. Keyboard focus has a separate outline; hover does not change the selection appearance
+  - `TagChipStyles.xaml` gives CheckBox controls a rounded chip template while retaining selection bindings and keyboard/automation behavior. Unselected chips use a neutral outline; selected chips uniformly use the dynamically resolved theme accent. An optional icon replaces the color dot and appears on a tile using the tag color or the neutral theme color. Tags without an icon keep the optional color dot in both states; unknown icon identifiers fall back to the dot/name. Text on the fill uses black or white according to relative luminance and contrast. Keyboard focus has a separate outline; hover does not change the selection appearance
 - A fresh form selects no tags by default. Quick add selects the new tag and preserves existing selections; editing and restored drafts keep their saved selections
 - Selected tag IDs are included in drafts and unsaved-change detection. Saving a transaction sends the actual selection, including an empty selection when tags are deliberately removed
 - Deletion of a tag used by transactions is blocked by the repository before SQLite's cascade deletion can remove associations
@@ -249,8 +249,8 @@ Rules:
 - Backup/restore to a single file
 - Additional frontends reusing the same core
 
-### Category icon presentation
+### Category and tag icon presentation
 
-Application add/edit validates and trims optional `mdi:<name>` identifiers without referencing a WPF enum. SQLite stores `IconKey` as nullable text in the initial development migration. Transaction DTOs include the current category icon, so changing a dictionary entry updates existing transactions on reload.
+Application add/edit validates and trims optional `mdi:<name>` identifiers without referencing a WPF enum. SQLite stores category and tag `IconKey` as nullable text in the initial development migration. Transaction DTOs include the current category and tag icons, so changing a dictionary entry updates existing transactions on reload.
 
-Only WPF references MahApps.Metro.IconPacks.Material and its Core dependency. The full catalog is cached as metadata; the owned picker creates controls for at most 60 results per page. Search and paging work offline. `CategoryBadge` shares the category presentation between dictionaries and the monthly list, including theme-aware fallback and contrasting icon foreground. Unknown identifiers hide the icon while preserving the name/color.
+Categories and tags use the shared `ReferenceIconKeyNormalizer` in Application. Only WPF references MahApps.Metro.IconPacks.Material and its Core dependency. The full catalog is cached as metadata; the owned picker creates controls for at most 60 results per page. Search and paging work offline. `CategoryBadge` renders categories in dictionaries and the monthly list, and tags in their dictionary. `TagChipStyles.xaml` and `TagLabelTemplates.xaml` render selectable and monthly-list tag chips. All use theme-aware fallback and contrasting icon foreground. Unknown identifiers hide the icon while preserving the name/color.

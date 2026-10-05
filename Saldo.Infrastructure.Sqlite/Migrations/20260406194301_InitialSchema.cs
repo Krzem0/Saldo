@@ -59,6 +59,7 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    IconKey = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     ColorCode = table.Column<string>(type: "TEXT", maxLength: 7, nullable: true)
                 },
                 constraints: table =>

@@ -13,7 +13,7 @@ public sealed class AddCategory
     public async Task<Category> ExecuteAsync(string name, string? colorCode = null, CancellationToken ct = default, string? iconKey = null)
     {
         var normalizedName = CategoryInputNormalizer.NormalizeName(name);
-        var normalizedIconKey = CategoryIconKeyNormalizer.Normalize(iconKey);
+        var normalizedIconKey = ReferenceIconKeyNormalizer.Normalize(iconKey);
         var normalizedColorCode = CategoryInputNormalizer.NormalizeColorCode(colorCode);
         if ((await _categories.GetAllAsync(ct)).Any(category => string.Equals(category.Name, normalizedName, StringComparison.OrdinalIgnoreCase)))
         {

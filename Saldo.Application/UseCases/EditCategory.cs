@@ -11,7 +11,7 @@ public sealed class EditCategory
     public async Task ExecuteAsync(int id, string name, string? colorCode = null, CancellationToken ct = default, string? iconKey = null)
     {
         var normalizedName = CategoryInputNormalizer.NormalizeName(name);
-        var normalizedIconKey = CategoryIconKeyNormalizer.Normalize(iconKey);
+        var normalizedIconKey = ReferenceIconKeyNormalizer.Normalize(iconKey);
         var normalizedColorCode = CategoryInputNormalizer.NormalizeColorCode(colorCode);
         var category = await _categories.GetByIdAsync(id, ct)
             ?? throw new KeyNotFoundException($"Category {id} not found.");

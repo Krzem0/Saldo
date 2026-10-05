@@ -5,10 +5,11 @@ namespace Saldo.Application.UseCases;
 
 public sealed class AddTag(ITagRepository tags)
 {
-    public async Task<Tag> ExecuteAsync(string name, string? colorCode = null, CancellationToken ct = default)
+    public async Task<Tag> ExecuteAsync(string name, string? colorCode = null, CancellationToken ct = default, string? iconKey = null)
     {
+        var normalizedIcon = ReferenceIconKeyNormalizer.Normalize(iconKey);
         var normalizedColor = ColorCodeNormalizer.Normalize(colorCode);
-        var tag = new Tag { Name = await TagNameValidator.NormalizeAsync(tags, name, null, ct), ColorCode = normalizedColor };
+        var tag = new Tag { Name = await TagNameValidator.NormalizeAsync(tags, name, null, ct), ColorCode = normalizedColor, IconKey = normalizedIcon };
         await tags.AddAsync(tag, ct);
         return tag;
     }

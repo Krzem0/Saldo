@@ -87,6 +87,10 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("Saldo.Domain.Entities.Tag", b =>
                 {
+                    b.Property<string>("IconKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ColorCode")
                         .HasMaxLength(7)
                         .HasColumnType("TEXT");

@@ -38,8 +38,8 @@
 - The WPF transaction list formats amounts using the selected language and uses subtle amount-cell colors to distinguish expenses from income
 - Monthly transactions are sorted by date descending by default; date and amount columns also support sorting from their headers
 - Category colors can be selected or cleared when adding or editing a category, including adding one from the transaction form
-  - The category dictionary displays color and icon beside the name. The tag dictionary has a Color column showing a swatch and HEX code, or a No color label
-- Category icons are optional and independent of color. The category dialog opens an owned icon picker with the full local MDI catalog, a search field (Search or Enter), and 60 icons per page with scrolling. Clearing the search with × immediately restores the full catalog; the page number can be entered directly (Enter or leaving the field). Search supports English names and common Polish aliases
+  - Category and tag dictionaries display optional color and icon beside the name, without a separate Color column
+- Category icons are optional and independent of color. Category and tag dialogs open the same owned icon picker with the full local MDI catalog, a search field (Search or Enter), and 60 icons per page with scrolling. Clearing the search with × immediately restores the full catalog; the page number can be entered directly (Enter or leaving the field). Search supports English names and common Polish aliases
 - Category labels show a contrasting icon on a solid color tile and a subtle background behind the name. An icon without color uses the neutral theme; unknown icon identifiers fall back to the name/color
 - The category dialog uses the native Windows color picker; the transaction list shows category names with a subtle background based on the saved color
 - Tags describe additional context across categories, for example `Dla Iwony` / `For Iwona`; they are separate from the payer and counterparty
@@ -47,9 +47,9 @@
 - Fresh transaction forms start with no selected tags; quick add creates a dictionary tag and selects it for the current transaction
 - Editing a transaction and restoring a new-transaction draft preserve selected tags by ID, including after a tag is renamed
 - Tag names are trimmed, limited to 50 characters, and checked for duplicates on add/edit. Tags used by transactions cannot be deleted until they are removed from those transactions
-  - Tags can have an optional `#RRGGBB` color. Add/edit and quick add use the same name/color dialog as categories, with a native color picker and a clear-color action
-  - Form chips use a neutral outline when unselected and the application accent when selected, with contrasting text. Optional tag colors appear as small dots in both states. Keyboard focus has a separate outline
-  - Monthly transaction tag labels use solid custom colors with contrasting text; tags without a color use a neutral theme background
+  - Tags can have an optional `#RRGGBB` color and an independent MDI icon. Add/edit and quick add use the same name/color dialog as categories, with a native color picker and a clear-color action
+  - Form chips use a neutral outline when unselected and the application accent when selected, with contrasting text. An optional icon appears on a small tile filled with the tag color, or a neutral theme color when none is assigned. Tags without an icon show their optional color as a small dot in both states. Keyboard focus has a separate outline
+  - Monthly transaction tag labels show optional icons and use solid custom colors with contrasting text; tags without a color use a neutral theme background
 
 ## Tech Stack
 

@@ -1,6 +1,6 @@
-# Third-party notices: category icons
+# Third-party notices: category and tag icons
 
-These notices cover the new category-icon components; they are not an exhaustive inventory of Saldo's existing dependencies.
+These notices cover the new category/tag icon components; they are not an exhaustive inventory of Saldo's existing dependencies.
 
 ## MahApps.Metro.IconPacks.Material and MahApps.Metro.IconPacks.Core 6.2.1
 

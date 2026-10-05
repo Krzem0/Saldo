@@ -15,6 +15,8 @@ public static class CategoryIconCatalog
 {
     private static readonly Dictionary<string, string> PolishAliases = new()
     {
+        ["Account"] = "osoba czlowiek rodzina bliscy", ["Airplane"] = "wakacje podroz samolot",
+        ["Wrench"] = "remont narzedzia",
         ["Home"] = "dom mieszkanie czynsz", ["Cart"] = "koszyk zakupy supermarket",
         ["SilverwareForkKnife"] = "jedzenie restauracja posilek", ["Car"] = "samochod transport paliwo",
         ["Paw"] = "pies kot zwierzeta lapa", ["HeartPulse"] = "zdrowie lekarz",

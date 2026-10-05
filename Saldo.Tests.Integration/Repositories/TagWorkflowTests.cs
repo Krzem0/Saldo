@@ -12,6 +12,59 @@ namespace Saldo.Tests.Integration.Repositories;
 public sealed class TagWorkflowTests
 {
     [Theory]
+    [InlineData(null, null, null)]
+    [InlineData("  ", null, null)]
+    [InlineData(" mdi:Account ", null, "mdi:Account")]
+    [InlineData("mdi:Airplane", "#3366CC", "mdi:Airplane")]
+    public async Task TagIcon_InitialMigration_AddEditClear_UpdatesTransactionDetails(string? input, string? color, string? expected)
+    {
+        using var db = new TestDatabase(useMigrations: true);
+        Assert.False(db.Context.Database.HasPendingModelChanges());
+        var tags = new TagRepository(db.Context);
+        var tag = await new AddTag(tags).ExecuteAsync("For Iwona", color, iconKey: input);
+        db.Context.ChangeTracker.Clear();
+        Assert.Equal(expected, (await tags.GetByIdAsync(tag.Id))!.IconKey);
+        var category = new Category { Name = "Food" };
+        db.Context.Add(category);
+        await db.Context.SaveChangesAsync();
+        var transactions = new TransactionRepository(db.Context);
+        await transactions.AddAsync(new Transaction { Date = new DateOnly(2019, 5, 1), Amount = 10,
+            Description = "Groceries", CategoryId = category.Id, Tags = [new TransactionTag { TagId = tag.Id }] });
+        db.Context.ChangeTracker.Clear();
+        async Task<TransactionTagDto> Details() => Assert.Single(Assert.Single(await new ListTransactions(transactions)
+            .ExecuteAsync(new ListTransactionsQuery(2019, 5))).TagDetails);
+        Assert.Equal(expected, (await Details()).IconKey);
+        await new EditTag(tags).ExecuteAsync(tag.Id, tag.Name, color, iconKey: "mdi:Gift");
+        db.Context.ChangeTracker.Clear();
+        Assert.Equal("mdi:Gift", (await Details()).IconKey);
+        await new EditTag(tags).ExecuteAsync(tag.Id, tag.Name, color, iconKey: null);
+        db.Context.ChangeTracker.Clear();
+        var cleared = await Details();
+        Assert.Null(cleared.IconKey);
+        Assert.Equal(color, cleared.ColorCode);
+        Assert.Equal(tag.Id, Assert.Single(await db.Context.TransactionTags.ToListAsync()).TagId);
+    }
+
+    [Theory]
+    [InlineData("Account")]
+    [InlineData("mdi:../Account")]
+    [InlineData("mdi:123")]
+    public async Task InvalidTagIcon_AddAndEdit_DoNotMutateStoredTag(string key)
+    {
+        using var db = new TestDatabase(useMigrations: true);
+        var tags = new TagRepository(db.Context);
+        var tag = await new AddTag(tags).ExecuteAsync("Original", "#3366CC", iconKey: "mdi:Account");
+        await Assert.ThrowsAsync<ArgumentException>(() => new AddTag(tags).ExecuteAsync("New", iconKey: key));
+        await Assert.ThrowsAsync<ArgumentException>(() => new EditTag(tags).ExecuteAsync(tag.Id, "Changed", "#FFFFFF", iconKey: key));
+        await db.Context.SaveChangesAsync();
+        db.Context.ChangeTracker.Clear();
+        var unchanged = Assert.Single(await tags.GetAllAsync());
+        Assert.Equal("Original", unchanged.Name);
+        Assert.Equal("#3366CC", unchanged.ColorCode);
+        Assert.Equal("mdi:Account", unchanged.IconKey);
+    }
+
+    [Theory]
     [InlineData(null, null)]
     [InlineData("", null)]
     [InlineData("   ", null)]
