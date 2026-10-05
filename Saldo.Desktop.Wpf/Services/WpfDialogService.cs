@@ -20,9 +20,9 @@ public sealed class WpfDialogService : IDialogService
         return dialog.ShowDialog() == true ? dialog.EnteredName : null;
     }
 
-    public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null)
+    public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null)
     {
-        var dialog = new ReferenceColorDialog(title, initialName, initialColorCode);
+        var dialog = new ReferenceColorDialog(title, initialName, initialColorCode, allowIcons, initialIconKey);
         SetOwner(dialog);
         return dialog.ShowDialog() == true ? dialog.Result : null;
     }

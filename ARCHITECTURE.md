@@ -140,15 +140,16 @@ Rules:
 - Type (`Income` / `Expense`)
 - Amount (positive number)
 - CategoryId (required)
-- PayerId (required)
-- CounterpartyId (required)
+- PayerId (optional)
+- CounterpartyId (optional)
 - LocationId (optional)
-- Description (optional)
+- Description (required, non-blank, up to 500 characters)
 
 ### Category
 
 - Id
 - Name
+- IconKey (optional portable identifier, e.g. `mdi:Home`, up to 100 characters)
 - ColorCode (optional uppercase `#RRGGBB`, stored as nullable text with a maximum length of 7)
 
 ### Party
@@ -176,7 +177,7 @@ Rules:
 - `Category` is a controlled dictionary
 - WPF dictionary lists preserve selection by entity ID after reload, rebinding to the refreshed instance so the visible selection matches edit/delete actions. If there is no selection or the selected entity no longer exists, the first available item is selected. An empty list has no selection; edit/delete are disabled during loading and when nothing is selected
 - Category colors are persisted data independent of WPF; `TransactionDto.CategoryColorCode` carries the current category color to Presentation when transactions are loaded
-- WPF renders the category color as a translucent background behind its name in the transaction list; the transaction-form category selector currently shows names only. Category and tag dictionary lists use shared typed templates with a separate Color column showing a solid swatch and HEX code, or a localized No color label. Other dictionary lists show names only
+- WPF renders the category color as a translucent background behind its name in the transaction list; the transaction-form category selector currently shows names only. Category dictionary entries show the name with optional color and icon, without a separate Color column. The tag dictionary uses a typed template with a separate Color column showing a solid swatch and HEX code, or a localized No color label. Other dictionary lists show names only
 - The native color picker receives the category dialog's HWND through an `IWin32Window` adapter, explicitly associating it with its WPF owner for modal behavior and activation
 - `Party` and `Location` are reusable dictionaries that can be extended through explicit add workflows from their tabs or the transaction form's `+` buttons
 - Tags are an optional reusable dictionary independent of categories and parties. Add/edit tag use cases normalize names and reject case-insensitive duplicates; invalid names and duplicates are presented with localized messages
@@ -247,3 +248,9 @@ Rules:
 - Tags and advanced filtering
 - Backup/restore to a single file
 - Additional frontends reusing the same core
+
+### Category icon presentation
+
+Application add/edit validates and trims optional `mdi:<name>` identifiers without referencing a WPF enum. SQLite stores `IconKey` as nullable text in the initial development migration. Transaction DTOs include the current category icon, so changing a dictionary entry updates existing transactions on reload.
+
+Only WPF references MahApps.Metro.IconPacks.Material and its Core dependency. The full catalog is cached as metadata; the owned picker creates controls for at most 60 results per page. Search and paging work offline. `CategoryBadge` shares the category presentation between dictionaries and the monthly list, including theme-aware fallback and contrasting icon foreground. Unknown identifiers hide the icon while preserving the name/color.

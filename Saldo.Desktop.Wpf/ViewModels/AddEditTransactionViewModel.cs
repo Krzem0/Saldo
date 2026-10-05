@@ -166,7 +166,14 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         }
     }
 
-    public string? Description { get => _description; set => SetField(ref _description, value); }
+    public string? Description
+    {
+        get => _description;
+        set
+        {
+            if (SetField(ref _description, value)) ClearFieldError(nameof(Description));
+        }
+    }
     public string LocationText
     {
         get => _locationText;
@@ -180,6 +187,9 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     public ObservableCollection<Party> Parties { get; private set; }
     public ObservableCollection<Location> Locations { get; private set; }
     public ObservableCollection<SelectableTag> Tags { get; }
+
+    public string DescriptionError => GetErrorText(nameof(Description));
+    public bool HasDescriptionError => HasError(nameof(Description));
 
     public string AmountError => GetErrorText(nameof(AmountText));
     public string CategoryError => GetErrorText(nameof(SelectedCategory));
@@ -342,13 +352,13 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     private async Task AddCategoryAsync()
     {
         var categoryInput = _dialogService.ShowReferenceColorDialog(
-            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Category")));
+            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Category")), allowIcons: true);
         if (categoryInput is null) return;
 
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
-            var category = await scope.ServiceProvider.GetRequiredService<AddCategory>().ExecuteAsync(categoryInput.Name, categoryInput.ColorCode);
+            var category = await scope.ServiceProvider.GetRequiredService<AddCategory>().ExecuteAsync(categoryInput.Name, categoryInput.ColorCode, iconKey: categoryInput.IconKey);
             Categories.Add(category);
             SelectedCategory = category;
         }
@@ -434,9 +444,9 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         _selectedCategory = Categories.FirstOrDefault(c => c.Id == t.CategoryId);
         _categoryText = _selectedCategory?.Name ?? string.Empty;
         _selectedPayer = Parties.FirstOrDefault(p => p.Id == t.PayerId);
-        _payerText = t.PayerName;
+        _payerText = t.PayerName ?? string.Empty;
         _selectedCounterparty = Parties.FirstOrDefault(p => p.Id == t.CounterpartyId);
-        _counterpartyText = t.CounterpartyName;
+        _counterpartyText = t.CounterpartyName ?? string.Empty;
         _selectedLocation = t.LocationId.HasValue
             ? Locations.FirstOrDefault(location => location.Id == t.LocationId.Value)
             : null;
@@ -626,14 +636,15 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
     private static string MapCommandProperty(string? propertyName, string errorCode) => propertyName switch
     {
+        nameof(ITransactionCommand.Description) => nameof(Description),
         nameof(ITransactionCommand.Amount) => nameof(AmountText),
         nameof(ITransactionCommand.CategoryId) => nameof(SelectedCategory),
         nameof(ITransactionCommand.PayerName) => nameof(PayerText),
         nameof(ITransactionCommand.CounterpartyName) => nameof(CounterpartyText),
         _ => errorCode switch
         {
-            ErrorCodes.Transaction.PayerRequired => nameof(PayerText),
-            ErrorCodes.Transaction.CounterpartyRequired => nameof(CounterpartyText),
+            ErrorCodes.Transaction.PayerInvalid => nameof(PayerText),
+            ErrorCodes.Transaction.CounterpartyInvalid => nameof(CounterpartyText),
             ErrorCodes.Transaction.LocationInvalid => nameof(LocationText),
             _ => string.Empty
         }
@@ -642,8 +653,8 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     private string GetDisplayErrorCode(string propertyName, string errorCode)
     {
         if (errorCode is ErrorCodes.Transaction.CategoryRequired
-            or ErrorCodes.Transaction.PayerRequired
-            or ErrorCodes.Transaction.CounterpartyRequired)
+            or ErrorCodes.Transaction.PayerInvalid
+            or ErrorCodes.Transaction.CounterpartyInvalid)
         {
             var hasTypedValue = propertyName switch
             {
@@ -677,8 +688,12 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         ErrorCodes.Transaction.IdMustBePositive => T("Validation_TransactionIdMustBePositive"),
         ErrorCodes.Transaction.AmountMustBePositive => T("Validation_AmountMustBePositive"),
         ErrorCodes.Transaction.CategoryRequired => T("Validation_CategoryRequired"),
-        ErrorCodes.Transaction.PayerRequired => T("Validation_PayerRequired"),
-        ErrorCodes.Transaction.CounterpartyRequired => T("Validation_CounterpartyRequired"),
+        ErrorCodes.Transaction.PayerInvalid => T("Validation_PayerInvalid"),
+        ErrorCodes.Transaction.CounterpartyInvalid => T("Validation_CounterpartyInvalid"),
+        ErrorCodes.Transaction.DescriptionRequired => T("Validation_DescriptionRequired"),
+        ErrorCodes.Transaction.DescriptionTooLong => T("Validation_DescriptionTooLong"),
+        ErrorCodes.Transaction.DateRequired => T("Validation_DateRequired"),
+        ErrorCodes.Transaction.TypeInvalid => T("Validation_TypeInvalid"),
         ErrorCodes.Transaction.LocationInvalid => T("Validation_LocationInvalid"),
         ReferenceSelectionRequiredError => T(ReferenceSelectionRequiredError),
         ErrorCodes.Transaction.NotFound => T("Validation_TransactionNotFound"),
@@ -701,6 +716,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
     private void NotifyAllErrorProperties()
     {
+        NotifyErrorProperties(nameof(Description));
         NotifyErrorProperties(nameof(AmountText));
         NotifyErrorProperties(nameof(SelectedCategory));
         NotifyErrorProperties(nameof(PayerText));
@@ -713,6 +729,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     {
         var (textProperty, visibilityProperty) = propertyName switch
         {
+            nameof(Description) => (nameof(DescriptionError), nameof(HasDescriptionError)),
             nameof(AmountText) => (nameof(AmountError), nameof(HasAmountError)),
             nameof(SelectedCategory) => (nameof(CategoryError), nameof(HasCategoryError)),
             nameof(PayerText) => (nameof(PayerError), nameof(HasPayerError)),

@@ -26,6 +26,10 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("IconKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ColorCode")
                         .HasMaxLength(7)
                         .HasColumnType("TEXT");
@@ -117,13 +121,14 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("CounterpartyId")
+                    b.Property<int?>("CounterpartyId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
@@ -133,7 +138,7 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     b.Property<int?>("LocationId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("PayerId")
+                    b.Property<int?>("PayerId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -184,14 +189,12 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     b.HasOne("Saldo.Domain.Entities.Party", "Counterparty")
                         .WithMany("CounterpartyTransactions")
                         .HasForeignKey("CounterpartyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Saldo.Domain.Entities.Party", "Payer")
                         .WithMany("PayerTransactions")
                         .HasForeignKey("PayerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Category");
 

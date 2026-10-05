@@ -100,8 +100,8 @@ public sealed class TransactionRepository : ITransactionRepository
     private static void ClearReferenceNavigations(Transaction transaction)
     {
         transaction.Category = null!;
-        transaction.Payer = null!;
-        transaction.Counterparty = null!;
+        transaction.Payer = null;
+        transaction.Counterparty = null;
         transaction.Location = null;
     }
 

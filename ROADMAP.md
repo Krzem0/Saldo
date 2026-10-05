@@ -27,4 +27,4 @@ This document tracks planned work. Implemented behavior and architectural decisi
 
 - [ ] Create a second frontend reusing Application and Infrastructure through DI
 - [ ] Reuse stable validation codes and property metadata
-- [ ] Recreate documented presentation conventions, including drafts, amount/type rendering, and category colors
+- [ ] Recreate documented presentation conventions, including drafts, amount/type rendering, and category colors/icons

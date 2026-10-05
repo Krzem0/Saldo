@@ -17,14 +17,22 @@ public abstract class TransactionCommandValidator<TCommand> : AbstractValidator<
             .GreaterThan(0)
             .WithErrorCode(ErrorCodes.Transaction.CategoryRequired);
 
-        RuleFor(command => command.PayerName)
-            .NotEmpty()
-            .When(command => !command.PayerId.HasValue || command.PayerId.Value <= 0)
-            .WithErrorCode(ErrorCodes.Transaction.PayerRequired);
+        RuleFor(command => command.PayerId)
+            .GreaterThan(0).When(command => command.PayerId.HasValue)
+            .WithErrorCode(ErrorCodes.Transaction.PayerInvalid);
 
-        RuleFor(command => command.CounterpartyName)
-            .NotEmpty()
-            .When(command => !command.CounterpartyId.HasValue || command.CounterpartyId.Value <= 0)
-            .WithErrorCode(ErrorCodes.Transaction.CounterpartyRequired);
+        RuleFor(command => command.CounterpartyId)
+            .GreaterThan(0).When(command => command.CounterpartyId.HasValue)
+            .WithErrorCode(ErrorCodes.Transaction.CounterpartyInvalid);
+
+        RuleFor(command => command.Description)
+            .NotEmpty().WithErrorCode(ErrorCodes.Transaction.DescriptionRequired)
+            .MaximumLength(500).WithErrorCode(ErrorCodes.Transaction.DescriptionTooLong);
+
+        RuleFor(command => command.Date)
+            .NotEmpty().WithErrorCode(ErrorCodes.Transaction.DateRequired);
+
+        RuleFor(command => command.Type)
+            .IsInEnum().WithErrorCode(ErrorCodes.Transaction.TypeInvalid);
     }
 }

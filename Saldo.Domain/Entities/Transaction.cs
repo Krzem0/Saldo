@@ -21,19 +21,19 @@ public sealed class Transaction
     /// <summary>
     /// Who initiated/paid the transaction.
     /// </summary>
-    public int PayerId { get; set; }
-    public Party Payer { get; set; } = null!;
+    public int? PayerId { get; set; }
+    public Party? Payer { get; set; }
 
     /// <summary>
     /// The other side of the transaction (shop/company/person).
     /// </summary>
-    public int CounterpartyId { get; set; }
-    public Party Counterparty { get; set; } = null!;
+    public int? CounterpartyId { get; set; }
+    public Party? Counterparty { get; set; }
 
     public int? LocationId { get; set; }
     public Location? Location { get; set; }
 
-    public string? Description { get; set; }
+    public string Description { get; set; } = string.Empty;
 
     public ICollection<TransactionTag> Tags { get; set; } = new List<TransactionTag>();
 }

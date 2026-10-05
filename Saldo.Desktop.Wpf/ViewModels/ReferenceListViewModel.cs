@@ -10,7 +10,7 @@ using Saldo.Application.Errors;
 
 namespace Saldo.Desktop.Wpf.ViewModels;
 
-public sealed record ReferenceItemInput(string Name, string? ColorCode = null);
+public sealed record ReferenceItemInput(string Name, string? ColorCode = null, string? IconKey = null);
 
 /// <summary>Generic ViewModel for a simple name-based reference list (Category / Member / Counterparty).</summary>
 public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T : class
@@ -63,6 +63,10 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
     protected abstract int GetId(T item);
     protected abstract Task AddCoreAsync(IServiceScope scope, string name, string? colorCode, CancellationToken ct);
     protected abstract Task UpdateCoreAsync(IServiceScope scope, T item, string name, string? colorCode, CancellationToken ct);
+    protected virtual Task AddInputCoreAsync(IServiceScope scope, ReferenceItemInput input, CancellationToken ct)
+        => AddCoreAsync(scope, input.Name.Trim(), input.ColorCode, ct);
+    protected virtual Task UpdateInputCoreAsync(IServiceScope scope, T item, ReferenceItemInput input, CancellationToken ct)
+        => UpdateCoreAsync(scope, item, input.Name.Trim(), input.ColorCode, ct);
     protected abstract Task DeleteCoreAsync(IServiceScope scope, T item, CancellationToken ct);
 
     protected virtual ReferenceItemInput? ShowAddDialog()
@@ -120,7 +124,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
-            await AddCoreAsync(scope, input.Name.Trim(), input.ColorCode, CancellationToken.None);
+            await AddInputCoreAsync(scope, input, CancellationToken.None);
             await LoadAsync();
         }
         catch (Exception ex)
@@ -141,7 +145,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
-            await UpdateCoreAsync(scope, SelectedItem, input.Name.Trim(), input.ColorCode, CancellationToken.None);
+            await UpdateInputCoreAsync(scope, SelectedItem, input, CancellationToken.None);
             await LoadAsync();
         }
         catch (Exception ex)

@@ -12,10 +12,11 @@ public partial class ReferenceColorDialog : Window
 {
     private readonly ILocalizationService _localization;
     private string? _selectedColorCode;
+    private string? _selectedIconKey;
 
     public string EnteredName { get; set; }
 
-    public ReferenceColorDialog(string title, string? initialName, string? initialColorCode)
+    public ReferenceColorDialog(string title, string? initialName, string? initialColorCode, bool allowIcons = false, string? initialIconKey = null)
     {
         InitializeComponent();
         Title = title;
@@ -23,6 +24,8 @@ public partial class ReferenceColorDialog : Window
 
         _localization = (ILocalizationService)System.Windows.Application.Current.Resources["Localization"];
         _selectedColorCode = initialColorCode;
+        _selectedIconKey = initialIconKey;
+        IconSection.Visibility = allowIcons ? Visibility.Visible : Visibility.Collapsed;
 
         DataContext = this;
         UpdateColorPreview();
@@ -34,7 +37,7 @@ public partial class ReferenceColorDialog : Window
         };
     }
 
-    public ReferenceColorDialogResult Result => new(EnteredName, _selectedColorCode);
+    public ReferenceColorDialogResult Result => new(EnteredName, _selectedColorCode, _selectedIconKey);
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
@@ -93,11 +96,29 @@ public partial class ReferenceColorDialog : Window
 
     private void UpdateColorPreview()
     {
+        IconPreview.IconKey = _selectedIconKey;
+        IconPreview.ColorCode = _selectedColorCode;
+        IconPreview.NameText = _selectedIconKey is null ? _localization["CategoryIconNone"] : _selectedIconKey[4..];
+        ClearIconButton.IsEnabled = _selectedIconKey is not null;
         ColorPreview.Background = string.IsNullOrWhiteSpace(_selectedColorCode)
             ? Brushes.Transparent
             : CreateBrush(_selectedColorCode);
         ColorCodeText.Text = _selectedColorCode ?? _localization["ReferenceColorNone"];
         ClearColorButton.IsEnabled = !string.IsNullOrWhiteSpace(_selectedColorCode);
+    }
+
+    private void ChooseIcon_Click(object sender, RoutedEventArgs e)
+    {
+        var picker = new CategoryIconPickerDialog(_localization, _selectedIconKey) { Owner = this };
+        if (picker.ShowDialog() != true) return;
+        _selectedIconKey = picker.ViewModel.SelectedIcon!.Key;
+        UpdateColorPreview();
+    }
+
+    private void ClearIcon_Click(object sender, RoutedEventArgs e)
+    {
+        _selectedIconKey = null;
+        UpdateColorPreview();
     }
 
     private static Brush CreateBrush(string colorCode) => (Brush)new BrushConverter().ConvertFromString(colorCode)!;

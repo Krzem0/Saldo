@@ -7,6 +7,42 @@ namespace Saldo.Tests.Unit.UseCases;
 public sealed class CategoryColorTests
 {
     [Theory]
+    [InlineData(" mdi:Home ", "mdi:Home")]
+    [InlineData(null, null)]
+    [InlineData("  ", null)]
+    public async Task Icon_AddEditAndClear_AreIndependentOfColor(string? input, string? expected)
+    {
+        var repository = new CategoryRepositoryFake();
+        var added = await new AddCategory(repository).ExecuteAsync("New", iconKey: input);
+        Assert.Equal(expected, added.IconKey);
+        Assert.Null(added.ColorCode);
+        await new EditCategory(repository).ExecuteAsync(1, "Updated", "#112233", iconKey: input);
+        Assert.Equal(expected, repository.Existing.IconKey);
+        Assert.Equal("#112233", repository.Existing.ColorCode);
+        await new EditCategory(repository).ExecuteAsync(1, "Updated", "#112233", iconKey: null);
+        Assert.Null(repository.Existing.IconKey);
+        Assert.Equal("#112233", repository.Existing.ColorCode);
+    }
+
+    [Theory]
+    [InlineData("Home")]
+    [InlineData("mdi:../Home")]
+    [InlineData("mdi:42")]
+    [InlineData("mdi:Home Icon")]
+    public async Task InvalidIcon_AddAndEdit_DoNotMutateCategory(string key)
+    {
+        var repository = new CategoryRepositoryFake();
+        repository.Existing.IconKey = "mdi:Home";
+        await Assert.ThrowsAsync<ArgumentException>(() => new AddCategory(repository).ExecuteAsync("New", iconKey: key));
+        await Assert.ThrowsAsync<ArgumentException>(() => new EditCategory(repository).ExecuteAsync(1, "Changed", "#FFFFFF", iconKey: key));
+        Assert.Null(repository.Added);
+        Assert.Equal(0, repository.UpdateCalls);
+        Assert.Equal("Existing category", repository.Existing.Name);
+        Assert.Equal("#112233", repository.Existing.ColorCode);
+        Assert.Equal("mdi:Home", repository.Existing.IconKey);
+    }
+
+    [Theory]
     [InlineData(" #a1b2c3 ", "#A1B2C3")]
     [InlineData("#000000", "#000000")]
     [InlineData(null, null)]

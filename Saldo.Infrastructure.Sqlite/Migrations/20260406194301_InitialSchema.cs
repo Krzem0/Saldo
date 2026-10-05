@@ -18,6 +18,7 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    IconKey = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     ColorCode = table.Column<string>(type: "TEXT", maxLength: 7, nullable: true)
                 },
                 constraints: table =>
@@ -75,10 +76,10 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     Type = table.Column<int>(type: "INTEGER", nullable: false),
                     Amount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
                     CategoryId = table.Column<int>(type: "INTEGER", nullable: false),
-                    PayerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CounterpartyId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PayerId = table.Column<int>(type: "INTEGER", nullable: true),
+                    CounterpartyId = table.Column<int>(type: "INTEGER", nullable: true),
                     LocationId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true)
+                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false)
                 },
                 constraints: table =>
                 {

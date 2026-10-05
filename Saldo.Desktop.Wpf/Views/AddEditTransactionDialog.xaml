@@ -147,26 +147,6 @@
         </Grid>
 
         <StackPanel Margin="0,0,0,12">
-            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Counterparty]}" Style="{StaticResource FieldLabelStyle}"/>
-            <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Parties}"
-                                               SelectedItem="{Binding SelectedCounterparty}"
-                                               Text="{Binding CounterpartyText, UpdateSourceTrigger=PropertyChanged}"
-                                               DisplayMemberPath="Name"/>
-                <Button Grid.Column="1" Content="+" Command="{Binding AddCounterpartyCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,0,0,0"
-                        ToolTip="{Binding Source={StaticResource Localization}, Path=[AddPartyTooltip]}"/>
-            </Grid>
-            <TextBlock Text="{Binding CounterpartyError}" Style="{StaticResource FieldErrorStyle}"
-                       Visibility="{Binding HasCounterpartyError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-        </StackPanel>
-
-        <StackPanel Margin="0,0,0,12">
-            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Description]}" Style="{StaticResource FieldLabelStyle}"/>
-            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0"/>
-        </StackPanel>
-
-        <StackPanel Margin="0,0,0,12">
             <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Category]}" Style="{StaticResource FieldLabelStyle}"/>
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -182,18 +162,25 @@
         </StackPanel>
 
         <StackPanel Margin="0,0,0,12">
-            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Location]}" Style="{StaticResource FieldLabelStyle}"/>
+            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Description]}" Style="{StaticResource FieldLabelStyle}"/>
+            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0"/>
+            <TextBlock Text="{Binding DescriptionError}" Style="{StaticResource FieldErrorStyle}"
+                       Visibility="{Binding HasDescriptionError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        </StackPanel>
+
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Counterparty]}" Style="{StaticResource FieldLabelStyle}"/>
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Locations}"
-                                               SelectedItem="{Binding SelectedLocation}"
-                                               Text="{Binding LocationText, UpdateSourceTrigger=PropertyChanged}"
+                <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Parties}"
+                                               SelectedItem="{Binding SelectedCounterparty}"
+                                               Text="{Binding CounterpartyText, UpdateSourceTrigger=PropertyChanged}"
                                                DisplayMemberPath="Name"/>
-                <Button Grid.Column="1" Content="+" Command="{Binding AddLocationCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,0,0,0"
-                        ToolTip="{Binding Source={StaticResource Localization}, Path=[AddLocationTooltip]}"/>
+                <Button Grid.Column="1" Content="+" Command="{Binding AddCounterpartyCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,0,0,0"
+                        ToolTip="{Binding Source={StaticResource Localization}, Path=[AddPartyTooltip]}"/>
             </Grid>
-            <TextBlock Text="{Binding LocationError}" Style="{StaticResource FieldErrorStyle}"
-                       Visibility="{Binding HasLocationError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <TextBlock Text="{Binding CounterpartyError}" Style="{StaticResource FieldErrorStyle}"
+                       Visibility="{Binding HasCounterpartyError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
 
         <StackPanel Margin="0,0,0,12">
@@ -209,6 +196,21 @@
             </Grid>
             <TextBlock Text="{Binding PayerError}" Style="{StaticResource FieldErrorStyle}"
                        Visibility="{Binding HasPayerError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        </StackPanel>
+
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Location]}" Style="{StaticResource FieldLabelStyle}"/>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <controls:AutocompleteComboBox Grid.Column="0" ItemsSource="{Binding Locations}"
+                                               SelectedItem="{Binding SelectedLocation}"
+                                               Text="{Binding LocationText, UpdateSourceTrigger=PropertyChanged}"
+                                               DisplayMemberPath="Name"/>
+                <Button Grid.Column="1" Content="+" Command="{Binding AddLocationCommand}" Style="{StaticResource QuickAddButtonStyle}" Margin="6,0,0,0"
+                        ToolTip="{Binding Source={StaticResource Localization}, Path=[AddLocationTooltip]}"/>
+            </Grid>
+            <TextBlock Text="{Binding LocationError}" Style="{StaticResource FieldErrorStyle}"
+                       Visibility="{Binding HasLocationError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
 
         <StackPanel Margin="0,0,0,12">

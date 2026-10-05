@@ -49,17 +49,17 @@ public sealed class AddTransaction
             .ToList();
 
         var payer = await ResolvePartyAsync(command.PayerId, command.PayerName, ct);
-        if (payer is null)
+        if (payer is null && (command.PayerId.HasValue || !string.IsNullOrWhiteSpace(command.PayerName)))
         {
             _logger.LogWarning("Transaction rejected because payer could not be resolved.");
-            AddErrorIfMissing(errors, ErrorCodes.Transaction.PayerRequired, nameof(ITransactionCommand.PayerName));
+            AddErrorIfMissing(errors, ErrorCodes.Transaction.PayerInvalid, nameof(ITransactionCommand.PayerName));
         }
 
         var counterparty = await ResolvePartyAsync(command.CounterpartyId, command.CounterpartyName, ct);
-        if (counterparty is null)
+        if (counterparty is null && (command.CounterpartyId.HasValue || !string.IsNullOrWhiteSpace(command.CounterpartyName)))
         {
             _logger.LogWarning("Transaction rejected because counterparty could not be resolved.");
-            AddErrorIfMissing(errors, ErrorCodes.Transaction.CounterpartyRequired, nameof(ITransactionCommand.CounterpartyName));
+            AddErrorIfMissing(errors, ErrorCodes.Transaction.CounterpartyInvalid, nameof(ITransactionCommand.CounterpartyName));
         }
 
         var location = await ResolveLocationAsync(command.Location, ct);
@@ -76,24 +76,19 @@ public sealed class AddTransaction
             return Result.Fail<TransactionDto>(errors);
         }
 
-        if (payer is null || counterparty is null)
-        {
-            throw new InvalidOperationException("Transaction references could not be resolved after validation.");
-        }
-
         var transaction = new Transaction
         {
             Date = command.Date,
             Type = command.Type,
             Amount = command.Amount,
             CategoryId = command.CategoryId,
-            PayerId = payer.Id,
+            PayerId = payer?.Id,
             Payer = payer,
-            CounterpartyId = counterparty.Id,
+            CounterpartyId = counterparty?.Id,
             Counterparty = counterparty,
             LocationId = location?.Id,
             Location = location,
-            Description = command.Description,
+            Description = command.Description!.Trim(),
             Tags = command.TagIds
                 .Select(tagId => new TransactionTag { TagId = tagId })
                 .ToList()

@@ -16,6 +16,69 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class TagChipStyleTests
 {
+    [Fact]
+    public void CategoryBadge_PreviewRendersActualVectorIcons() => OnSta(() =>
+    {
+        var root = new StackPanel { Orientation = Orientation.Horizontal };
+        foreach (var theme in new[] { "LightTheme", "DarkTheme" })
+        {
+            var panel = new StackPanel { Width = 280, Margin = new Thickness(16) };
+            panel.Resources.MergedDictionaries.Add(Load(theme));
+            panel.Background = (Brush)panel.FindResource("SurfaceBrush");
+            panel.Children.Add(new TextBlock { Text = theme, Foreground = (Brush)panel.FindResource("PrimaryTextBrush"), Margin = new Thickness(8) });
+            foreach (var (name, color, key) in new[] {
+                ("Mieszkanie", "#3366CC", "mdi:Home"), ("Supermarkety", "#12956A", "mdi:Cart"),
+                ("Zwierzęta", "#8E44AD", "mdi:Paw"), ("Zdrowie", "#DD3377", "mdi:HeartPulse"),
+                ("Ikona bez koloru", (string?)null, "mdi:Home"), ("Sam kolor", "#F4C542", (string?)null),
+                ("Bez ikony i koloru", (string?)null, (string?)null) })
+            {
+                var badge = new Saldo.Desktop.Wpf.Controls.CategoryBadge { NameText = name, ColorCode = color, IconKey = key, Margin = new Thickness(8, 4, 8, 4) };
+                panel.Children.Add(badge);
+            }
+            root.Children.Add(panel);
+        }
+        root.Measure(new Size(640, double.PositiveInfinity));
+        root.Arrange(new Rect(new Point(), root.DesiredSize));
+        root.UpdateLayout();
+        foreach (var icon in Descendants(root).OfType<MahApps.Metro.IconPacks.PackIconMaterial>().Where(icon => icon.Kind != MahApps.Metro.IconPacks.PackIconMaterialKind.None))
+            Assert.Contains(Descendants(icon).OfType<System.Windows.Shapes.Path>(), path => path.Data is not null);
+        if (Environment.GetEnvironmentVariable("SALDO_CATEGORY_PREVIEW") is { Length: > 0 } output)
+        {
+            var bitmap = new RenderTargetBitmap((int)Math.Ceiling(root.ActualWidth), (int)Math.Ceiling(root.ActualHeight), 96, 96, PixelFormats.Pbgra32);
+            bitmap.Render(root);
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            using var file = System.IO.File.Create(output);
+            encoder.Save(file);
+        }
+    });
+
+    [Theory]
+    [InlineData("LightTheme", "#FFFFFF", "mdi:Home")]
+    [InlineData("DarkTheme", "#000000", "mdi:Cart")]
+    [InlineData("DarkTheme", "#3366CC", "mdi:Paw")]
+    [InlineData("LightTheme", null, "mdi:Home")]
+    [InlineData("DarkTheme", null, null)]
+    [InlineData("LightTheme", "#3366CC", null)]
+    [InlineData("DarkTheme", "#3366CC", "mdi:UnknownFutureIcon")]
+    public void CategoryBadge_OptionalIconColorAndTheme_RenderWithContrast(string theme, string? color, string? iconKey) => OnSta(() =>
+    {
+        var badge = new Saldo.Desktop.Wpf.Controls.CategoryBadge { NameText = "Mieszkanie", ColorCode = color, IconKey = iconKey };
+        badge.Resources.MergedDictionaries.Add(Load(theme));
+        Layout(badge);
+        var tile = (Border)badge.FindName("IconTile");
+        var icon = (MahApps.Metro.IconPacks.PackIconMaterial)badge.FindName("CategoryIcon");
+        var expectedKind = Saldo.Desktop.Wpf.Services.CategoryIconCatalog.Resolve(iconKey);
+        Assert.Equal(expectedKind, icon.Kind);
+        Assert.Equal(expectedKind == MahApps.Metro.IconPacks.PackIconMaterialKind.None ? Visibility.Collapsed : Visibility.Visible, tile.Visibility);
+        Assert.Equal(color is null ? Color(badge, "ControlBrush") : Parse(color), ((SolidColorBrush)tile.Background).Color);
+        Assert.True(Contrast(((SolidColorBrush)tile.Background).Color, ((SolidColorBrush)icon.Foreground).Color) >= 4.5);
+        Assert.Contains(Descendants(badge).OfType<TextBlock>(), text => text.Text == "Mieszkanie");
+        badge.Resources.MergedDictionaries[0] = Load(theme == "LightTheme" ? "DarkTheme" : "LightTheme");
+        Layout(badge);
+        Assert.Equal(color is null ? Color(badge, "ControlBrush") : Parse(color), ((SolidColorBrush)tile.Background).Color);
+    });
+
     [Theory]
     [InlineData("LightTheme", null)]
     [InlineData("DarkTheme", null)]
@@ -53,7 +116,7 @@ public sealed class TagChipStyleTests
             Layout(presenter);
             var swatch = Descendants(presenter).OfType<Border>().FirstOrDefault(border => border.Name == "ColorSwatch");
             Assert.Contains(Descendants(presenter).OfType<TextBlock>(), text => text.Text == "Example");
-            if (entityType is "Category" or "Tag")
+            if (entityType == "Tag")
             {
                 Assert.NotNull(swatch);
                 Assert.Equal(colorCode is null ? Colors.Transparent : Parse(colorCode), ((SolidColorBrush)swatch.Background).Color);

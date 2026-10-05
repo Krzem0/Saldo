@@ -16,6 +16,8 @@ internal sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
             .IsRequired()
             .HasMaxLength(100);
 
+        e.Property(x => x.IconKey).HasMaxLength(100);
+
         e.Property(x => x.ColorCode)
             .HasMaxLength(7);
 

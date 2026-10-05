@@ -50,8 +50,8 @@ public sealed class SqliteDatabaseBackupServiceTests : IDisposable
         Assert.Equal(42.50m, saved.Amount);
         Assert.Equal("Food", saved.Category.Name);
         Assert.Equal("#112233", saved.Category.ColorCode);
-        Assert.Equal("Me", saved.Payer.Name);
-        Assert.Equal("Me", saved.Counterparty.Name);
+        Assert.Equal("Me", Assert.IsType<Party>(saved.Payer).Name);
+        Assert.Equal("Me", Assert.IsType<Party>(saved.Counterparty).Name);
         Assert.Equal("Shop", saved.Location!.Name);
         Assert.Equal("groceries", Assert.Single(saved.Tags).Tag.Name);
         Assert.Equal(await db.Context.Database.GetAppliedMigrationsAsync(), await backup.Database.GetAppliedMigrationsAsync());

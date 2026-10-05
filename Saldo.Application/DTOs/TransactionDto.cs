@@ -10,10 +10,10 @@ public sealed record TransactionDto(
     int CategoryId,
     string CategoryName,
     string? CategoryColorCode,
-    int PayerId,
-    string PayerName,
-    int CounterpartyId,
-    string CounterpartyName,
+    int? PayerId,
+    string? PayerName,
+    int? CounterpartyId,
+    string? CounterpartyName,
     int? LocationId,
     string? Location,
     string? Description,
@@ -21,5 +21,6 @@ public sealed record TransactionDto(
     IReadOnlyList<int> TagIds
 )
 {
+    public string? CategoryIconKey { get; init; }
     public IReadOnlyList<TransactionTagDto> TagDetails { get; init; } = [];
 }

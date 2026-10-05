@@ -13,7 +13,7 @@
 
 - Income and expense transactions
 - Monthly transaction list and summary
-- Categories managed as a controlled dictionary with optional colors
+- Categories managed as a controlled dictionary with optional colors and MDI icons
 - Parties managed as a reusable dictionary
 - Locations managed as a reusable dictionary
 - Tags managed as a reusable dictionary, with multiple optional tags per transaction
@@ -24,6 +24,8 @@
 - Light, dark, and system appearance themes for the WPF UI
 
 ## UX Rules Worth Knowing
+
+- Transactions require a type, positive amount, category, non-blank description (up to 500 characters), and date. Payer, counterparty, location, and tags are optional
 
 - `Category`, `Party`, and `Location` are selected from existing values, with autocomplete support
 - Reference data can be added explicitly from the transaction form with `+`; saving a transaction never creates a reference item implicitly
@@ -36,7 +38,9 @@
 - The WPF transaction list formats amounts using the selected language and uses subtle amount-cell colors to distinguish expenses from income
 - Monthly transactions are sorted by date descending by default; date and amount columns also support sorting from their headers
 - Category colors can be selected or cleared when adding or editing a category, including adding one from the transaction form
-  - Category and tag dictionary lists have a Color column showing a swatch and HEX code, or a No color label
+  - The category dictionary displays color and icon beside the name. The tag dictionary has a Color column showing a swatch and HEX code, or a No color label
+- Category icons are optional and independent of color. The category dialog opens an owned icon picker with the full local MDI catalog, a search field (Search or Enter), and 60 icons per page with scrolling. Clearing the search with × immediately restores the full catalog; the page number can be entered directly (Enter or leaving the field). Search supports English names and common Polish aliases
+- Category labels show a contrasting icon on a solid color tile and a subtle background behind the name. An icon without color uses the neutral theme; unknown icon identifiers fall back to the name/color
 - The category dialog uses the native Windows color picker; the transaction list shows category names with a subtle background based on the saved color
 - Tags describe additional context across categories, for example `Dla Iwony` / `For Iwona`; they are separate from the payer and counterparty
 - Add tags explicitly from the Tags page or the transaction form's `+` button; select them with chips and view them on the transaction list

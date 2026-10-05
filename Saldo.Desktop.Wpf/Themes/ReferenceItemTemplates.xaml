@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:Saldo.Desktop.Wpf.Controls"
                     xmlns:entities="clr-namespace:Saldo.Domain.Entities;assembly=Saldo.Domain"
                     xmlns:localization="clr-namespace:Saldo.Desktop.Wpf.Localization">
     <localization:TagColorBrushConverter x:Key="ReferenceColorBrushConverter"/>
@@ -37,8 +38,11 @@
             </DataTrigger>
         </DataTemplate.Triggers>
     </DataTemplate>
+    <DataTemplate x:Key="CategoryReferenceItemTemplate">
+        <controls:CategoryBadge NameText="{Binding Name}" ColorCode="{Binding ColorCode}" IconKey="{Binding IconKey}"/>
+    </DataTemplate>
     <DataTemplate DataType="{x:Type entities:Category}">
-        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ColoredReferenceItemTemplate}"/>
+        <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource CategoryReferenceItemTemplate}"/>
     </DataTemplate>
     <DataTemplate DataType="{x:Type entities:Tag}">
         <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource ColoredReferenceItemTemplate}"/>

@@ -14,9 +14,9 @@ internal static class TransactionMapper
         t.Category?.Name ?? string.Empty,
         t.Category?.ColorCode,
         t.PayerId,
-        t.Payer?.Name ?? string.Empty,
+        t.Payer?.Name,
         t.CounterpartyId,
-        t.Counterparty?.Name ?? string.Empty,
+        t.Counterparty?.Name,
         t.LocationId,
         t.Location?.Name,
         t.Description,
@@ -24,6 +24,7 @@ internal static class TransactionMapper
         t.Tags.OrderBy(tt => tt.TagId).Select(tt => tt.TagId).ToList()
     )
     {
+        CategoryIconKey = t.Category?.IconKey,
         TagDetails = t.Tags.OrderBy(tt => tt.TagId)
             .Select(tt => new TransactionTagDto(tt.TagId, tt.Tag?.Name ?? string.Empty, tt.Tag?.ColorCode))
             .ToArray()

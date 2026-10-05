@@ -94,8 +94,8 @@
   <data name="Validation_TransactionIdMustBePositive" xml:space="preserve"><value>Transaction id must be positive.</value></data>
   <data name="Validation_AmountMustBePositive" xml:space="preserve"><value>Amount must be greater than zero.</value></data>
   <data name="Validation_CategoryRequired" xml:space="preserve"><value>Category is required.</value></data>
-  <data name="Validation_PayerRequired" xml:space="preserve"><value>Payer is required.</value></data>
-  <data name="Validation_CounterpartyRequired" xml:space="preserve"><value>Counterparty is required.</value></data>
+  <data name="Validation_PayerInvalid" xml:space="preserve"><value>Select an existing payer or add one with the + button.</value></data>
+  <data name="Validation_CounterpartyInvalid" xml:space="preserve"><value>Select an existing counterparty or add one with the + button.</value></data>
   <data name="Validation_ReferenceSelectionRequired" xml:space="preserve"><value>Select an item from the list or add it with the + button.</value></data>
   <data name="Validation_LocationInvalid" xml:space="preserve"><value>Select an existing location or add it with the + button.</value></data>
   <data name="Validation_TransactionNotFound" xml:space="preserve"><value>Transaction was not found.</value></data>
@@ -116,4 +116,24 @@
   <data name="AddTagTooltip" xml:space="preserve"><value>Add tag</value></data>
   <data name="TagsEmpty" xml:space="preserve"><value>No tags</value></data>
   <data name="Validation_TagNameInvalid" xml:space="preserve"><value>Tag name must contain between 1 and 50 characters.</value></data>
+  <data name="Validation_DescriptionRequired" xml:space="preserve"><value>Description is required.</value></data>
+  <data name="Validation_DescriptionTooLong" xml:space="preserve"><value>Description must not exceed 500 characters.</value></data>
+  <data name="Validation_DateRequired" xml:space="preserve"><value>Date is required.</value></data>
+  <data name="Validation_TypeInvalid" xml:space="preserve"><value>Select a valid transaction type.</value></data>
+  <data name="CategoryIcon" xml:space="preserve"><value>Icon</value></data>
+  <data name="CategoryIconNone" xml:space="preserve"><value>No icon</value></data>
+  <data name="CategoryIconClear" xml:space="preserve"><value>Clear</value></data>
+  <data name="IconPicker_Title" xml:space="preserve"><value>Choose category icon</value></data>
+  <data name="IconPicker_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="IconPicker_SearchHint" xml:space="preserve"><value>Icon name, e.g. home or cart</value></data>
+  <data name="IconPicker_Status" xml:space="preserve"><value>{0} icons · page {1} of {2}</value></data>
+  <data name="IconPicker_Empty" xml:space="preserve"><value>No matching icons</value></data>
+  <data name="IconPicker_Previous" xml:space="preserve"><value>Previous</value></data>
+  <data name="IconPicker_Next" xml:space="preserve"><value>Next</value></data>
+  <data name="IconPicker_Choose" xml:space="preserve"><value>Choose</value></data>
+  <data name="IconPicker_ClearSearch" xml:space="preserve"><value>Clear search</value></data>
+  <data name="IconPicker_ResultCount" xml:space="preserve"><value>{0} icons</value></data>
+  <data name="IconPicker_Page" xml:space="preserve"><value>Page</value></data>
+  <data name="IconPicker_PageCount" xml:space="preserve"><value>of {0}</value></data>
+  <data name="IconPicker_PageHint" xml:space="preserve"><value>Enter a page number and press Enter</value></data>
 </root>

@@ -62,7 +62,7 @@ public sealed class AddTransactionTests
     {
         var result = await CreateUseCase().ExecuteAsync(ValidCommand() with { PayerId = payerId, PayerName = null });
         Assert.True(result.IsFailed);
-        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.PayerRequired);
+        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.PayerInvalid);
     }
 
     [Theory]
@@ -72,7 +72,7 @@ public sealed class AddTransactionTests
     {
         var result = await CreateUseCase().ExecuteAsync(ValidCommand() with { CounterpartyId = counterpartyId, CounterpartyName = null });
         Assert.True(result.IsFailed);
-        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.CounterpartyRequired);
+        Assert.Contains(result.Errors, e => e.Message == ErrorCodes.Transaction.CounterpartyInvalid);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 <UserControl x:Class="Saldo.Desktop.Wpf.Views.TransactionListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:controls="clr-namespace:Saldo.Desktop.Wpf.Controls"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:localization="clr-namespace:Saldo.Desktop.Wpf.Localization"
              xmlns:domainEnums="clr-namespace:Saldo.Domain.Enums;assembly=Saldo.Domain">
@@ -364,13 +365,7 @@
                                          CellStyle="{StaticResource TransactionGridCellStyle}">
                      <DataGridTemplateColumn.CellTemplate>
                          <DataTemplate>
-                             <Border Background="{Binding CategoryColorCode, Converter={StaticResource CategoryColorBrushConverter}}"
-                                     CornerRadius="3"
-                                     Padding="4,1">
-                                 <TextBlock Text="{Binding CategoryName}"
-                                            TextTrimming="CharacterEllipsis"
-                                            Foreground="{DynamicResource PrimaryTextBrush}"/>
-                             </Border>
+                             <controls:CategoryBadge NameText="{Binding CategoryName}" ColorCode="{Binding CategoryColorCode}" IconKey="{Binding CategoryIconKey}"/>
                          </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                  </DataGridTemplateColumn>

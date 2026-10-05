@@ -142,9 +142,11 @@ public sealed class TransactionTagSelectionTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task SaveCommand_AddOrEdit_PassesSelectedTagsToApplication(bool editing)
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task SaveCommand_AddOrEdit_PassesSelectedTagsToApplication(bool editing, bool omitParties)
     {
         var repository = new FakeTransactionRepository();
         var parties = new[] { new Party { Id = 1, Name = "Me" }, new Party { Id = 2, Name = "Shop" } };
@@ -158,16 +160,19 @@ public sealed class TransactionTagSelectionTests
         if (editing)
         {
             var added = await provider.GetRequiredService<AddTransaction>().ExecuteAsync(new AddTransactionCommand(
-                new DateOnly(2026, 10, 4), TransactionType.Expense, 10m, 1, 1, "Me", 2, "Shop", null, null, [1]));
+                new DateOnly(2026, 10, 4), TransactionType.Expense, 10m, 1, 1, "Me", 2, "Shop", "Initial", null, [1]));
             existing = added.Value;
         }
         var viewModel = new AddEditTransactionViewModel(provider.GetRequiredService<IServiceScopeFactory>(),
             new UnusedDialogs(unsavedChanges: UnsavedChangesChoice.Save), new LocalizationService(), [new Category { Id = 1, Name = "Food" }], parties, [],
             [new Tag { Id = 1, Name = "Dla Iwony" }, new Tag { Id = 2, Name = "Wakacje" }], existing: existing);
+        viewModel.Description = "Updated";
         viewModel.AmountText = "10";
         viewModel.SelectedCategory = viewModel.Categories[0];
-        viewModel.SelectedPayer = viewModel.Parties[0];
-        viewModel.SelectedCounterparty = viewModel.Parties[1];
+        viewModel.SelectedPayer = omitParties ? null : viewModel.Parties[0];
+        viewModel.PayerText = omitParties ? string.Empty : "Me";
+        viewModel.SelectedCounterparty = omitParties ? null : viewModel.Parties[1];
+        viewModel.CounterpartyText = omitParties ? string.Empty : "Shop";
         viewModel.Tags[0].IsSelected = true;
         viewModel.Tags[1].IsSelected = true;
         var closed = new TaskCompletionSource<bool>();
@@ -179,7 +184,41 @@ public sealed class TransactionTagSelectionTests
         Assert.True(await closed.Task.WaitAsync(TimeSpan.FromSeconds(5)));
         var saved = await repository.GetByIdAsync(1);
         Assert.NotNull(saved);
+        Assert.Equal(omitParties ? (int?)null : 1, saved.PayerId);
+        Assert.Equal(omitParties ? (int?)null : 2, saved.CounterpartyId);
         Assert.Equal(new[] { 1, 2 }, saved.Tags.Select(tag => tag.TagId).Order());
+    }
+
+    [Fact]
+    public async Task SaveCommand_EmptyDescription_ShowsInlineErrorAndKeepsFormOpen()
+    {
+        var repository = new FakeTransactionRepository();
+        var services = new ServiceCollection();
+        services.AddSingleton(new AddTransaction(repository, new FakePartyRepository([]), new FakeLocationRepository([])));
+        using var provider = services.BuildServiceProvider();
+        var viewModel = new AddEditTransactionViewModel(provider.GetRequiredService<IServiceScopeFactory>(),
+            new UnusedDialogs(), new LocalizationService(), [new Category { Id = 1, Name = "Food" }], [], [], []);
+        viewModel.SelectedCategory = viewModel.Categories[0];
+        viewModel.AmountText = "10";
+        var closed = false;
+        viewModel.RequestClose += _ => closed = true;
+        var errorShown = new TaskCompletionSource<bool>();
+        viewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(viewModel.HasDescriptionError))
+                errorShown.TrySetResult(viewModel.HasDescriptionError);
+        };
+
+        viewModel.SaveCommand.Execute(null);
+
+        Assert.True(await errorShown.Task.WaitAsync(TimeSpan.FromSeconds(5)));
+        Assert.False(closed);
+        Assert.False(viewModel.HasPayerError);
+        Assert.False(viewModel.HasCounterpartyError);
+        Assert.NotEmpty(viewModel.DescriptionError);
+        Assert.Null(await repository.GetByIdAsync(1));
+        viewModel.Description = "Groceries";
+        Assert.False(viewModel.HasDescriptionError);
     }
 
     private static AddEditTransactionViewModel Create(TransactionDto? existing = null, TransactionDraft? draft = null,
@@ -343,7 +382,7 @@ public sealed class TransactionTagSelectionTests
         }
         public bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel) => throw new NotSupportedException();
         public string? ShowNameDialog(string title, string? initialValue = null) => name;
-        public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null)
+        public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null)
             => name is null ? null : new(name, colorCode);
         public bool ConfirmDelete(string title, string message) => throw new NotSupportedException();
         public string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter) => throw new NotSupportedException();

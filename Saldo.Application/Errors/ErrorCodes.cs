@@ -7,9 +7,13 @@ public static class ErrorCodes
         public const string IdMustBePositive = "Transaction.IdMustBePositive";
         public const string AmountMustBePositive = "Transaction.AmountMustBePositive";
         public const string CategoryRequired = "Transaction.CategoryRequired";
-        public const string PayerRequired = "Transaction.PayerRequired";
-        public const string CounterpartyRequired = "Transaction.CounterpartyRequired";
+        public const string PayerInvalid = "Transaction.PayerInvalid";
+        public const string CounterpartyInvalid = "Transaction.CounterpartyInvalid";
         public const string LocationInvalid = "Transaction.LocationInvalid";
+        public const string DescriptionRequired = "Transaction.DescriptionRequired";
+        public const string DescriptionTooLong = "Transaction.DescriptionTooLong";
+        public const string DateRequired = "Transaction.DateRequired";
+        public const string TypeInvalid = "Transaction.TypeInvalid";
         public const string NotFound = "Transaction.NotFound";
     }
 }

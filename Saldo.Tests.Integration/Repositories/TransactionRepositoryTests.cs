@@ -82,8 +82,8 @@ public sealed class TransactionRepositoryTests : IDisposable
         Assert.NotNull(loaded);
         Assert.Equal(partyId, loaded.PayerId);
         Assert.Equal(partyId, loaded.CounterpartyId);
-        Assert.Equal("Alice", loaded.Payer.Name);
-        Assert.Equal("Alice", loaded.Counterparty.Name);
+        Assert.Equal("Alice", Assert.IsType<Party>(loaded.Payer).Name);
+        Assert.Equal("Alice", Assert.IsType<Party>(loaded.Counterparty).Name);
         Assert.Equal(2, _db.Context.Parties.Count());
     }
 
@@ -98,8 +98,8 @@ public sealed class TransactionRepositoryTests : IDisposable
 
         Assert.NotNull(loaded);
         Assert.Equal("Food", loaded.Category.Name);
-        Assert.Equal("Alice", loaded.Payer.Name);
-        Assert.Equal("Shop", loaded.Counterparty.Name);
+        Assert.Equal("Alice", Assert.IsType<Party>(loaded.Payer).Name);
+        Assert.Equal("Shop", Assert.IsType<Party>(loaded.Counterparty).Name);
         Assert.Equal("Somewhere", loaded.Location!.Name);
     }
 

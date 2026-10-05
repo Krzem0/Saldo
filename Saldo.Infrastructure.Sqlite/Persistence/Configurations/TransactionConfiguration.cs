@@ -23,6 +23,7 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
             .HasPrecision(18, 2);
 
         e.Property(x => x.Description)
+            .IsRequired()
             .HasMaxLength(500);
 
         // Indeksy pod filtrowanie i raporty
