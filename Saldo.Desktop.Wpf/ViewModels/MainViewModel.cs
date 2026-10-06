@@ -81,6 +81,9 @@ public sealed class MainViewModel : ViewModelBase
 
         switch (page)
         {
+            case MainPage.Settings:
+                Settings.LoadCommand.Execute(null);
+                break;
             case MainPage.Transactions:
                 TransactionList.LoadCommand.Execute(null);
                 break;

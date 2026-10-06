@@ -90,6 +90,24 @@ public class AutocompleteComboBox : Control
             typeof(AutocompleteComboBox),
             new PropertyMetadata(string.Empty, OnDisplayMemberPathChanged));
 
+    public DataTemplate? ItemTemplate
+    {
+        get => (DataTemplate?)GetValue(ItemTemplateProperty);
+        set => SetValue(ItemTemplateProperty, value);
+    }
+
+    public static readonly DependencyProperty ItemTemplateProperty = DependencyProperty.Register(
+        nameof(ItemTemplate), typeof(DataTemplate), typeof(AutocompleteComboBox), new PropertyMetadata(null));
+
+    private static readonly DependencyPropertyKey IsTextEditingPropertyKey = DependencyProperty.RegisterReadOnly(
+        nameof(IsTextEditing), typeof(bool), typeof(AutocompleteComboBox), new PropertyMetadata(false));
+    public static readonly DependencyProperty IsTextEditingProperty = IsTextEditingPropertyKey.DependencyProperty;
+    public bool IsTextEditing
+    {
+        get => (bool)GetValue(IsTextEditingProperty);
+        private set => SetValue(IsTextEditingPropertyKey, value);
+    }
+
     public string Text
     {
         get => (string)GetValue(TextProperty);
@@ -138,6 +156,8 @@ public class AutocompleteComboBox : Control
         {
             _editableTextBox.TextChanged -= EditableTextBox_TextChanged;
             _editableTextBox.GotKeyboardFocus -= EditableTextBox_GotKeyboardFocus;
+            _editableTextBox.PreviewMouseDown -= EditableTextBox_PreviewMouseDown;
+            _editableTextBox.PreviewKeyDown -= EditableTextBox_PreviewKeyDown;
         }
 
         if (_clearButton is not null)
@@ -173,6 +193,8 @@ public class AutocompleteComboBox : Control
         {
             _editableTextBox.TextChanged += EditableTextBox_TextChanged;
             _editableTextBox.GotKeyboardFocus += EditableTextBox_GotKeyboardFocus;
+            _editableTextBox.PreviewMouseDown += EditableTextBox_PreviewMouseDown;
+            _editableTextBox.PreviewKeyDown += EditableTextBox_PreviewKeyDown;
         }
 
         if (_clearButton is not null)
@@ -237,6 +259,7 @@ public class AutocompleteComboBox : Control
         }
 
         IsDropDownOpen = false;
+        IsTextEditing = false;
     }
 
     private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -355,8 +378,12 @@ public class AutocompleteComboBox : Control
 
     private void EditableTextBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
+        IsTextEditing = true;
         MoveCaretToEnd();
     }
+
+    private void EditableTextBox_PreviewMouseDown(object sender, MouseButtonEventArgs e) => IsTextEditing = true;
+    private void EditableTextBox_PreviewKeyDown(object sender, KeyEventArgs e) => IsTextEditing = true;
 
     private void ClearButton_Click(object sender, RoutedEventArgs e)
     {
@@ -460,6 +487,7 @@ public class AutocompleteComboBox : Control
         IsDropDownOpen = false;
         UpdateClearButtonVisibility();
         FocusEditableTextBox();
+        IsTextEditing = false;
     }
 
     private void UpdateFilteredView()

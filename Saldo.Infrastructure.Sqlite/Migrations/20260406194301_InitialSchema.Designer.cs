@@ -20,6 +20,15 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
 
+            modelBuilder.Entity("Saldo.Domain.Entities.TransactionSettings", b =>
+                {
+                    b.Property<int>("Id").HasColumnType("INTEGER");
+                    b.Property<int?>("DefaultPayerId").HasColumnType("INTEGER");
+                    b.HasKey("Id");
+                    b.HasIndex("DefaultPayerId");
+                    b.ToTable("TransactionSettings", t => t.HasCheckConstraint("CK_TransactionSettings_Singleton", "Id = 1"));
+                });
+
             modelBuilder.Entity("Saldo.Domain.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -207,6 +216,12 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     b.Navigation("Location");
 
                     b.Navigation("Payer");
+                });
+
+            modelBuilder.Entity("Saldo.Domain.Entities.TransactionSettings", b =>
+                {
+                    b.HasOne("Saldo.Domain.Entities.Party", null)
+                        .WithMany().HasForeignKey("DefaultPayerId").OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Saldo.Domain.Entities.TransactionTag", b =>

@@ -136,4 +136,10 @@
   <data name="IconPicker_Page" xml:space="preserve"><value>Page</value></data>
   <data name="IconPicker_PageCount" xml:space="preserve"><value>of {0}</value></data>
   <data name="IconPicker_PageHint" xml:space="preserve"><value>Enter a page number and press Enter</value></data>
+  <data name="TransactionSettingsTitle" xml:space="preserve"><value>Transaction settings</value></data>
+  <data name="DefaultPayerLabel" xml:space="preserve"><value>Default payer</value></data>
+  <data name="DefaultPayerNone" xml:space="preserve"><value>None</value></data>
+  <data name="DefaultPayerDescription" xml:space="preserve"><value>The payer automatically selected for a new transaction.</value></data>
+  <data name="TransactionSettingsSaved" xml:space="preserve"><value>Settings saved.</value></data>
+  <data name="TransactionSettingsFailed" xml:space="preserve"><value>Could not load or save settings. Please try again.</value></data>
 </root>

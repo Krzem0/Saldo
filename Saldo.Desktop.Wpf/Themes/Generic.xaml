@@ -107,6 +107,28 @@
                                          CaretBrush="{TemplateBinding Foreground}"
                                          Text="{Binding Text, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
+                                <ContentPresenter x:Name="PART_SelectedItemPresenter" Grid.Column="0"
+                                                  Content="{TemplateBinding SelectedItem}"
+                                                  ContentTemplate="{TemplateBinding ItemTemplate}"
+                                                  Margin="{TemplateBinding Padding}" VerticalAlignment="Center"
+                                                  IsHitTestVisible="False">
+                                    <ContentPresenter.Style>
+                                        <Style TargetType="ContentPresenter">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ItemTemplate, RelativeSource={RelativeSource TemplatedParent}}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsTextEditing, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContentPresenter.Style>
+                                </ContentPresenter>
+
                                 <Button x:Name="PART_ClearButton"
                                         Grid.Column="1"
                                         Width="28"
@@ -118,7 +140,7 @@
                                         Content="✕"
                                         Visibility="Collapsed"/>
 
-                                <ToggleButton x:Name="PART_DropDownToggle"
+                                <ToggleButton x:Name="PART_DropDownButton"
                                               Grid.Column="2"
                                               Width="28"
                                               Focusable="False"
@@ -135,7 +157,7 @@
                                Placement="Bottom"
                                Focusable="False"
                                StaysOpen="False"
-                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                               IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                PopupAnimation="Slide"
                                PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
                                MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
@@ -149,17 +171,31 @@
                                          ItemsSource="{Binding FilteredItemsSource, RelativeSource={RelativeSource TemplatedParent}}"
                                          SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                          IsSynchronizedWithCurrentItem="False"
-                                         DisplayMemberPath="{TemplateBinding DisplayMemberPath}"
+                                         ItemTemplate="{TemplateBinding ItemTemplate}"
                                          Background="Transparent"
                                          Foreground="{DynamicResource PrimaryTextBrush}"
                                          BorderThickness="0"
                                          MaxHeight="240"
                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                         ScrollViewer.VerticalScrollBarVisibility="Auto"/>
+                                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                    <ListBox.Style>
+                                        <Style TargetType="ListBox">
+                                            <Style.Triggers>
+                                                <!-- DisplayMemberPath and ItemTemplate are mutually exclusive in ItemsControl. -->
+                                                <Trigger Property="ItemTemplate" Value="{x:Null}">
+                                                    <Setter Property="DisplayMemberPath" Value="{Binding DisplayMemberPath, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ListBox.Style>
+                                </ListBox>
                             </Border>
                         </Popup>
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <Trigger SourceName="PART_SelectedItemPresenter" Property="Visibility" Value="Visible">
+                            <Setter TargetName="PART_EditableTextBox" Property="Opacity" Value="0"/>
+                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Border" Property="BorderBrush" Value="#808080"/>
                         </Trigger>

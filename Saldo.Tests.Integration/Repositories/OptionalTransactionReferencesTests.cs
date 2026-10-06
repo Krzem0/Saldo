@@ -52,9 +52,9 @@ public sealed class OptionalTransactionReferencesTests
         Assert.Null(loaded.CounterpartyId);
         Assert.Null(loaded.Counterparty);
         Assert.Equal("Updated", loaded.Description);
-        Assert.Single(await parties.GetAllAsync());
+        Assert.NotNull(await parties.GetByIdAsync(party.Id));
         // Clearing both links permits deleting the formerly referenced dictionary entry.
-        db.Context.Parties.Remove((await db.Context.Parties.SingleAsync()));
+        db.Context.Parties.Remove((await db.Context.Parties.SingleAsync(p => p.Id == party.Id)));
         await db.Context.SaveChangesAsync();
         db.Context.ChangeTracker.Clear();
         Assert.NotNull(await transactions.GetByIdAsync(added.Value.Id));

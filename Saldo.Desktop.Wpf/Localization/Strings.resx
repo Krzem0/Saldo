@@ -136,4 +136,10 @@
   <data name="IconPicker_Page" xml:space="preserve"><value>Strona</value></data>
   <data name="IconPicker_PageCount" xml:space="preserve"><value>z {0}</value></data>
   <data name="IconPicker_PageHint" xml:space="preserve"><value>Wpisz numer strony i naciśnij Enter</value></data>
+  <data name="TransactionSettingsTitle" xml:space="preserve"><value>Ustawienia transakcji</value></data>
+  <data name="DefaultPayerLabel" xml:space="preserve"><value>Domyślny płatnik</value></data>
+  <data name="DefaultPayerNone" xml:space="preserve"><value>Brak</value></data>
+  <data name="DefaultPayerDescription" xml:space="preserve"><value>Płatnik automatycznie wybierany przy dodawaniu nowej transakcji.</value></data>
+  <data name="TransactionSettingsSaved" xml:space="preserve"><value>Ustawienia zapisane.</value></data>
+  <data name="TransactionSettingsFailed" xml:space="preserve"><value>Nie udało się odczytać lub zapisać ustawień. Spróbuj ponownie.</value></data>
 </root>

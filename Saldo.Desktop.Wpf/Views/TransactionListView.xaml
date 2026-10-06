@@ -12,6 +12,10 @@
         <localization:TransactionTypeToTextConverter x:Key="TransactionTypeToTextConverter"/>
         <localization:LocalizedNumberConverter x:Key="LocalizedNumberConverter"/>
         <localization:CategoryColorBrushConverter x:Key="CategoryColorBrushConverter"/>
+        <Style x:Key="TransactionTextStyle" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
         <Style x:Key="TransactionGridHeaderStyle" TargetType="DataGridColumnHeader">
             <Setter Property="Background" Value="{DynamicResource ControlBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
@@ -20,13 +24,76 @@
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Grid>
+                            <Border x:Name="HeaderBorder" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter VerticalAlignment="Center" SnapsToDevicePixels="True"/>
+                                    <Path x:Name="SortArrow" Grid.Column="1" Width="8" Height="5" Margin="6,0,0,0"
+                                          VerticalAlignment="Center" Fill="{TemplateBinding Foreground}"
+                                          Stretch="Fill" Visibility="Collapsed"/>
+                                </Grid>
+                            </Border>
+                            <Thumb x:Name="PART_LeftHeaderGripper" Width="8" HorizontalAlignment="Left" Cursor="SizeWE">
+                                <Thumb.Template>
+                                    <ControlTemplate TargetType="Thumb"><Border Background="Transparent"/></ControlTemplate>
+                                </Thumb.Template>
+                            </Thumb>
+                            <Thumb x:Name="PART_RightHeaderGripper" Width="8" HorizontalAlignment="Right" Cursor="SizeWE">
+                                <Thumb.Template>
+                                    <ControlTemplate TargetType="Thumb"><Border Background="Transparent"/></ControlTemplate>
+                                </Thumb.Template>
+                            </Thumb>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="SortDirection" Value="Ascending">
+                                <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="SortArrow" Property="Data" Value="M 0 5 L 4 0 L 8 5 Z"/>
+                            </Trigger>
+                            <Trigger Property="SortDirection" Value="Descending">
+                                <Setter TargetName="SortArrow" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="SortArrow" Property="Data" Value="M 0 0 L 4 5 L 8 0 Z"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="HeaderBorder" Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="TransactionGridCellStyle" TargetType="DataGridCell">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="{DynamicResource GridLineBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="Padding" Value="10,7"/>
+            <Setter Property="Padding" Value="5,2"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="{DynamicResource SelectionBrush}"/>
@@ -326,7 +393,8 @@
                                     Binding="{Binding Date, StringFormat={}{0:dd.MM.yyyy}}"
                                     SortMemberPath="Date"
                                     SortDirection="Descending"
-                                    Width="90"/>
+                                    ElementStyle="{StaticResource TransactionTextStyle}"
+                                    Width="90" MinWidth="80"/>
                  <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Amount]}"
                                     SortMemberPath="Amount"
                                     Width="110">
@@ -354,33 +422,38 @@
                         </Style>
                     </DataGridTextColumn.CellStyle>
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource TransactionTextStyle}">
                             <Setter Property="HorizontalAlignment" Value="Right"/>
                             <Setter Property="Padding" Value="0,0,4,0"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Counterparty]}" Binding="{Binding CounterpartyName}" Width="140"/>
                  <DataGridTemplateColumn Header="{Binding Source={StaticResource Localization}, Path=[Category]}" Width="120"
+                                         SortMemberPath="CategoryName"
                                          CellStyle="{StaticResource TransactionGridCellStyle}">
                      <DataGridTemplateColumn.CellTemplate>
                          <DataTemplate>
-                             <controls:CategoryBadge NameText="{Binding CategoryName}" ColorCode="{Binding CategoryColorCode}" IconKey="{Binding CategoryIconKey}"/>
+                             <controls:CategoryBadge NameText="{Binding CategoryName}" ColorCode="{Binding CategoryColorCode}" IconKey="{Binding CategoryIconKey}" VerticalAlignment="Center"/>
                          </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                  </DataGridTemplateColumn>
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Description]}" Binding="{Binding Description}"
+                                     ElementStyle="{StaticResource TransactionTextStyle}" Width="*" MinWidth="180"/>
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Counterparty]}" Binding="{Binding CounterpartyName}"
+                                     ElementStyle="{StaticResource TransactionTextStyle}" Width="160" MinWidth="140"/>
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Payer]}" Binding="{Binding PayerName}"
+                                     ElementStyle="{StaticResource TransactionTextStyle}" Width="110"/>
+                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Location]}" Binding="{Binding Location}"
+                                     ElementStyle="{StaticResource TransactionTextStyle}" Width="120"/>
                  <DataGridTemplateColumn Header="{Binding Source={StaticResource Localization}, Path=[Tags]}" Width="150" CanUserSort="False">
                      <DataGridTemplateColumn.CellTemplate>
                          <DataTemplate>
-                             <ItemsControl ItemsSource="{Binding TagDetails}" ItemTemplate="{StaticResource TagLabelTemplate}">
+                             <ItemsControl ItemsSource="{Binding TagDetails}" ItemTemplate="{StaticResource TagLabelTemplate}" VerticalAlignment="Center">
                                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                              </ItemsControl>
                          </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                  </DataGridTemplateColumn>
-                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Description]}" Binding="{Binding Description}"     Width="*"/>
-                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Location]}"     Binding="{Binding Location}"        Width="120"/>
-                 <DataGridTextColumn Header="{Binding Source={StaticResource Localization}, Path=[Payer]}"       Binding="{Binding PayerName}"       Width="110"/>
                     </DataGrid.Columns>
                 </DataGrid>
 

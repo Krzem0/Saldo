@@ -1,53 +1,29 @@
+using Saldo.Application.Interfaces;
 using Saldo.Application.UseCases;
 using Saldo.Domain.Entities;
 using Saldo.Domain.Enums;
-using Saldo.Tests.Unit.Fakes;
 
 namespace Saldo.Tests.Unit.UseCases;
 
 public sealed class GetNewTransactionDefaultsTests
 {
-    [Fact]
-    public async Task ExecuteAsync_WhenJaExists_UsesJaAsDefaultPayer()
+    [Theory]
+    [InlineData(7)]
+    [InlineData(null)]
+    public async Task ExecuteAsync_UsesStoredPayerIdWithoutNameOrAlphabeticalFallback(int? payerId)
     {
-        var useCase = new GetNewTransactionDefaults(new FakePartyRepository(
-        [
-            new Party { Id = 2, Name = "Mama" },
-            new Party { Id = 7, Name = "Ja" }
-        ]));
-
+        var useCase = new GetNewTransactionDefaults(new SettingsRepository(payerId));
         var result = await useCase.ExecuteAsync();
-
         Assert.Equal(DateOnly.FromDateTime(DateTime.Today), result.Date);
         Assert.Equal(TransactionType.Expense, result.Type);
-        Assert.Equal(7, result.PayerId);
+        Assert.Equal(payerId, result.PayerId);
     }
 
-    [Fact]
-    public async Task ExecuteAsync_WhenMeExists_UsesMeAsDefaultPayer()
+    private sealed class SettingsRepository(int? payerId) : ITransactionSettingsRepository
     {
-        var useCase = new GetNewTransactionDefaults(new FakePartyRepository(
-        [
-            new Party { Id = 3, Name = "Shop" },
-            new Party { Id = 5, Name = "Me" }
-        ]));
-
-        var result = await useCase.ExecuteAsync();
-
-        Assert.Equal(5, result.PayerId);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WhenSelfPartyDoesNotExist_FallsBackToFirstAvailableParty()
-    {
-        var useCase = new GetNewTransactionDefaults(new FakePartyRepository(
-        [
-            new Party { Id = 11, Name = "Adam" },
-            new Party { Id = 12, Name = "Zofia" }
-        ]));
-
-        var result = await useCase.ExecuteAsync();
-
-        Assert.Equal(11, result.PayerId);
+        public Task<TransactionSettings> GetAsync(CancellationToken ct = default) =>
+            Task.FromResult(new TransactionSettings { DefaultPayerId = payerId });
+        public Task SaveAsync(TransactionSettings settings, CancellationToken ct = default) =>
+            throw new NotSupportedException();
     }
 }

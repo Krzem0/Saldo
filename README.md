@@ -16,8 +16,8 @@
 - Categories managed as a controlled dictionary with optional colors and MDI icons
 - Parties managed as a reusable dictionary
 - Locations managed as a reusable dictionary
-- Tags managed as a reusable dictionary, with multiple optional tags per transaction
-- Local persistence with SQLite
+- Tags managed as a reusable dictionary with optional colors and MDI icons, with multiple optional tags per transaction
+- Local persistence with SQLite, including a manually configured default payer
 - Manual database backups to a user-selected file
 - UI localization based on resource files
 - Default app language based on the system culture
@@ -27,21 +27,24 @@
 
 - Transactions require a type, positive amount, category, non-blank description (up to 500 characters), and date. Payer, counterparty, location, and tags are optional
 
-- `Category`, `Party`, and `Location` are selected from existing values, with autocomplete support
+- `Category`, `Party`, and `Location` are selected from existing values, with autocomplete support. Typing after dismissing the suggestions reopens the filtered list
 - Reference data can be added explicitly from the transaction form with `+`; saving a transaction never creates a reference item implicitly
 - Duplicate category, party, and location names are rejected with a user-friendly message
 - New transaction defaults are resolved outside the GUI, in the Application layer
+  - The default payer is stored by party ID in SQLite `TransactionSettings`. Choose a party or None in Settings and save; fresh forms use that choice, while restored drafts retain their own payer. Deleting an unused default party clears the setting.
 - A new transaction form keeps an in-memory draft when it is cancelled; editing an existing transaction instead asks before discarding changes
   - Restored drafts are marked inside the form. Clear resets the form to its defaults and removes tag selections; closing an unchanged fresh or cleared form leaves no draft
 - User-facing labels are localized, while domain values remain stable in English
 - Transaction form validation is displayed next to the relevant field; errors that cannot be assigned to a field are shown in a form-level summary
-- The WPF transaction list formats amounts using the selected language and uses subtle amount-cell colors to distinguish expenses from income
-- Monthly transactions are sorted by date descending by default; date and amount columns also support sorting from their headers
+- The WPF transaction list formats amounts using the selected language and uses subtle amount-cell colors to distinguish expenses from income. The type selector in add/edit forms also uses red for expenses and green for income, both in the dropdown and for the selected value
+- Monthly transactions are sorted by date descending by default. Date, amount, category name, description, counterparty, payer, and location support header sorting; an arrow indicates the active column and direction. Tags do not support header sorting
+- Form fields are ordered as date/amount/type, category, description, counterparty, payer, location, and tags. The monthly table follows the same order for its visible fields; type is represented by amount-cell color and a tooltip
 - Category colors can be selected or cleared when adding or editing a category, including adding one from the transaction form
   - Category and tag dictionaries display optional color and icon beside the name, without a separate Color column
 - Category icons are optional and independent of color. Category and tag dialogs open the same owned icon picker with the full local MDI catalog, a search field (Search or Enter), and 60 icons per page with scrolling. Clearing the search with × immediately restores the full catalog; the page number can be entered directly (Enter or leaving the field). Search supports English names and common Polish aliases
 - Category labels show a contrasting icon on a solid color tile and a subtle background behind the name. An icon without color uses the neutral theme; unknown icon identifiers fall back to the name/color
-- The category dialog uses the native Windows color picker; the transaction list shows category names with a subtle background based on the saved color
+- The category selector uses the same color/icon label for dropdown results and the selected category. Clicking the field or editing switches to plain text for name-based search; choosing a result restores the label
+- Category and tag dialogs use the native Windows color picker
 - Tags describe additional context across categories, for example `Dla Iwony` / `For Iwona`; they are separate from the payer and counterparty
 - Add tags explicitly from the Tags page or the transaction form's `+` button; select them with chips and view them on the transaction list
 - Fresh transaction forms start with no selected tags; quick add creates a dictionary tag and selects it for the current transaction
@@ -83,8 +86,9 @@
 - The WPF UI uses resource-based translations
 - Supported cultures currently include `pl-PL` and `en-US`
 - The app chooses its default language from the current system culture at startup
-- Some seed data is culture-aware, for example the initial self party value (`Ja` / `Me`); it is chosen only for a new, empty database and is not translated later
+- Initial category names are culture-aware. The initial migration seeds the self party (`Ja`, ID 1) and links it to the default payer setting; renaming the party preserves that selection.
 - Number formatting in the WPF UI follows the currently selected culture
+- Transaction amount fields display two decimal places and grouping when unfocused, without a currency symbol; editing uses plain numeric input. Empty fields remain empty. Presentation formatting never changes the input stored in drafts or the decimal amount sent to Application. Currency selection is not implemented yet.
 - New user-facing text should be added through localization resources instead of hardcoded strings
 
 ## Appearance

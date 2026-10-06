@@ -4,6 +4,7 @@ using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Saldo.Application.Interfaces;
+using Saldo.Application.UseCases;
 using Saldo.Desktop.Wpf.Infrastructure;
 using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Services;
@@ -28,12 +29,83 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
         _dialogService = dialogService;
         _logger = logger;
         _databaseFolderService = databaseFolderService;
+        LoadCommand = new AsyncRelayCommand(LoadTransactionSettingsAsync);
+        SaveTransactionSettingsCommand = new AsyncRelayCommand(SaveTransactionSettingsAsync, () => _hasLoadedTransactionSettings && !IsTransactionSettingsBusy);
         CreateBackupCommand = new AsyncRelayCommand(CreateBackupAsync);
         OpenDatabaseFolderCommand = new RelayCommand(OpenDatabaseFolder);
     }
 
     public ICommand CreateBackupCommand { get; }
     public ICommand OpenDatabaseFolderCommand { get; }
+
+    public ICommand LoadCommand { get; }
+    public ICommand SaveTransactionSettingsCommand { get; }
+    private bool _hasLoadedTransactionSettings;
+    private bool _isTransactionSettingsBusy;
+    public bool IsTransactionSettingsBusy
+    {
+        get => _isTransactionSettingsBusy;
+        private set { SetField(ref _isTransactionSettingsBusy, value); CommandManager.InvalidateRequerySuggested(); }
+    }
+    private IReadOnlyList<DefaultPayerOption> _defaultPayerOptions = [];
+    public IReadOnlyList<DefaultPayerOption> DefaultPayerOptions => _defaultPayerOptions;
+    private DefaultPayerOption? _selectedDefaultPayerOption;
+    public DefaultPayerOption? SelectedDefaultPayerOption
+    {
+        get => _selectedDefaultPayerOption;
+        set { if (SetField(ref _selectedDefaultPayerOption, value)) TransactionSettingsMessage = string.Empty; }
+    }
+    private string _transactionSettingsMessage = string.Empty;
+    public string TransactionSettingsMessage
+    {
+        get => _transactionSettingsMessage;
+        private set => SetField(ref _transactionSettingsMessage, value);
+    }
+
+    public async Task LoadTransactionSettingsAsync()
+    {
+        _hasLoadedTransactionSettings = false;
+        IsTransactionSettingsBusy = true;
+        TransactionSettingsMessage = string.Empty;
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var parties = await scope.ServiceProvider.GetRequiredService<IPartyRepository>().GetAllAsync();
+            var settings = await scope.ServiceProvider.GetRequiredService<GetTransactionSettings>().ExecuteAsync();
+            _defaultPayerOptions = new[] { new DefaultPayerOption(null, T("DefaultPayerNone")) }
+                .Concat(parties.Select(p => new DefaultPayerOption(p.Id, p.Name))).ToArray();
+            OnPropertyChanged(nameof(DefaultPayerOptions));
+            SelectedDefaultPayerOption = _defaultPayerOptions.FirstOrDefault(p => p.Id == settings.DefaultPayerId)
+                ?? _defaultPayerOptions[0];
+            _hasLoadedTransactionSettings = true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load transaction settings.");
+            TransactionSettingsMessage = T("TransactionSettingsFailed");
+        }
+        finally { IsTransactionSettingsBusy = false; }
+    }
+
+    public async Task SaveTransactionSettingsAsync()
+    {
+        var payerId = SelectedDefaultPayerOption?.Id;
+        IsTransactionSettingsBusy = true;
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            await scope.ServiceProvider.GetRequiredService<SetDefaultPayer>().ExecuteAsync(payerId);
+            TransactionSettingsMessage = T("TransactionSettingsSaved");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save transaction settings.");
+            TransactionSettingsMessage = T("TransactionSettingsFailed");
+        }
+        finally { IsTransactionSettingsBusy = false; }
+    }
+
+    public sealed record DefaultPayerOption(int? Id, string Label);
 
     private void OpenDatabaseFolder()
     {
@@ -108,6 +180,11 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
 
     protected override void OnCultureChanged()
     {
+        var selectedId = SelectedDefaultPayerOption?.Id;
+        _defaultPayerOptions = _defaultPayerOptions.Select(p => p.Id is null ? new DefaultPayerOption(null, T("DefaultPayerNone")) : p).ToArray();
+        OnPropertyChanged(nameof(DefaultPayerOptions));
+        SelectedDefaultPayerOption = _defaultPayerOptions.FirstOrDefault(p => p.Id == selectedId);
+        TransactionSettingsMessage = string.Empty;
         OnPropertyChanged(nameof(CurrentCulture));
         OnPropertyChanged(nameof(ThemeOptions));
         OnPropertyChanged(nameof(SelectedThemeOption));

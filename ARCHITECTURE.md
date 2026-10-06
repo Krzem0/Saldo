@@ -56,7 +56,7 @@ Responsible for:
 
 Contains:
 
-- Use cases such as `AddTransaction`, `EditTransaction`, `DeleteTransaction`, `ListTransactions`, `GetSummary`, `GetNewTransactionDefaults`
+- Use cases such as `AddTransaction`, `EditTransaction`, `DeleteTransaction`, `ListTransactions`, `GetSummary`, `GetNewTransactionDefaults`, `GetTransactionSettings`, `SetDefaultPayer`
 - `AddCategory` and `EditCategory`, sharing category name and color normalization
 - `AddTag` and `EditTag`, sharing tag-name validation and duplicate checks
 - DTOs used by ViewModels
@@ -76,7 +76,7 @@ Rules:
 - Validation errors include the command property name when the error can be assigned to a field
 - May enforce workflow rules such as:
   - category must be chosen from an existing dictionary value
-  - payer and counterparty must be chosen from existing party values
+  - payer and counterparty are optional, but when provided must refer to existing party values
   - location is optional, but when provided it must be chosen from an existing location value
   - reference items are added through explicit `AddCategory`, `AddParty`, or `AddLocation` workflows, never implicitly while saving a transaction
 
@@ -89,7 +89,7 @@ Responsible for:
 
 Contains:
 
-- Entities such as `Transaction`, `Category`, `Party`, `Location`
+- Entities such as `Transaction`, `Category`, `Party`, `Location`, `Tag`, `TransactionTag`, and `TransactionSettings`
 - Enums such as `TransactionType`
 
 Rules:
@@ -168,23 +168,30 @@ Rules:
 - `TransactionTag`: TransactionId and TagId, forming a many-to-many association
 - Transaction commands carry selected tag IDs; `TransactionDto` exposes tag IDs and names so Presentation can display labels and preserve identity after renames
 
+### TransactionSettings
+
+- Id (singleton key, constrained to 1)
+- DefaultPayerId (optional foreign key to Party; deletion sets it to NULL)
+- Stores a manually configured default for new transactions; automatic suggestions and currency selection are not implemented
+
 ## Important Behavioral Rules
 
 - `Transaction.Type` is a domain enum and is translated only in the UI
 - Default values for a new transaction are resolved in the Application layer, not hardcoded in WPF
 - The default app language is chosen from the system culture
-- Initial seed values may depend on the current culture
+- Initial category names depend on the current culture and are created by WPF startup for a database without category/tag/transaction data. The initial migration creates the self party `Ja` with ID 1 and the transaction-settings row referencing that ID; names are not used to resolve defaults
 - `Category` is a controlled dictionary
 - WPF dictionary lists preserve selection by entity ID after reload, rebinding to the refreshed instance so the visible selection matches edit/delete actions. If there is no selection or the selected entity no longer exists, the first available item is selected. An empty list has no selection; edit/delete are disabled during loading and when nothing is selected
 - Category colors are persisted data independent of WPF; `TransactionDto.CategoryColorCode` carries the current category color to Presentation when transactions are loaded
-- WPF renders the category color as a translucent background behind its name in the transaction list; the transaction-form category selector currently shows names only. Category dictionary entries show the name with optional color and icon, without a separate Color column. Tag dictionary entries use the same name/color/icon presentation, without a separate Color column. Other dictionary lists show names only
+- WPF uses `CategoryBadge` for category names, optional icons, and colors in the monthly list, dictionary, autocomplete results, and the selected category field. Clicking or editing the selected field switches to plain name-based text input; choosing a result restores the badge. Category and tag dictionaries have no separate Color column. Other dictionary lists show names only
+- `AutocompleteComboBox.ItemTemplate` customizes result and selected-item presentation while `DisplayMemberPath` continues to resolve text for filtering and selection. Its inner ListBox uses either an item template or a display-member path. Popup open state is bound two-way so dismissing suggestions does not prevent reopening them on further typing
 - The native color picker receives the category dialog's HWND through an `IWin32Window` adapter, explicitly associating it with its WPF owner for modal behavior and activation
 - `Party` and `Location` are reusable dictionaries that can be extended through explicit add workflows from their tabs or the transaction form's `+` buttons
 - Tags are an optional reusable dictionary independent of categories and parties. Add/edit tag use cases normalize names and reject case-insensitive duplicates; invalid names and duplicates are presented with localized messages
   - Optional colors are normalized and validated on add/edit with the same Application validator as category colors. The nullable ColorCode column is included in the initial migration and EF model snapshot
   - The shared name/color dialog supports tag dictionary add/edit and transaction quick add, including choosing or clearing an independent icon with the shared MDI picker, and removing a previously chosen color
 - WPF supports a Tags page, multiple chip selections and quick add in transaction forms, and tag labels on the monthly transaction list
-  - `TransactionDto.TagDetails` carries tag IDs, names, and current colors as `TransactionTagDto` records. Monthly list labels use a noninteractive template with a solid custom fill or a neutral theme background and contrasting text; the view does not query repositories to resolve colors
+  - `TransactionDto.TagDetails` carries tag IDs, names, current colors, and icon identifiers as `TransactionTagDto` records. Monthly list labels use a noninteractive template with a solid custom fill or a neutral theme background and contrasting text; the view does not query repositories to resolve colors
   - `TagChipStyles.xaml` gives CheckBox controls a rounded chip template while retaining selection bindings and keyboard/automation behavior. Unselected chips use a neutral outline; selected chips uniformly use the dynamically resolved theme accent. An optional icon replaces the color dot and appears on a tile using the tag color or the neutral theme color. Tags without an icon keep the optional color dot in both states; unknown icon identifiers fall back to the dot/name. Text on the fill uses black or white according to relative luminance and contrast. Keyboard focus has a separate outline; hover does not change the selection appearance
 - A fresh form selects no tags by default. Quick add selects the new tag and preserves existing selections; editing and restored drafts keep their saved selections
 - Selected tag IDs are included in drafts and unsaved-change detection. Saving a transaction sends the actual selection, including an empty selection when tags are deliberately removed
@@ -195,7 +202,9 @@ Rules:
 - `TransactionDraft` is WPF-only temporary state for a new transaction and does not survive an application restart; editing an existing transaction asks before discarding unsaved changes instead
   - Unsaved edits use a themed WPF dialog through `IDialogService`, offering Save, Discard changes, and Continue editing. Escape or closing the prompt keeps the editor open; failed validation also prevents closing after Save
   - A restored draft is indicated in the form as well as the window title. The notice above the buttons disappears after the first field or tag selection change; the draft itself is retained. Clear is available only for new transactions and resets fields, validation errors, and tag selections to the fresh-form state. The list retains a draft on cancellation only when the form differs from its initial defaults
-- Amount formatting and the transaction-type colors in the list are Presentation concerns; another GUI must implement its own equivalent rendering from `Amount` and `Transaction.Type`
+- Amount formatting and transaction-type colors are Presentation concerns; another GUI must implement its own equivalent rendering from `Amount` and `Transaction.Type`. The WPF type selector uses expense/income theme colors for both options and the selected value
+- `AmountInputBehavior.RawText` binds to the ViewModel's numeric input text separately from `TextBox.Text`. Unfocused presentation uses culture-specific grouping and two decimal places, without a currency symbol. Focus restores plain numeric editing; letters and currency text are rejected during typing/paste. Empty fields remain empty, and focus-only formatting does not modify drafts or dirty-state detection. The ViewModel parses the raw input to `decimal` before sending an Application command
+- Monthly table columns follow the form order: date, amount, category, description, counterparty, payer, location, and tags. Type is represented by amount-cell color and tooltip. Header sorting applies to the scalar columns, including category name, with visible ascending/descending arrows; tags are not sortable. This sorting uses the WPF collection view, not a database query
 - Appearance selection is a Presentation concern. The current WPF `ThemeService` supports system, light, and dark themes without persisting the choice yet
 
 ## Validation and Error Contract
@@ -235,22 +244,30 @@ Rules:
 - Validator and use-case tests should verify stable error codes and relevant property metadata
 - Integration tests for SQLite persistence
 - Color tests cover normalization, rejection before writes, optional-color persistence, and adding, changing, or clearing colors as reflected in existing transaction DTOs
-- Integration tests use disposable SQLite files named `saldo-test-{GUID}.db` in the temporary directory. Color integration tests apply the initial migration to a fresh database; other repository tests currently use `EnsureCreated()`. Tests do not access the application's `%AppData%\Saldo\saldo.db`
+- Integration tests use disposable SQLite files named `saldo-test-{GUID}.db` in the temporary directory. Schema-sensitive color, icon, tag, optional-reference, and settings tests apply the initial migration to a fresh database; other repository tests can use `EnsureCreated()`. Tests do not access the application's `%AppData%\Saldo\saldo.db`
 - Backup integration tests verify standalone snapshots from an open WAL database, persisted references and tags, migration history and database integrity, replacement of previous backups, and protection against invalid destinations, failure, and cancellation
 - Minimal GUI testing, with most business behavior verified outside WPF
 - `Saldo.Tests.Wpf` verifies tag selection, draft restoration, rename handling, unsaved-change detection, and tag IDs passed by the form's save command without opening application windows. STA rendering tests exercise the actual chip template, both themes, selection bindings, theme changes, and text contrast
+- Settings integration tests verify the initial payer reference, preservation after rename, persistence across contexts, clearing, deletion behavior, invalid-reference rejection, and the singleton constraint. WPF tests cover loading and saving the selected payer by ID
+- Autocomplete tests exercise icon/color templates, name filtering, selected-label/editing transitions, and reopening after dismissal. Amount-field tests verify focus formatting, raw binding preservation, empty/reset behavior, and rejection of letters/currency text
 - Tag integration tests cover dictionary validation, optional color persistence through the initial migration, invalid-color rejection on add/edit, multi-tag transactions, rename/update/removal, blocked deletion of used tags, and rollback after a failed transaction update
 
 ## Future Extensions
 
 - CSV import/export
 - Recurring transactions
-- Tags and advanced filtering
-- Backup/restore to a single file
+- Tag filtering and summaries
+- Restore and automatic backups (manual single-file backup creation is implemented)
 - Additional frontends reusing the same core
 
 ### Category and tag icon presentation
 
 Application add/edit validates and trims optional `mdi:<name>` identifiers without referencing a WPF enum. SQLite stores category and tag `IconKey` as nullable text in the initial development migration. Transaction DTOs include the current category and tag icons, so changing a dictionary entry updates existing transactions on reload.
 
-Categories and tags use the shared `ReferenceIconKeyNormalizer` in Application. Only WPF references MahApps.Metro.IconPacks.Material and its Core dependency. The full catalog is cached as metadata; the owned picker creates controls for at most 60 results per page. Search and paging work offline. `CategoryBadge` renders categories in dictionaries and the monthly list, and tags in their dictionary. `TagChipStyles.xaml` and `TagLabelTemplates.xaml` render selectable and monthly-list tag chips. All use theme-aware fallback and contrasting icon foreground. Unknown identifiers hide the icon while preserving the name/color.
+Categories and tags use the shared `ReferenceIconKeyNormalizer` in Application. Only WPF references MahApps.Metro.IconPacks.Material and its Core dependency. The full catalog is cached as metadata; the owned picker creates controls for at most 60 results per page. Search and paging work offline. `CategoryBadge` renders categories in dictionaries, the monthly list, autocomplete results, and the selected category field, and tags in their dictionary. `TagChipStyles.xaml` and `TagLabelTemplates.xaml` render selectable and monthly-list tag chips. All use theme-aware fallback and contrasting icon foreground. Unknown identifiers hide the icon while preserving the name/color.
+
+## Transaction settings
+
+`TransactionSettings` contains one row (`Id = 1`, enforced by a check constraint) and an optional `DefaultPayerId` foreign key to `Parties`. Deleting an unused default party sets the reference to NULL. The initial migration seeds `Ja` with ID 1 and sets the default to that ID. WPF startup continues to seed category names; it does not recreate the initial party.
+
+Application exposes `GetTransactionSettings`, `SetDefaultPayer` (validates that the party exists), and `GetNewTransactionDefaults`. `ITransactionSettingsRepository` is implemented in SQLite Infrastructure. WPF Settings loads the current dictionary and setting on navigation, and saves an explicitly chosen party or None. New forms resolve defaults by ID, without name matching or alphabetical fallback; restored drafts and transaction edits preserve their own values. Theme and language remain separate in-memory UI preferences.

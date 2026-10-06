@@ -440,7 +440,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         TransactionId = t.Id;
         _date = t.Date.ToDateTime(TimeOnly.MinValue);
         _selectedType = Types.FirstOrDefault(d => d.Value == t.Type) ?? Types[0];
-        _amountText = t.Amount.ToString("N2", CultureInfo.CurrentCulture);
+        _amountText = t.Amount.ToString("0.##", CultureInfo.CurrentCulture);
         _selectedCategory = Categories.FirstOrDefault(c => c.Id == t.CategoryId);
         _categoryText = _selectedCategory?.Name ?? string.Empty;
         _selectedPayer = Parties.FirstOrDefault(p => p.Id == t.PayerId);

@@ -90,6 +90,9 @@ public partial class App : System.Windows.Application
 
         services.AddDbContext<SaldoDbContext>(o => o.UseSqlite($"Data Source={dbPath}"));
 
+        services.AddScoped<ITransactionSettingsRepository, TransactionSettingsRepository>();
+        services.AddScoped<GetTransactionSettings>();
+        services.AddScoped<SetDefaultPayer>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
@@ -150,8 +153,8 @@ public partial class App : System.Windows.Application
 
     private static async Task SeedInitialDataAsync(SaldoDbContext context, Microsoft.Extensions.Logging.ILogger logger, CultureInfo culture)
     {
+        // The initial migration already seeds the self party and transaction settings.
         var hasAnyData = await context.Categories.AnyAsync()
-            || await context.Parties.AnyAsync()
             || await context.Tags.AnyAsync()
             || await context.Transactions.AnyAsync()
             || await context.TransactionTags.AnyAsync();
@@ -167,7 +170,6 @@ public partial class App : System.Windows.Application
         var seedData = GetSeedData(culture);
 
         context.Categories.AddRange(seedData.CategoryNames.Select(name => new Category { Name = name }));
-        context.Parties.Add(new Party { Name = seedData.DefaultPartyName });
 
         await context.SaveChangesAsync();
 
@@ -184,7 +186,7 @@ public partial class App : System.Windows.Application
                     "Media i telefon",
                     "Supermarkety",
                     "Zakupy online",
-                    "Posiłki w pracy",
+                    "Jedzenie do pracy",
                     "Jedzenie poza domem",
                     "Używki",
                     "Transport",
@@ -198,15 +200,14 @@ public partial class App : System.Windows.Application
                     "Zdrowie",
                     "Prezenty i darowizny",
                     "Ubiór i pielęgnacja"
-                ],
-                "Ja"),
+                ]),
             _ => new SeedData(
                 [
                     "Housing",
                     "Utilities and phone",
                     "Supermarkets",
                     "Online shopping",
-                    "Meals at work",
+                    "Food for work",
                     "Dining out",
                     "Alcohol and tobacco",
                     "Transport",
@@ -220,12 +221,11 @@ public partial class App : System.Windows.Application
                     "Health",
                     "Gifts and donations",
                     "Clothing and personal care"
-                ],
-                "Me")
+                ])
         };
     }
 
-    private sealed record SeedData(IReadOnlyList<string> CategoryNames, string DefaultPartyName);
+    private sealed record SeedData(IReadOnlyList<string> CategoryNames);
 
     private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {

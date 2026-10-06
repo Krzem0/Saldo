@@ -5,6 +5,7 @@ namespace Saldo.Infrastructure.Sqlite.Persistence;
 
 public sealed class SaldoDbContext : DbContext
 {
+    public DbSet<TransactionSettings> TransactionSettings => Set<TransactionSettings>();
     public DbSet<Party> Parties => Set<Party>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Location> Locations => Set<Location>();
