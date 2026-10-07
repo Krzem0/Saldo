@@ -30,7 +30,10 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
         _logger = logger;
         _databaseFolderService = databaseFolderService;
         LoadCommand = new AsyncRelayCommand(LoadTransactionSettingsAsync);
-        SaveTransactionSettingsCommand = new AsyncRelayCommand(SaveTransactionSettingsAsync, () => _hasLoadedTransactionSettings && !IsTransactionSettingsBusy);
+        ClearDefaultPayerCommand = new RelayCommand(() => SelectedDefaultPayerOption = null,
+            () => !IsTransactionSettingsBusy && SelectedDefaultPayerOption is not null);
+        ClearDefaultLocationCommand = new RelayCommand(() => SelectedDefaultLocationOption = null,
+            () => !IsTransactionSettingsBusy && SelectedDefaultLocationOption is not null);
         CreateBackupCommand = new AsyncRelayCommand(CreateBackupAsync);
         OpenDatabaseFolderCommand = new RelayCommand(OpenDatabaseFolder);
     }
@@ -39,7 +42,13 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
     public ICommand OpenDatabaseFolderCommand { get; }
 
     public ICommand LoadCommand { get; }
-    public ICommand SaveTransactionSettingsCommand { get; }
+    public ICommand ClearDefaultPayerCommand { get; }
+    public ICommand ClearDefaultLocationCommand { get; }
+    public Task TransactionSettingsSaveTask { get; private set; } = Task.CompletedTask;
+    private bool _restoringTransactionSettings;
+    private int? _savedPayerId;
+    private int? _savedLocationId;
+    private readonly SemaphoreSlim _settingsSaveLock = new(1, 1);
     private bool _hasLoadedTransactionSettings;
     private bool _isTransactionSettingsBusy;
     public bool IsTransactionSettingsBusy
@@ -53,7 +62,31 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
     public DefaultPayerOption? SelectedDefaultPayerOption
     {
         get => _selectedDefaultPayerOption;
-        set { if (SetField(ref _selectedDefaultPayerOption, value)) TransactionSettingsMessage = string.Empty; }
+        set
+        {
+            if (SetField(ref _selectedDefaultPayerOption, value))
+            {
+                TransactionSettingsMessage = string.Empty;
+                CommandManager.InvalidateRequerySuggested();
+                SaveSelectionIfLoaded();
+            }
+        }
+    }
+    private IReadOnlyList<DefaultLocationOption> _defaultLocationOptions = [];
+    public IReadOnlyList<DefaultLocationOption> DefaultLocationOptions => _defaultLocationOptions;
+    private DefaultLocationOption? _selectedDefaultLocationOption;
+    public DefaultLocationOption? SelectedDefaultLocationOption
+    {
+        get => _selectedDefaultLocationOption;
+        set
+        {
+            if (SetField(ref _selectedDefaultLocationOption, value))
+            {
+                TransactionSettingsMessage = string.Empty;
+                CommandManager.InvalidateRequerySuggested();
+                SaveSelectionIfLoaded();
+            }
+        }
     }
     private string _transactionSettingsMessage = string.Empty;
     public string TransactionSettingsMessage
@@ -71,12 +104,16 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
             var parties = await scope.ServiceProvider.GetRequiredService<IPartyRepository>().GetAllAsync();
+            var locations = await scope.ServiceProvider.GetRequiredService<ILocationRepository>().GetAllAsync();
             var settings = await scope.ServiceProvider.GetRequiredService<GetTransactionSettings>().ExecuteAsync();
-            _defaultPayerOptions = new[] { new DefaultPayerOption(null, T("DefaultPayerNone")) }
-                .Concat(parties.Select(p => new DefaultPayerOption(p.Id, p.Name))).ToArray();
+            _defaultPayerOptions = parties.Select(p => new DefaultPayerOption(p.Id, p.Name)).ToArray();
             OnPropertyChanged(nameof(DefaultPayerOptions));
-            SelectedDefaultPayerOption = _defaultPayerOptions.FirstOrDefault(p => p.Id == settings.DefaultPayerId)
-                ?? _defaultPayerOptions[0];
+            SelectedDefaultPayerOption = _defaultPayerOptions.FirstOrDefault(p => p.Id == settings.DefaultPayerId);
+            _defaultLocationOptions = locations.Select(location => new DefaultLocationOption(location.Id, location.Name)).ToArray();
+            OnPropertyChanged(nameof(DefaultLocationOptions));
+            SelectedDefaultLocationOption = _defaultLocationOptions.FirstOrDefault(location => location.Id == settings.DefaultLocationId);
+            _savedPayerId = settings.DefaultPayerId;
+            _savedLocationId = settings.DefaultLocationId;
             _hasLoadedTransactionSettings = true;
         }
         catch (Exception ex)
@@ -87,25 +124,47 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
         finally { IsTransactionSettingsBusy = false; }
     }
 
-    public async Task SaveTransactionSettingsAsync()
+    private void SaveSelectionIfLoaded()
+    {
+        if (_hasLoadedTransactionSettings && !_restoringTransactionSettings)
+            TransactionSettingsSaveTask = SaveTransactionSettingsAsync();
+    }
+
+    private async Task SaveTransactionSettingsAsync()
     {
         var payerId = SelectedDefaultPayerOption?.Id;
+        var locationId = SelectedDefaultLocationOption?.Id;
+        await _settingsSaveLock.WaitAsync();
         IsTransactionSettingsBusy = true;
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
-            await scope.ServiceProvider.GetRequiredService<SetDefaultPayer>().ExecuteAsync(payerId);
+            await scope.ServiceProvider.GetRequiredService<SetTransactionDefaults>().ExecuteAsync(payerId, locationId);
+            _savedPayerId = payerId;
+            _savedLocationId = locationId;
             TransactionSettingsMessage = T("TransactionSettingsSaved");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save transaction settings.");
+            _restoringTransactionSettings = true;
+            try
+            {
+                SelectedDefaultPayerOption = _defaultPayerOptions.FirstOrDefault(option => option.Id == _savedPayerId);
+                SelectedDefaultLocationOption = _defaultLocationOptions.FirstOrDefault(option => option.Id == _savedLocationId);
+            }
+            finally { _restoringTransactionSettings = false; }
             TransactionSettingsMessage = T("TransactionSettingsFailed");
         }
-        finally { IsTransactionSettingsBusy = false; }
+        finally
+        {
+            IsTransactionSettingsBusy = false;
+            _settingsSaveLock.Release();
+        }
     }
 
-    public sealed record DefaultPayerOption(int? Id, string Label);
+    public sealed record DefaultPayerOption(int Id, string Label);
+    public sealed record DefaultLocationOption(int Id, string Label);
 
     private void OpenDatabaseFolder()
     {
@@ -180,10 +239,6 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
 
     protected override void OnCultureChanged()
     {
-        var selectedId = SelectedDefaultPayerOption?.Id;
-        _defaultPayerOptions = _defaultPayerOptions.Select(p => p.Id is null ? new DefaultPayerOption(null, T("DefaultPayerNone")) : p).ToArray();
-        OnPropertyChanged(nameof(DefaultPayerOptions));
-        SelectedDefaultPayerOption = _defaultPayerOptions.FirstOrDefault(p => p.Id == selectedId);
         TransactionSettingsMessage = string.Empty;
         OnPropertyChanged(nameof(CurrentCulture));
         OnPropertyChanged(nameof(ThemeOptions));

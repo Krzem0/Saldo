@@ -64,7 +64,7 @@
   <data name="Transaction_AddDraftTitle" xml:space="preserve"><value>Dodaj transakcję — szkic</value></data>
   <data name="Transaction_RestoredDraftMessage" xml:space="preserve"><value>Przywrócono szkic niezapisanej transakcji. Możesz kontynuować lub wyczyścić formularz.</value></data>
   <data name="Clear" xml:space="preserve"><value>Wyczyść</value></data>
-  <data name="Transaction_ClearTooltip" xml:space="preserve"><value>Usuń szkic i przywróć domyślne wartości formularza</value></data>
+  <data name="Transaction_ClearTooltip" xml:space="preserve"><value>Wyczyść formularz, zachowaj datę i przywróć domyślnego płatnika oraz miejsce</value></data>
   <data name="Transaction_UnsavedChangesTitle" xml:space="preserve"><value>Niezapisane zmiany</value></data>
   <data name="Transaction_UnsavedChangesMessage" xml:space="preserve"><value>Transakcja ma niezapisane zmiany. Czy chcesz zapisać je przed zamknięciem?</value></data>
   <data name="Transaction_DiscardChanges" xml:space="preserve"><value>Odrzuć</value></data>
@@ -138,8 +138,12 @@
   <data name="IconPicker_PageHint" xml:space="preserve"><value>Wpisz numer strony i naciśnij Enter</value></data>
   <data name="TransactionSettingsTitle" xml:space="preserve"><value>Ustawienia transakcji</value></data>
   <data name="DefaultPayerLabel" xml:space="preserve"><value>Domyślny płatnik</value></data>
-  <data name="DefaultPayerNone" xml:space="preserve"><value>Brak</value></data>
+  <data name="ClearDefaultPayer" xml:space="preserve"><value>Wyczyść domyślnego płatnika</value></data>
   <data name="DefaultPayerDescription" xml:space="preserve"><value>Płatnik automatycznie wybierany przy dodawaniu nowej transakcji.</value></data>
   <data name="TransactionSettingsSaved" xml:space="preserve"><value>Ustawienia zapisane.</value></data>
   <data name="TransactionSettingsFailed" xml:space="preserve"><value>Nie udało się odczytać lub zapisać ustawień. Spróbuj ponownie.</value></data>
+  <data name="TransactionList_RowCount" xml:space="preserve"><value>Liczba pozycji:</value></data>
+  <data name="DefaultLocationLabel" xml:space="preserve"><value>Domyślne miejsce</value></data>
+  <data name="DefaultLocationDescription" xml:space="preserve"><value>Miejsce automatycznie wybierane przy dodawaniu nowej transakcji.</value></data>
+  <data name="ClearDefaultLocation" xml:space="preserve"><value>Wyczyść domyślne miejsce</value></data>
 </root>

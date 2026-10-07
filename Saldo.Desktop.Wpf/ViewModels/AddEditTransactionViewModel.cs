@@ -28,7 +28,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     private bool _isRestoredDraft;
     private bool _showRestoredDraftNotice;
     private TransactionDraft? _initialDraft;
-    private readonly TransactionDraft _emptyDraft;
+    private TransactionDraft _emptyDraft;
 
     private DateTime _date = DateTime.Today;
     private TypeItem _selectedType;
@@ -297,7 +297,6 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     {
         if (!IsNewTransaction) return;
 
-        Date = _emptyDraft.Date;
         SelectedType = Types.First(type => type.Value == _emptyDraft.Type);
         AmountText = string.Empty;
         SelectedCategory = null;
@@ -306,11 +305,12 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         PayerText = _emptyDraft.PayerText;
         SelectedCounterparty = null;
         CounterpartyText = string.Empty;
-        SelectedLocation = null;
-        LocationText = string.Empty;
+        SelectedLocation = Locations.FirstOrDefault(location => location.Id == _emptyDraft.LocationId);
+        LocationText = _emptyDraft.LocationText;
         Description = null;
         SelectTags([]);
         ApplyValidationErrors([]);
+        _emptyDraft = CreateDraft();
         _isRestoredDraft = false;
         DismissRestoredDraftNotice();
         OnPropertyChanged(nameof(IsRestoredDraft));
@@ -433,6 +433,10 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             ? Parties.FirstOrDefault(p => p.Id == defaults.PayerId.Value)
             : null;
         _payerText = _selectedPayer?.Name ?? string.Empty;
+        _selectedLocation = defaults.LocationId.HasValue
+            ? Locations.FirstOrDefault(location => location.Id == defaults.LocationId.Value)
+            : null;
+        _locationText = _selectedLocation?.Name ?? string.Empty;
     }
 
     private void PopulateFrom(TransactionDto t)

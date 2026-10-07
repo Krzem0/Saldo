@@ -17,7 +17,7 @@
 - Parties managed as a reusable dictionary
 - Locations managed as a reusable dictionary
 - Tags managed as a reusable dictionary with optional colors and MDI icons, with multiple optional tags per transaction
-- Local persistence with SQLite, including a manually configured default payer
+- Local persistence with SQLite, including configurable default payer and location
 - Manual database backups to a user-selected file
 - UI localization based on resource files
 - Default app language based on the system culture
@@ -30,15 +30,20 @@
 - `Category`, `Party`, and `Location` are selected from existing values, with autocomplete support. Typing after dismissing the suggestions reopens the filtered list
 - Reference data can be added explicitly from the transaction form with `+`; saving a transaction never creates a reference item implicitly
 - Duplicate category, party, and location names are rejected with a user-friendly message
-- New transaction defaults are resolved outside the GUI, in the Application layer
-  - The default payer is stored by party ID in SQLite `TransactionSettings`. Choose a party or None in Settings and save; fresh forms use that choice, while restored drafts retain their own payer. Deleting an unused default party clears the setting.
+- Dictionary names (categories, parties, locations, and tags) are trimmed before saving, including quick add from the transaction form. Leading and trailing whitespace is removed; internal spaces are preserved, and whitespace-only names are rejected
+- Persisted transaction defaults are resolved outside the GUI, in the Application layer; the remembered date is temporary WPF session state
+  - Default payer and location are stored by ID in SQLite `TransactionSettings`; the location starts empty. Choosing a value or clearing it with X in Settings saves immediately, without a Save button. The X appears between the selected name and dropdown arrow; the lists contain only dictionary entries, with no None option. Fresh forms use those defaults, while restored drafts and edits keep their own values. Deleting an unused default party or location clears its setting.
+  - During a settings save, both selectors are disabled. If saving fails, the last saved selections are restored and an error is displayed.
 - A new transaction form keeps an in-memory draft when it is cancelled; editing an existing transaction instead asks before discarding changes
-  - Restored drafts are marked inside the form. Clear resets the form to its defaults and removes tag selections; closing an unchanged fresh or cleared form leaves no draft
+  - New forms start with today's date when the app starts and reuse the date of the last successfully added transaction during that session. Cancellation, failed saves, and edits do not change the remembered date; restored drafts keep their own date.
+  - Restored drafts are marked inside the form. Clear keeps the current form date, restores the other defaults, and removes tag selections; closing an unchanged fresh or cleared form leaves no draft.
 - User-facing labels are localized, while domain values remain stable in English
 - Transaction form validation is displayed next to the relevant field; errors that cannot be assigned to a field are shown in a form-level summary
 - The WPF transaction list formats amounts using the selected language and uses subtle amount-cell colors to distinguish expenses from income. The type selector in add/edit forms also uses red for expenses and green for income, both in the dropdown and for the selected value
 - Monthly transactions are sorted by date descending by default. Date, amount, category name, description, counterparty, payer, and location support header sorting; an arrow indicates the active column and direction. Tags do not support header sorting
-- Form fields are ordered as date/amount/type, category, description, counterparty, payer, location, and tags. The monthly table follows the same order for its visible fields; type is represented by amount-cell color and a tooltip
+- Below the monthly table, a small entry count appears on the left, with Edit and Delete on the right. It counts the transactions in the selected month and updates after adding or deleting a transaction and when switching months
+- Form fields are ordered as date/amount/type, description, category, counterparty, payer, location, and tags. The monthly table columns are date, amount, category, description, counterparty, payer, location, and tags; type is represented by amount-cell color and a tooltip
+- Add/edit date fields use a short date with hyphen separators, preserving the language's date order. Calendar selection and manual entry both use hyphens; the monthly table continues to display dates as `dd.MM.yyyy`
 - Category colors can be selected or cleared when adding or editing a category, including adding one from the transaction form
   - Category and tag dictionaries display optional color and icon beside the name, without a separate Color column
 - Category icons are optional and independent of color. Category and tag dialogs open the same owned icon picker with the full local MDI catalog, a search field (Search or Enter), and 60 icons per page with scrolling. Clearing the search with × immediately restores the full catalog; the page number can be entered directly (Enter or leaving the field). Search supports English names and common Polish aliases
@@ -106,6 +111,12 @@
 - Choosing an existing backup prompts before overwriting it. The active database and its SQLite sidecar files cannot be selected as backup destinations
 - A previous backup is replaced only after the new snapshot is complete
 - Restore, automatic backups, and a persisted preferred backup folder are not implemented yet
+
+## Development Database Changes
+
+- In the current local development phase, schema changes are included in the initial migration, its designer, and the EF model snapshot
+- Changing an already applied initial migration does not upgrade an existing database. An existing development database must be updated explicitly after a backup, with schema and data-integrity checks
+- `TransactionSettings.DefaultLocationId` is nullable, indexed, and references `Locations` with `ON DELETE SET NULL`; new databases start with no default location
 
 ## Status
 

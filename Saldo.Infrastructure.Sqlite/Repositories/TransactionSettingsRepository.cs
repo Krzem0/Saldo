@@ -18,6 +18,7 @@ public sealed class TransactionSettingsRepository(SaldoDbContext context) : ITra
             context.TransactionSettings.Add(current);
         }
         current.DefaultPayerId = settings.DefaultPayerId;
+        current.DefaultLocationId = settings.DefaultLocationId;
         await context.SaveChangesAsync(ct);
     }
 }

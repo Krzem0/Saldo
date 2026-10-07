@@ -93,6 +93,8 @@ public partial class App : System.Windows.Application
         services.AddScoped<ITransactionSettingsRepository, TransactionSettingsRepository>();
         services.AddScoped<GetTransactionSettings>();
         services.AddScoped<SetDefaultPayer>();
+        services.AddScoped<SetDefaultLocation>();
+        services.AddScoped<SetTransactionDefaults>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();

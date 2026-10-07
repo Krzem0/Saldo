@@ -13,6 +13,32 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class TransactionTagSelectionTests
 {
+    [Theory]
+    [InlineData(1)]
+    [InlineData(null)]
+    [InlineData(999)]
+    public void DefaultLocation_FreshFormAndClearUseIdWhileDraftPreservesOwnLocation(int? locationId)
+    {
+        using var provider = new ServiceCollection().BuildServiceProvider();
+        var defaults = new NewTransactionDefaultsDto(new DateOnly(2020, 1, 1), TransactionType.Expense, null, locationId);
+        var locations = new[] { new Location { Id = 1, Name = "Renamed home" }, new Location { Id = 2, Name = "Office" } };
+        AddEditTransactionViewModel Form(TransactionDraft? draft = null) => new(
+            provider.GetRequiredService<IServiceScopeFactory>(), new UnusedDialogs(), new LocalizationService(),
+            [], [], locations, [], defaults, draft: draft);
+        var fresh = Form();
+        var expectedId = locationId == 1 ? (int?)1 : null;
+        Assert.Equal(expectedId, fresh.SelectedLocation?.Id);
+        Assert.Equal(expectedId is null ? string.Empty : "Renamed home", fresh.LocationText);
+        Assert.False(fresh.HasDraftContent);
+        fresh.SelectedLocation = locations[1];
+        fresh.LocationText = "Office";
+        var restored = Form(fresh.CreateDraft());
+        Assert.Equal(2, restored.SelectedLocation?.Id);
+        restored.ClearCommand.Execute(null);
+        Assert.Equal(expectedId, restored.SelectedLocation?.Id);
+        Assert.False(restored.HasDraftContent);
+    }
+
     [Fact]
     public void FreshForm_DoesNotSelectAnyTags()
     {
@@ -44,7 +70,7 @@ public sealed class TransactionTagSelectionTests
         viewModel.Date = originalDate.AddDays(-1);
         Assert.True(viewModel.ClearCommand.CanExecute(null));
         viewModel.ClearCommand.Execute(null);
-        Assert.Equal(originalDate, viewModel.Date);
+        Assert.Equal(originalDate.AddDays(-1), viewModel.Date);
         Assert.False(viewModel.ClearCommand.CanExecute(null));
     }
 
@@ -75,7 +101,7 @@ public sealed class TransactionTagSelectionTests
         Assert.False(viewModel.IsRestoredDraft);
         Assert.False(viewModel.HasDraftContent);
         Assert.False(viewModel.ClearCommand.CanExecute(null));
-        Assert.Equal(new DateTime(2019, 5, 1), viewModel.Date);
+        Assert.Equal(new DateTime(2019, 5, 20), viewModel.Date);
         Assert.Equal(TransactionType.Expense, viewModel.SelectedType.Value);
         Assert.Equal("Me", viewModel.PayerText);
         Assert.Equal(1, viewModel.SelectedPayer?.Id);

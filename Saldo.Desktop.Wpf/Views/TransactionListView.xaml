@@ -476,10 +476,22 @@
             </Grid>
         </Border>
 
-        <!-- Action buttons -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,6,8,8">
-             <Button Content="{Binding Source={StaticResource Localization}, Path=[Edit]}"   Command="{Binding EditCommand}"   Style="{StaticResource SecondaryActionButtonStyle}" Margin="0,0,8,0"/>
-             <Button Content="{Binding Source={StaticResource Localization}, Path=[Delete]}" Command="{Binding DeleteCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
-        </StackPanel>
+        <!-- Table actions and row count -->
+        <Grid Grid.Row="3" Margin="8,6,8,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="{Binding Source={StaticResource Localization}, Path=[Edit]}" Command="{Binding EditCommand}"
+                        Style="{StaticResource SecondaryActionButtonStyle}" Margin="0,0,8,0"/>
+                <Button Content="{Binding Source={StaticResource Localization}, Path=[Delete]}" Command="{Binding DeleteCommand}"
+                        Style="{StaticResource DangerActionButtonStyle}"/>
+            </StackPanel>
+            <TextBlock Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,16,0" FontSize="12"
+                       Foreground="{DynamicResource MutedTextBrush}">
+                <Run Text="{Binding Source={StaticResource Localization}, Path=[TransactionList_RowCount], Mode=OneWay}"/><Run Text=" "/><Run Text="{Binding Transactions.Count, Mode=OneWay}"/>
+            </TextBlock>
+        </Grid>
     </Grid>
 </UserControl>

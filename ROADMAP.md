@@ -10,13 +10,15 @@ This document tracks planned work. Implemented behavior and architectural decisi
 
 ## App Reliability
 
-- [ ] Persist UI preferences, including language and appearance theme (the manually configured default payer is already persisted separately in TransactionSettings)
+- [ ] Persist UI preferences, including language and appearance theme (the default payer and location are already persisted separately in TransactionSettings)
 - [ ] Persist a preferred backup folder
 - [ ] Restore from a single-file database backup (manual backup creation is available in Settings)
 - [ ] Packaging and installer
 
 ## Later
 
+- [ ] Explore and implement reusable transaction templates for repeated expenses. Loading a template into the add-transaction form should fill all fields except date and amount: type, description, category, counterparty, payer, location, and selected tags. Keep the form's current date and amount unchanged.
+- [ ] Replace the full transaction tag cloud with a dropdown for choosing tags; display only selected tags below it using the current chip appearance (the current form still displays all available tags as selectable chips)
 - [ ] Further WPF visual polish and accessibility review
 - [ ] Recurring transactions
 - [ ] CSV import and export

@@ -10,6 +10,8 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <ProjectReference Include="..\Saldo.Desktop.Wpf\Saldo.Desktop.Wpf.csproj" />
     <Using Include="Xunit" />
+    <None Include="..\Saldo.Desktop.Wpf\Views\TransactionListView.xaml" Link="Views\TransactionListView.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Saldo.Desktop.Wpf\Views\SettingsView.xaml" Link="Views\SettingsView.xaml" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="..\Saldo.Tests.Unit\Fakes\FakeTransactionRepository.cs" Link="Fakes\FakeTransactionRepository.cs" />
     <Compile Include="..\Saldo.Tests.Unit\Fakes\FakePartyRepository.cs" Link="Fakes\FakePartyRepository.cs" />
     <Compile Include="..\Saldo.Tests.Unit\Fakes\FakeLocationRepository.cs" Link="Fakes\FakeLocationRepository.cs" />

@@ -40,25 +40,6 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TransactionSettings",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false),
-                    DefaultPayerId = table.Column<int>(type: "INTEGER", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TransactionSettings", x => x.Id);
-                    table.CheckConstraint("CK_TransactionSettings_Singleton", "Id = 1");
-                    table.ForeignKey("FK_TransactionSettings_Parties_DefaultPayerId", x => x.DefaultPayerId,
-                        "Parties", "Id", onDelete: ReferentialAction.SetNull);
-                });
-            migrationBuilder.CreateIndex("IX_TransactionSettings_DefaultPayerId", "TransactionSettings", "DefaultPayerId");
-            // Stable IDs keep the default independent of the party's display name.
-            migrationBuilder.InsertData("Parties", new[] { "Id", "Name" }, new object[] { 1, "Ja" });
-            migrationBuilder.InsertData("TransactionSettings", new[] { "Id", "DefaultPayerId" }, new object[] { 1, 1 });
-
-            migrationBuilder.CreateTable(
                 name: "Locations",
                 columns: table => new
                 {
@@ -70,6 +51,29 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 {
                     table.PrimaryKey("PK_Locations", x => x.Id);
                 });
+
+            migrationBuilder.CreateTable(
+                name: "TransactionSettings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false),
+                    DefaultPayerId = table.Column<int>(type: "INTEGER", nullable: true),
+                    DefaultLocationId = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TransactionSettings", x => x.Id);
+                    table.ForeignKey("FK_TransactionSettings_Locations_DefaultLocationId", x => x.DefaultLocationId,
+                        "Locations", "Id", onDelete: ReferentialAction.SetNull);
+                    table.CheckConstraint("CK_TransactionSettings_Singleton", "Id = 1");
+                    table.ForeignKey("FK_TransactionSettings_Parties_DefaultPayerId", x => x.DefaultPayerId,
+                        "Parties", "Id", onDelete: ReferentialAction.SetNull);
+                });
+            migrationBuilder.CreateIndex("IX_TransactionSettings_DefaultPayerId", "TransactionSettings", "DefaultPayerId");
+            migrationBuilder.CreateIndex("IX_TransactionSettings_DefaultLocationId", "TransactionSettings", "DefaultLocationId");
+            // Stable IDs keep the default independent of the party's display name.
+            migrationBuilder.InsertData("Parties", new[] { "Id", "Name" }, new object[] { 1, "Ja" });
+            migrationBuilder.InsertData("TransactionSettings", new[] { "Id", "DefaultPayerId" }, new object[] { 1, 1 });
 
             migrationBuilder.CreateTable(
                 name: "Tags",

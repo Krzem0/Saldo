@@ -22,7 +22,7 @@ Responsible for:
 - Localization display concerns
 - Parsing UI-specific input representations, such as converting amount text to `decimal`
 - Presenting validation feedback returned by Application
-- Keeping temporary GUI state, such as a new-transaction draft
+- Keeping temporary GUI state, such as a new-transaction draft and the date of the last successfully added transaction in the current session
 - Formatting amounts for the selected culture and applying UI-only visual cues based on transaction type
 - Applying GUI-specific appearance themes through WPF resource dictionaries
 
@@ -56,7 +56,7 @@ Responsible for:
 
 Contains:
 
-- Use cases such as `AddTransaction`, `EditTransaction`, `DeleteTransaction`, `ListTransactions`, `GetSummary`, `GetNewTransactionDefaults`, `GetTransactionSettings`, `SetDefaultPayer`
+- Use cases such as `AddTransaction`, `EditTransaction`, `DeleteTransaction`, `ListTransactions`, `GetSummary`, `GetNewTransactionDefaults`, `GetTransactionSettings`, `SetDefaultPayer`, `SetDefaultLocation`, `SetTransactionDefaults`
 - `AddCategory` and `EditCategory`, sharing category name and color normalization
 - `AddTag` and `EditTag`, sharing tag-name validation and duplicate checks
 - DTOs used by ViewModels
@@ -120,6 +120,7 @@ Rules:
 - Implements interfaces defined in the Application layer
 - No UI code
 - During the current single-instance local development phase, schema changes update the initial migration, its designer, and the model snapshot. Incremental upgrade migrations are deferred until deployed databases need to be preserved across schema versions
+- Editing an already applied initial migration does not alter an existing database. Updating a local development database is a separate, explicit operation: create a consistent backup, apply the required schema change, and verify data preservation, integrity, and foreign keys
 
 ### Database Backups
 
@@ -172,12 +173,13 @@ Rules:
 
 - Id (singleton key, constrained to 1)
 - DefaultPayerId (optional foreign key to Party; deletion sets it to NULL)
-- Stores a manually configured default for new transactions; automatic suggestions and currency selection are not implemented
+- DefaultLocationId (optional foreign key to Location; deletion sets it to NULL; initially empty)
+- Stores manually configured payer and location defaults for new transactions; the remembered transaction date is session-only WPF state, and currency selection is not implemented
 
 ## Important Behavioral Rules
 
 - `Transaction.Type` is a domain enum and is translated only in the UI
-- Default values for a new transaction are resolved in the Application layer, not hardcoded in WPF
+- Persisted payer/location defaults and the initial date/type are resolved in the Application layer. WPF replaces the new-form date with its remembered session date; restored drafts and edits retain their own date
 - The default app language is chosen from the system culture
 - Initial category names depend on the current culture and are created by WPF startup for a database without category/tag/transaction data. The initial migration creates the self party `Ja` with ID 1 and the transaction-settings row referencing that ID; names are not used to resolve defaults
 - `Category` is a controlled dictionary
@@ -199,12 +201,15 @@ Rules:
 - Transaction updates replace tag associations and scalar fields within one database transaction; a failed write rolls back both. Only scalar transaction data is attached before inserting tag links to avoid EF tracking conflicts
 - Reference data for a form is loaded sequentially because repositories in a scope share an EF Core DbContext
 - Add workflows reject duplicate reference names before a database constraint error reaches the user
+- Application add workflows trim category, party, location, and tag names before validation/duplicate comparison and persistence. Whitespace-only names are rejected; whitespace inside a name is preserved. Quick add uses the same workflows
 - `TransactionDraft` is WPF-only temporary state for a new transaction and does not survive an application restart; editing an existing transaction asks before discarding unsaved changes instead
   - Unsaved edits use a themed WPF dialog through `IDialogService`, offering Save, Discard changes, and Continue editing. Escape or closing the prompt keeps the editor open; failed validation also prevents closing after Save
-  - A restored draft is indicated in the form as well as the window title. The notice above the buttons disappears after the first field or tag selection change; the draft itself is retained. Clear is available only for new transactions and resets fields, validation errors, and tag selections to the fresh-form state. The list retains a draft on cancellation only when the form differs from its initial defaults
+  - A restored draft is indicated in the form as well as the window title. The notice above the buttons disappears after the first field or tag selection change; the draft itself is retained. Clear is available only for new transactions: it preserves the current form date, resets the other fields to their original defaults, and clears validation errors and tag selections. It captures a new empty-draft baseline, so cancelling immediately after Clear leaves no draft. Subsequent changes can create a new draft
 - Amount formatting and transaction-type colors are Presentation concerns; another GUI must implement its own equivalent rendering from `Amount` and `Transaction.Type`. The WPF type selector uses expense/income theme colors for both options and the selected value
 - `AmountInputBehavior.RawText` binds to the ViewModel's numeric input text separately from `TextBox.Text`. Unfocused presentation uses culture-specific grouping and two decimal places, without a currency symbol. Focus restores plain numeric editing; letters and currency text are rejected during typing/paste. Empty fields remain empty, and focus-only formatting does not modify drafts or dirty-state detection. The ViewModel parses the raw input to `decimal` before sending an Application command
-- Monthly table columns follow the form order: date, amount, category, description, counterparty, payer, location, and tags. Type is represented by amount-cell color and tooltip. Header sorting applies to the scalar columns, including category name, with visible ascending/descending arrows; tags are not sortable. This sorting uses the WPF collection view, not a database query
+- Transaction form order is date/amount/type, description, category, counterparty, payer, location, and tags. Monthly table columns are date, amount, category, description, counterparty, payer, location, and tags. Type is represented by amount-cell color and tooltip. Header sorting applies to the scalar columns, including category name, with visible ascending/descending arrows; tags are not sortable. This sorting uses the WPF collection view, not a database query
+- The monthly table footer binds its left-side count to `Transactions.Count`; Edit and Delete remain on the right. The count tracks the loaded month and collection changes. Read-only bindings in `Run.Text` explicitly use `Mode=OneWay`, including the localized label, because that property's default binding mode is two-way
+- `HyphenDatePicker` is a WPF presentation control used by the add/edit form. It normalizes dot and slash date separators to hyphens while retaining short-date culture ordering and the standard calendar/parser. Formatting does not change the bound date value; table dates continue to use `dd.MM.yyyy`
 - Appearance selection is a Presentation concern. The current WPF `ThemeService` supports system, light, and dark themes without persisting the choice yet
 
 ## Validation and Error Contract
@@ -248,7 +253,9 @@ Rules:
 - Backup integration tests verify standalone snapshots from an open WAL database, persisted references and tags, migration history and database integrity, replacement of previous backups, and protection against invalid destinations, failure, and cancellation
 - Minimal GUI testing, with most business behavior verified outside WPF
 - `Saldo.Tests.Wpf` verifies tag selection, draft restoration, rename handling, unsaved-change detection, and tag IDs passed by the form's save command without opening application windows. STA rendering tests exercise the actual chip template, both themes, selection bindings, theme changes, and text contrast
-- Settings integration tests verify the initial payer reference, preservation after rename, persistence across contexts, clearing, deletion behavior, invalid-reference rejection, and the singleton constraint. WPF tests cover loading and saving the selected payer by ID
+- Settings integration tests verify the initial payer reference and empty default location, preservation after rename, persistence across contexts, clearing, deletion behavior, invalid-reference rejection, atomic validation of both defaults, the singleton constraint, and agreement between the initial migration and EF model. WPF tests cover automatic selection/clear saves, loading without writes, rollback of the visible selection after a failed save, and the shared X-button template for payer/location
+- Date-session tests exercise successful add, failed validation, cancellation, editing, and a fresh session. Clear tests verify date preservation, default payer/location restoration, and removal of a restored draft. Date-control tests cover manual entry, selection, and clearing in both supported cultures
+- Transaction-list XAML tests verify that the view loads without the read-only localization binding exception and that the footer count tracks collection changes
 - Autocomplete tests exercise icon/color templates, name filtering, selected-label/editing transitions, and reopening after dismissal. Amount-field tests verify focus formatting, raw binding preservation, empty/reset behavior, and rejection of letters/currency text
 - Tag integration tests cover dictionary validation, optional color persistence through the initial migration, invalid-color rejection on add/edit, multi-tag transactions, rename/update/removal, blocked deletion of used tags, and rollback after a failed transaction update
 
@@ -268,6 +275,16 @@ Categories and tags use the shared `ReferenceIconKeyNormalizer` in Application. 
 
 ## Transaction settings
 
-`TransactionSettings` contains one row (`Id = 1`, enforced by a check constraint) and an optional `DefaultPayerId` foreign key to `Parties`. Deleting an unused default party sets the reference to NULL. The initial migration seeds `Ja` with ID 1 and sets the default to that ID. WPF startup continues to seed category names; it does not recreate the initial party.
+`TransactionSettings` contains one row (`Id = 1`, enforced by a check constraint) and optional `DefaultPayerId` and `DefaultLocationId` foreign keys to `Parties` and `Locations`. The default location is initially NULL. Deleting an unused default party or location sets its reference to NULL. The initial migration seeds `Ja` with ID 1 and sets the default to that ID. WPF startup continues to seed category names; it does not recreate the initial party.
 
-Application exposes `GetTransactionSettings`, `SetDefaultPayer` (validates that the party exists), and `GetNewTransactionDefaults`. `ITransactionSettingsRepository` is implemented in SQLite Infrastructure. WPF Settings loads the current dictionary and setting on navigation, and saves an explicitly chosen party or None. New forms resolve defaults by ID, without name matching or alphabetical fallback; restored drafts and transaction edits preserve their own values. Theme and language remain separate in-memory UI preferences.
+Application exposes `GetTransactionSettings`, `SetDefaultPayer`, `SetDefaultLocation`, `SetTransactionDefaults` (validates both IDs before one atomic repository save), and `GetNewTransactionDefaults`. `ITransactionSettingsRepository` is implemented in SQLite Infrastructure. Both foreign keys are nullable and indexed in the initial migration and model snapshot.
+
+WPF Settings loads both dictionaries and settings on navigation. The selectors share `DefaultReferenceComboBoxStyle`, show only dictionary entries, and expose X between the selected label and dropdown arrow. Selection or clearing saves automatically through `SetTransactionDefaults`; there is no Save button. Saves are serialized, selectors are disabled while a save runs, and a failed save restores the last saved selections and displays a localized error. Loading and changing the UI language do not write settings.
+
+New forms resolve both defaults by ID, without name matching or alphabetical fallback; restored drafts and transaction edits preserve their own values. Theme and language remain separate in-memory UI preferences.
+
+### Session date and Clear
+
+`TransactionListViewModel` initializes its remembered new-transaction date to today and updates it only after a successful add. Subsequent new forms use that date alongside the persisted payer/location defaults. Changing months or navigating between pages does not reset it; a new application session starts from today. Cancelled forms, failed saves, and edits do not update it, while restored drafts retain their own date.
+
+Clear preserves the current new-form date, restores the other original defaults, and establishes a new empty-draft baseline. Closing immediately after clearing therefore retains no draft, and Clear itself does not update the list's remembered date. Clear is unavailable when editing an existing transaction.

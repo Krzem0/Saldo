@@ -5,5 +5,6 @@ namespace Saldo.Application.DTOs;
 public sealed record NewTransactionDefaultsDto(
     DateOnly Date,
     TransactionType Type,
-    int? PayerId
+    int? PayerId,
+    int? LocationId = null
 );

@@ -125,7 +125,8 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0" Margin="0,0,8,0">
                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Date]}" Style="{StaticResource FieldLabelStyle}"/>
-                <DatePicker SelectedDate="{Binding Date}" Margin="0"/>
+                <controls:HyphenDatePicker SelectedDate="{Binding Date}" SelectedDateFormat="Short" Margin="0"
+                                          Style="{StaticResource {x:Type DatePicker}}"/>
             </StackPanel>
             <StackPanel Grid.Column="1" Margin="4,0">
                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Amount]}" Style="{StaticResource FieldLabelStyle}"/>
@@ -174,6 +175,13 @@
         </Grid>
 
         <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Description]}" Style="{StaticResource FieldLabelStyle}"/>
+            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0"/>
+            <TextBlock Text="{Binding DescriptionError}" Style="{StaticResource FieldErrorStyle}"
+                       Visibility="{Binding HasDescriptionError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+        </StackPanel>
+
+        <StackPanel Margin="0,0,0,12">
             <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Category]}" Style="{StaticResource FieldLabelStyle}"/>
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
@@ -193,13 +201,6 @@
             </Grid>
             <TextBlock Text="{Binding CategoryError}" Style="{StaticResource FieldErrorStyle}"
                        Visibility="{Binding HasCategoryError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-        </StackPanel>
-
-        <StackPanel Margin="0,0,0,12">
-            <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Description]}" Style="{StaticResource FieldLabelStyle}"/>
-            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0"/>
-            <TextBlock Text="{Binding DescriptionError}" Style="{StaticResource FieldErrorStyle}"
-                       Visibility="{Binding HasDescriptionError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
 
         <StackPanel Margin="0,0,0,12">

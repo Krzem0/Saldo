@@ -12,5 +12,6 @@ internal sealed class TransactionSettingsConfiguration : IEntityTypeConfiguratio
         e.HasKey(x => x.Id);
         e.Property(x => x.Id).ValueGeneratedNever();
         e.HasOne<Party>().WithMany().HasForeignKey(x => x.DefaultPayerId).OnDelete(DeleteBehavior.SetNull);
+        e.HasOne<Location>().WithMany().HasForeignKey(x => x.DefaultLocationId).OnDelete(DeleteBehavior.SetNull);
     }
 }

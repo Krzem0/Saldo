@@ -24,8 +24,10 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 {
                     b.Property<int>("Id").HasColumnType("INTEGER");
                     b.Property<int?>("DefaultPayerId").HasColumnType("INTEGER");
+                    b.Property<int?>("DefaultLocationId").HasColumnType("INTEGER");
                     b.HasKey("Id");
                     b.HasIndex("DefaultPayerId");
+                    b.HasIndex("DefaultLocationId");
                     b.ToTable("TransactionSettings", t => t.HasCheckConstraint("CK_TransactionSettings_Singleton", "Id = 1"));
                 });
 
@@ -220,6 +222,9 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
 
             modelBuilder.Entity("Saldo.Domain.Entities.TransactionSettings", b =>
                 {
+                    b.HasOne("Saldo.Domain.Entities.Location", null)
+                        .WithMany().HasForeignKey("DefaultLocationId").OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Saldo.Domain.Entities.Party", null)
                         .WithMany().HasForeignKey("DefaultPayerId").OnDelete(DeleteBehavior.SetNull);
                 });

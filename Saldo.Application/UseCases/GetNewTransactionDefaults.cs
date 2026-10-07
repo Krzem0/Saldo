@@ -10,6 +10,6 @@ public sealed class GetNewTransactionDefaults(ITransactionSettingsRepository set
     {
         var current = await settings.GetAsync(ct);
         return new NewTransactionDefaultsDto(
-            DateOnly.FromDateTime(DateTime.Today), TransactionType.Expense, current.DefaultPayerId);
+            DateOnly.FromDateTime(DateTime.Today), TransactionType.Expense, current.DefaultPayerId, current.DefaultLocationId);
     }
 }

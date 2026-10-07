@@ -28,6 +28,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     private TransactionDto? _selectedTransaction;
     private bool _isLoading;
     private TransactionDraft? _newTransactionDraft;
+    private DateOnly _lastNewTransactionDate = DateOnly.FromDateTime(DateTime.Today);
 
     public sealed class MonthItem : ViewModelBase
     {
@@ -63,7 +64,15 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
 
     public int Year  { get => _year;  private set => SetField(ref _year,  value); }
     public int Month { get => _month; private set => SetField(ref _month, value); }
-    public string MonthLabel => new DateOnly(Year, Month, 1).ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+    public string MonthLabel
+    {
+        get
+        {
+            var culture = CultureInfo.CurrentCulture;
+            var label = new DateOnly(Year, Month, 1).ToString("MMMM yyyy", culture).ToLower(culture);
+            return char.ToUpper(label[0], culture) + label[1..];
+        }
+    }
     public bool IsCurrentMonth => Year == DateTime.Today.Year && Month == DateTime.Today.Month;
 
     public bool IsMonthPickerOpen
@@ -245,12 +254,14 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     private async Task AddAsync()
     {
         var (categories, parties, locations, tags, defaults) = await LoadNewTransactionDataAsync();
+        defaults = defaults with { Date = _lastNewTransactionDate };
         var dialogVm = new AddEditTransactionViewModel(
             _scopeFactory, _dialogService, Localization, categories, parties, locations, tags, defaults,
             draft: _newTransactionDraft);
 
         if (_dialogService.ShowAddEditTransaction(dialogVm) == true)
         {
+            _lastNewTransactionDate = DateOnly.FromDateTime(dialogVm.Date);
             _newTransactionDraft = null;
             await LoadAsync();
         }
