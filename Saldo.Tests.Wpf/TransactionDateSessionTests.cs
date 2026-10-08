@@ -17,17 +17,7 @@ public sealed class TransactionDateSessionTests
         var transactions = new FakeTransactionRepository();
         var parties = new FakePartyRepository();
         var locations = new FakeLocationRepository();
-        using var provider = new ServiceCollection()
-            .AddSingleton<ITransactionRepository>(transactions)
-            .AddSingleton<IPartyRepository>(parties)
-            .AddSingleton<ILocationRepository>(locations)
-            .AddSingleton<ICategoryRepository>(new Categories())
-            .AddSingleton<ITagRepository>(new Tags())
-            .AddSingleton<ITransactionSettingsRepository>(new Settings())
-            .AddSingleton(new AddTransaction(transactions, parties, locations))
-            .AddSingleton(new EditTransaction(transactions, parties, locations))
-            .AddScoped<GetNewTransactionDefaults>().AddScoped<ListTransactions>().AddScoped<GetSummary>()
-            .BuildServiceProvider();
+        using var provider = CreateProvider(transactions, parties, locations);
         var dialogs = new Dialogs();
         var scopeFactory = provider.GetRequiredService<IServiceScopeFactory>();
         var vm = new TransactionListViewModel(scopeFactory, dialogs, new LocalizationService());
@@ -91,6 +81,108 @@ public sealed class TransactionDateSessionTests
         var restarted = new TransactionListViewModel(scopeFactory, dialogs, new LocalizationService());
         dialogs.Show = form => { Assert.Equal(DateTime.Today, form.Date); return false; };
         restarted.AddCommand.Execute(null);
+    }
+
+    [Fact]
+    public void ChangingPeriod_UpdatesNewFormDateThroughPickerArrowsAndCurrentMonth()
+    {
+        using var provider = CreateProvider();
+        var dialogs = new Dialogs();
+        var vm = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), dialogs, new LocalizationService());
+
+        void AssertDate(DateTime expected)
+        {
+            var shown = false;
+            dialogs.Show = form => { shown = true; Assert.Equal(expected, form.Date); return false; };
+            vm.AddCommand.Execute(null);
+            Assert.True(shown);
+        }
+
+        AssertDate(DateTime.Today);
+        vm.OpenMonthPickerCommand.Execute(null);
+        vm.PickerYearText = "2019";
+        vm.SelectMonthCommand.Execute(12);
+        AssertDate(new DateTime(2019, 12, 1));
+        vm.NextMonthCommand.Execute(null);
+        AssertDate(new DateTime(2020, 1, 1));
+        vm.PreviousMonthCommand.Execute(null);
+        AssertDate(new DateTime(2019, 12, 1));
+        vm.OpenMonthPickerCommand.Execute(null);
+        vm.PickerYearText = "2018";
+        vm.SelectMonthCommand.Execute(12);
+        AssertDate(new DateTime(2018, 12, 1));
+        vm.CurrentMonthCommand.Execute(null);
+        AssertDate(DateTime.Today);
+    }
+
+    [Fact]
+    public async Task ChangingPeriod_UpdatesDraftDateAndKeepsSavedDateUntilPeriodChanges()
+    {
+        var transactions = new FakeTransactionRepository();
+        using var provider = CreateProvider(transactions);
+        var dialogs = new Dialogs();
+        var vm = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), dialogs, new LocalizationService());
+        dialogs.Show = form =>
+        {
+            form.Date = new DateTime(2019, 5, 20);
+            form.AmountText = "10";
+            form.SelectedCategory = form.Categories[0];
+            form.Description = "Unfinished transaction";
+            return false;
+        };
+        vm.AddCommand.Execute(null);
+        vm.OpenMonthPickerCommand.Execute(null);
+        vm.PickerYearText = "2019";
+        vm.SelectMonthCommand.Execute(9);
+
+        dialogs.Show = form =>
+        {
+            Assert.Equal(new DateTime(2019, 9, 1), form.Date);
+            Assert.Equal("10", form.AmountText);
+            Assert.Equal(1, form.SelectedCategory!.Id);
+            Assert.Equal("Unfinished transaction", form.Description);
+            form.Date = new DateTime(2019, 9, 12);
+            bool? result = null;
+            form.RequestClose += closed => result = closed;
+            form.SaveCommand.Execute(null);
+            Assert.True(result);
+            return result;
+        };
+        vm.AddCommand.Execute(null);
+        Assert.Equal(new DateOnly(2019, 9, 12), (await transactions.GetByIdAsync(1))!.Date);
+
+        var shown = 0;
+        dialogs.Show = form => { shown++; Assert.Equal(new DateTime(2019, 9, 12), form.Date); return false; };
+        vm.AddCommand.Execute(null);
+        vm.LoadCommand.Execute(null);
+        vm.OpenMonthPickerCommand.Execute(null);
+        vm.SelectMonthCommand.Execute(9);
+        vm.AddCommand.Execute(null);
+        Assert.Equal(2, shown);
+
+        vm.NextMonthCommand.Execute(null);
+        dialogs.Show = form => { shown++; Assert.Equal(new DateTime(2019, 10, 1), form.Date); return false; };
+        vm.AddCommand.Execute(null);
+        Assert.Equal(3, shown);
+    }
+
+    private static ServiceProvider CreateProvider(FakeTransactionRepository? transactions = null,
+        FakePartyRepository? parties = null, FakeLocationRepository? locations = null)
+    {
+        transactions ??= new FakeTransactionRepository();
+        parties ??= new FakePartyRepository();
+        locations ??= new FakeLocationRepository();
+        return new ServiceCollection()
+            .AddSingleton<ITransactionRepository>(transactions)
+            .AddSingleton<IPartyRepository>(parties)
+            .AddSingleton<ILocationRepository>(locations)
+            .AddSingleton<ICategoryRepository>(new Categories())
+            .AddSingleton<ITagRepository>(new Tags())
+            .AddSingleton<ITransactionSettingsRepository>(new Settings())
+            .AddSingleton(new AddTransaction(transactions, parties, locations))
+            .AddSingleton(new EditTransaction(transactions, parties, locations))
+            .AddScoped<GetNewTransactionDefaults>().AddScoped<ListTransactions>().AddScoped<GetSummary>()
+            .BuildServiceProvider();
     }
 
     private sealed class Settings : ITransactionSettingsRepository

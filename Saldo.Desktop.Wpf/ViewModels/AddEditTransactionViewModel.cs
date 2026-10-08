@@ -97,7 +97,32 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     public TypeItem SelectedType
     {
         get => _selectedType;
-        set => SetField(ref _selectedType, value);
+        set
+        {
+            if (SetField(ref _selectedType, value))
+            {
+                OnPropertyChanged(nameof(IsExpense));
+                OnPropertyChanged(nameof(IsIncome));
+            }
+        }
+    }
+
+    public bool IsExpense
+    {
+        get => SelectedType.Value == TransactionType.Expense;
+        set
+        {
+            if (value) SelectedType = Types.First(type => type.Value == TransactionType.Expense);
+        }
+    }
+
+    public bool IsIncome
+    {
+        get => SelectedType.Value == TransactionType.Income;
+        set
+        {
+            if (value) SelectedType = Types.First(type => type.Value == TransactionType.Income);
+        }
     }
 
     public string AmountText

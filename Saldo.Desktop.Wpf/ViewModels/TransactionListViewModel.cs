@@ -190,10 +190,8 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
             PickerYear = year;
         }
 
-        Month = month;
-        Year  = PickerYear;
         IsMonthPickerOpen = false;
-        RefreshSelectedMonth();
+        SetSelectedMonth(PickerYear, month);
     }
 
     private async Task LoadAsync()
@@ -223,23 +221,36 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     private void PreviousMonth()
     {
         var d = new DateOnly(Year, Month, 1).AddMonths(-1);
-        Year = d.Year;
-        Month = d.Month;
-        RefreshSelectedMonth();
+        SetSelectedMonth(d.Year, d.Month);
     }
 
     private void NextMonth()
     {
         var d = new DateOnly(Year, Month, 1).AddMonths(1);
-        Year = d.Year;
-        Month = d.Month;
-        RefreshSelectedMonth();
+        SetSelectedMonth(d.Year, d.Month);
     }
 
     private void GoToCurrentMonth()
     {
-        Year = DateTime.Today.Year;
-        Month = DateTime.Today.Month;
+        var today = DateTime.Today;
+        SetSelectedMonth(today.Year, today.Month);
+    }
+
+    private void SetSelectedMonth(int year, int month)
+    {
+        if (Year == year && Month == month) return;
+
+        Year = year;
+        Month = month;
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        _lastNewTransactionDate = year == today.Year && month == today.Month
+            ? today
+            : new DateOnly(year, month, 1);
+        if (_newTransactionDraft is not null)
+        {
+            _newTransactionDraft.Date = _lastNewTransactionDate.ToDateTime(TimeOnly.MinValue);
+        }
+
         RefreshSelectedMonth();
     }
 

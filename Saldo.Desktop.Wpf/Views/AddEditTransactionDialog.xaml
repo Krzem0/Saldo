@@ -114,6 +114,62 @@
                     <Setter Property="Padding" Value="0"/>
                     <Setter Property="FontWeight" Value="SemiBold"/>
                 </Style>
+                <Style x:Key="TransactionTypeButtonStyle" TargetType="RadioButton">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+                    <Setter Property="BorderBrush" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Margin" Value="1"/>
+                    <Setter Property="Padding" Value="2,0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    <Setter Property="Cursor" Value="Hand"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="RadioButton">
+                                <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                      RecognizesAccessKey="True"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="True"/>
+                                <Condition Property="Tag" Value="{x:Static domainEnums:TransactionType.Expense}"/>
+                            </MultiTrigger.Conditions>
+                            <Setter Property="Background" Value="{DynamicResource ExpenseBackgroundBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource ExpenseTextBrush}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource ExpenseTextBrush}"/>
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="True"/>
+                                <Condition Property="Tag" Value="{x:Static domainEnums:TransactionType.Income}"/>
+                            </MultiTrigger.Conditions>
+                            <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                            <Setter Property="BorderBrush" Value="{DynamicResource SuccessTextBrush}"/>
+                        </MultiTrigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
             </ResourceDictionary>
         </StackPanel.Resources>
 
@@ -126,6 +182,7 @@
             <StackPanel Grid.Column="0" Margin="0,0,8,0">
                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Date]}" Style="{StaticResource FieldLabelStyle}"/>
                 <controls:HyphenDatePicker SelectedDate="{Binding Date}" SelectedDateFormat="Short" Margin="0"
+                                          Language="{Binding Source={StaticResource Localization}, Path=CurrentCulture.Name, ConverterCulture=en-US}"
                                           Style="{StaticResource {x:Type DatePicker}}"/>
             </StackPanel>
             <StackPanel Grid.Column="1" Margin="4,0">
@@ -140,37 +197,17 @@
             </StackPanel>
             <StackPanel Grid.Column="2" Margin="8,0,0,0">
                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Type]}" Style="{StaticResource FieldLabelStyle}"/>
-                <ComboBox ItemsSource="{Binding Types}" SelectedItem="{Binding SelectedType}" Margin="0" MinHeight="30" HorizontalContentAlignment="Center">
-                    <ComboBox.Style>
-                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedType.Value}" Value="{x:Static domainEnums:TransactionType.Expense}">
-                                    <Setter Property="Background" Value="{DynamicResource ExpenseBackgroundBrush}"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding SelectedType.Value}" Value="{x:Static domainEnums:TransactionType.Income}">
-                                    <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ComboBox.Style>
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border x:Name="TypeBackground" CornerRadius="3" Padding="6,2">
-                                <TextBlock x:Name="TypeLabel" Text="{Binding Label}" Margin="0"/>
-                            </Border>
-                            <DataTemplate.Triggers>
-                                <DataTrigger Binding="{Binding Value}" Value="{x:Static domainEnums:TransactionType.Expense}">
-                                    <Setter TargetName="TypeBackground" Property="Background" Value="{DynamicResource ExpenseBackgroundBrush}"/>
-                                    <Setter TargetName="TypeLabel" Property="Foreground" Value="{DynamicResource ExpenseTextBrush}"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Value}" Value="{x:Static domainEnums:TransactionType.Income}">
-                                    <Setter TargetName="TypeBackground" Property="Background" Value="{DynamicResource SuccessBackgroundBrush}"/>
-                                    <Setter TargetName="TypeLabel" Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
-                                </DataTrigger>
-                            </DataTemplate.Triggers>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                <Border Height="30" CornerRadius="4" Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
+                    <UniformGrid Rows="1" Columns="2">
+                        <RadioButton Content="{Binding Types[0].Label}" IsChecked="{Binding IsExpense, Mode=TwoWay}"
+                                     Tag="{x:Static domainEnums:TransactionType.Expense}" GroupName="TransactionType"
+                                     Style="{StaticResource TransactionTypeButtonStyle}"/>
+                        <RadioButton Content="{Binding Types[1].Label}" IsChecked="{Binding IsIncome, Mode=TwoWay}"
+                                     Tag="{x:Static domainEnums:TransactionType.Income}" GroupName="TransactionType"
+                                     Style="{StaticResource TransactionTypeButtonStyle}"/>
+                    </UniformGrid>
+                </Border>
             </StackPanel>
         </Grid>
 

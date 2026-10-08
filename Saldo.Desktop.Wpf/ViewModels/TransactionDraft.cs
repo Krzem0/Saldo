@@ -9,7 +9,7 @@ namespace Saldo.Desktop.Wpf.ViewModels;
 public sealed class TransactionDraft
 {
     public int? TransactionId { get; init; }
-    public DateTime Date { get; init; }
+    public DateTime Date { get; set; }
     public TransactionType Type { get; init; }
     public string AmountText { get; init; } = string.Empty;
     public int? CategoryId { get; init; }
