@@ -22,6 +22,7 @@ public sealed class HyphenDatePicker : DatePicker
         {
             _textBox.TextChanged -= OnTextChanged;
             _textBox.PreviewKeyDown -= OnTextBoxPreviewKeyDown;
+            _textBox.LostFocus -= OnTextBoxLostFocus;
         }
         base.OnApplyTemplate();
         // DatePicker writes directly to the template text box during initialization.
@@ -30,15 +31,18 @@ public sealed class HyphenDatePicker : DatePicker
         {
             _textBox.TextChanged += OnTextChanged;
             _textBox.PreviewKeyDown += OnTextBoxPreviewKeyDown;
-            NormalizeTextBox();
+            _textBox.LostFocus += OnTextBoxLostFocus;
+            NormalizeTextBox(padSegments: true);
         }
     }
 
     private void OnTextChanged(object sender, TextChangedEventArgs e) => NormalizeTextBox();
+    private void OnTextBoxLostFocus(object sender, RoutedEventArgs e) => NormalizeTextBox(padSegments: true);
 
     protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
+        if (e.Property == SelectedDateProperty) NormalizeTextBox(padSegments: true);
         if (e.Property == LanguageProperty && SelectedDate is { } date)
         {
             // DatePicker does not refresh the existing text when Language changes.
@@ -84,10 +88,12 @@ public sealed class HyphenDatePicker : DatePicker
         _textBox.Select(start, Math.Min(length, _textBox.Text.Length - start));
     }
 
-    private void NormalizeTextBox()
+    private void NormalizeTextBox(bool padSegments = false)
     {
         if (_textBox is null) return;
-        var text = Normalize(_textBox.Text);
+        // Do not pad date segments while the user deletes or types digits.
+        // Padding here reinserted deleted zeroes and displaced the caret.
+        var text = padSegments ? Normalize(_textBox.Text) : _textBox.Text.Replace('.', '-').Replace('/', '-');
         if (text == _textBox.Text) return;
         var start = _textBox.SelectionStart;
         var length = _textBox.SelectionLength;

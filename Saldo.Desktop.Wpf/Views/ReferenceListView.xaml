@@ -13,11 +13,33 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <TextBlock
                    Text="{Binding Title}"
                    Foreground="{DynamicResource PrimaryTextBrush}"
                    FontSize="24"
-                   FontWeight="SemiBold"/>
+                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <Border Grid.Column="1" Width="260" Margin="16,0,0,0" Padding="9,5" CornerRadius="4"
+                    Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Grid Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                        <Ellipse Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                 Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1.5"/>
+                        <Line X1="9" Y1="9" X2="15" Y2="15" Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1.5"/>
+                    </Grid>
+                    <TextBox x:Name="ReferenceSearchBox" Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             BorderThickness="0" Background="Transparent" Padding="0,2,30,2"
+                             ToolTip="{Binding Source={StaticResource Localization}, Path=[ReferenceList_Search]}"
+                             AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[ReferenceList_Search]}"/>
+                    <Button Grid.Column="1" Command="{Binding ClearSearchCommand}" Click="ClearSearch_Click"
+                            ToolTip="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                            AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                            Style="{StaticResource ClearTextButtonStyle}"/>
+                </Grid>
+            </Border>
+        </Grid>
 
         <Border Grid.Row="2"
                 Background="{DynamicResource SurfaceBrush}"
@@ -97,7 +119,7 @@
                         </ListBox.ItemContainerStyle>
                     </ListBox>
 
-                    <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[ReferenceList_Empty]}"
+                    <TextBlock Text="{Binding EmptyMessage}"
                                Foreground="{DynamicResource MutedTextBrush}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"

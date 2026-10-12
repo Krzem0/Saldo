@@ -17,4 +17,5 @@ public interface IDialogService
     UnsavedChangesChoice ConfirmUnsavedChanges(string title, string message);
 
     string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter);
+    void ShowMessage(string title, string message) => throw new NotSupportedException();
 }

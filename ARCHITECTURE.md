@@ -261,11 +261,19 @@ Rules:
 
 ## Future Extensions
 
+Dictionary pages share `ReferenceListView` and `ReferenceListViewModel<T>`. The view exposes a search field beside the title, and the view model retains all loaded rows while publishing a filtered `Items` collection. Search matches name substrings without case and trims query edges. Filtering and reloads restore selection by ID among visible rows, fall back to the first visible row, and clear selection when no rows match. Search state persists across CRUD reloads; empty dictionaries and empty search results have separate localized messages.
+
+`ClearButtonStyles.xaml` extracts the existing Settings clear-button presentation into `InlineClearButtonStyle`, shared by Settings selectors, autocomplete fields, and the `ClearTextButtonStyle` used for dictionary/template search and transaction amount/description fields. Hover uses the theme's `ControlHoverBrush` rather than the Windows button chrome. Clear commands preserve bindings and use the view-model property setters, including the amount behavior's raw text binding. Buttons collapse when their clear command cannot execute; view click handlers return focus to the corresponding input. Clearing a search reapplies its filter immediately.
+
 ### Transaction templates
 
 `AddTransactionButton` exposes the normal add command and a separate template picker. `TransactionListViewModel` reloads templates on opening, filters names locally, and fetches the chosen template again before opening the form. `AddEditTransactionViewModel` applies template IDs against current dictionaries without changing the date or setting the restored-draft state. Template forms do not overwrite an existing transaction draft; cancellation creates a draft only when no previous draft exists.
 
+`TransactionTemplatePickerViewModel` shares template loading, name search, keyboard selection commands, and status/error state between the header and the new-transaction form. `AddTransactionButton.IsTemplateOnly` shows just the arrow beside Description in the form. Selecting a template there reloads its current references and updates the existing form through property setters, preserving the date and existing values for fields absent from the template, including typed reference text and selected tags. Nonempty template tag sets replace the current selection. It clears validation errors and the restored-draft notice without saving or closing the transaction form. Failed reads leave the form's contents unchanged. Existing-transaction editing does not expose this picker.
+
 The new-transaction form's `SaveAsTemplateCommand` uses the existing name dialog and `AddTransactionTemplate` use case. It copies the current type, description, dictionary references, optional amount, and selected tag IDs without the date. Validation errors appear on the transaction form; success shows an inline confirmation without saving a transaction or closing the form.
+
+The form tracks the loaded template name in presentation state. Its localized title appends that name to the add/draft title, and the name dialog starts with the loaded template's name. `TransactionDraft.SourceTemplateName` preserves it when reopening an unfinished form. Ordinary edits retain it; loading another template replaces it, and Clear removes it. No schema or Application transaction changes are involved.
 
 `TransactionTemplate` and `TransactionTemplateTag` are Domain entities independent of WPF drafts. Templates have no date or recurrence fields. `SaveTransactionTemplateCommand`, `TransactionTemplateDto`, and the add/edit/get/list/delete use cases expose core CRUD. `TransactionTemplateInput` shares validation and dictionary-reference checks between add/edit; expected failures use `Result` with stable codes and property metadata. Optional amounts must be positive; duplicate tag IDs are normalized to one link.
 

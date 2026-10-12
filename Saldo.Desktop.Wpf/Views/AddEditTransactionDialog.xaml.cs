@@ -8,6 +8,8 @@ namespace Saldo.Desktop.Wpf.Views;
 public partial class AddEditTransactionDialog : Window
 {
     private bool _allowClose;
+    private void ClearAmount_Click(object sender, RoutedEventArgs e) => AmountBox.Focus();
+    private void ClearDescription_Click(object sender, RoutedEventArgs e) => DescriptionBox.Focus();
 
     public AddEditTransactionDialog()
     {

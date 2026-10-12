@@ -68,6 +68,13 @@ public sealed class WpfDialogService : IDialogService
         return accepted == true ? dialog.FileName : null;
     }
 
+    public void ShowMessage(string title, string message)
+    {
+        var dialog = new MessageDialog(title, message);
+        SetOwner(dialog);
+        dialog.ShowDialog();
+    }
+
     private static Window? GetActiveOwner()
         => System.Windows.Application.Current?.Windows
             .OfType<Window>()

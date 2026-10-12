@@ -7,9 +7,14 @@ namespace Saldo.Desktop.Wpf.Views;
 
 public partial class AddTransactionButton : UserControl
 {
+    public static readonly DependencyProperty IsTemplateOnlyProperty = DependencyProperty.Register(
+        nameof(IsTemplateOnly), typeof(bool), typeof(AddTransactionButton), new PropertyMetadata(false));
+    public bool IsTemplateOnly { get => (bool)GetValue(IsTemplateOnlyProperty); set => SetValue(IsTemplateOnlyProperty, value); }
+    private TransactionTemplatePickerViewModel? Picker => (DataContext as ITransactionTemplatePickerHost)?.TemplatePicker;
     public AddTransactionButton() => InitializeComponent();
 
     private void OnPopupOpened(object? sender, EventArgs e) => SearchBox.Focus();
+    private void ClearSearch_Click(object sender, RoutedEventArgs e) => SearchBox.Focus();
 
     private void OnTemplateClicked(object sender, MouseButtonEventArgs e)
     {
@@ -22,7 +27,7 @@ public partial class AddTransactionButton : UserControl
 
     private void OnPickerKeyDown(object sender, KeyEventArgs e)
     {
-        if (DataContext is not TransactionListViewModel vm) return;
+        if (Picker is not { } vm) return;
         if (e.Key == Key.Escape)
         {
             vm.IsTemplatePickerOpen = false;
@@ -44,7 +49,7 @@ public partial class AddTransactionButton : UserControl
 
     private void UseSelectedTemplate()
     {
-        if (DataContext is TransactionListViewModel vm && vm.UseTemplateCommand.CanExecute(null))
+        if (Picker is { } vm && vm.UseTemplateCommand.CanExecute(null))
             vm.UseTemplateCommand.Execute(null);
     }
 }

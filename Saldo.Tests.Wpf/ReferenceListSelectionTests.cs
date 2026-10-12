@@ -13,6 +13,35 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class ReferenceListSelectionTests
 {
+    [Fact]
+    public void Search_FiltersByNamePreservesVisibleSelectionAndRemainsActiveAfterReload() => OnSta(() =>
+    {
+        using var provider = new ServiceCollection().BuildServiceProvider();
+        var vm = new TestReferenceList(provider.GetRequiredService<IServiceScopeFactory>());
+        vm.Rows = [new Tag { Id = 1, Name = "Zakupy do pracy" }, new Tag { Id = 2, Name = "Zakupy domowe" }, new Tag { Id = 3, Name = "Transport" }];
+        vm.LoadCommand.Execute(null);
+        vm.SelectedItem = vm.Items[1];
+        vm.SearchText = "  ZAKUPY  ";
+        Assert.Equal(2, vm.Items.Count);
+        Assert.Equal(2, vm.SelectedItem!.Id);
+        vm.SearchText = "pracy";
+        Assert.Equal(1, Assert.Single(vm.Items).Id);
+        Assert.Equal(1, vm.SelectedItem!.Id);
+        vm.SearchText = "nie istnieje";
+        Assert.Empty(vm.Items);
+        Assert.Null(vm.SelectedItem);
+        Assert.False(vm.EditCommand.CanExecute(null));
+        Assert.False(vm.DeleteCommand.CanExecute(null));
+        Assert.Equal(new LocalizationService()["ReferenceList_NoMatches"], vm.EmptyMessage);
+        vm.SearchText = "Zakupy";
+        vm.Rows = [new Tag { Id = 1, Name = "Transport" }, new Tag { Id = 4, Name = "Zakupy nowe" }];
+        vm.LoadCommand.Execute(null);
+        Assert.Equal("Zakupy", vm.SearchText);
+        Assert.Equal(4, Assert.Single(vm.Items).Id);
+        vm.SearchText = "";
+        Assert.Equal(2, vm.Items.Count);
+    });
+
     [Theory]
     [InlineData(false, false)]
     [InlineData(true, false)]

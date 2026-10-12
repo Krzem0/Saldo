@@ -2,6 +2,7 @@ using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -111,7 +112,7 @@ public sealed class TransactionTemplatesViewTests
         var surface = (FrameworkElement)popup.Child;
         surface.Resources = control.Resources;
         Layout(surface, 320, 180);
-        Assert.Same(vm, surface.DataContext);
+        Assert.Same(vm.TemplatePicker, surface.DataContext);
         var list = Descendants(surface).OfType<ListBox>().Single();
         Assert.Equal(280, list.MaxHeight);
         Assert.Equal("Zakupy — Społem", Assert.Single(list.Items.Cast<Saldo.Application.DTOs.TransactionTemplateDto>()).Name);
@@ -121,6 +122,14 @@ public sealed class TransactionTemplatesViewTests
         Layout(surface, 320, 180);
         Assert.Empty(list.Items);
         Assert.Contains(Descendants(surface).OfType<TextBlock>(), block => block.Text == "Brak pasujących szablonów.");
+        var clearSearch = Descendants(surface).OfType<Button>().Single();
+        Assert.Same(vm.TemplatePicker.ClearSearchCommand, clearSearch.Command);
+        Assert.True(clearSearch.IsEnabled);
+        clearSearch.Command.Execute(null);
+        Layout(surface, 320, 180);
+        Assert.Empty(search.Text);
+        Assert.Single(list.Items);
+        Assert.False(clearSearch.Command.CanExecute(null));
     });
 
     [Theory]
@@ -138,6 +147,8 @@ public sealed class TransactionTemplatesViewTests
             Background = (Brush)window.Resources["SurfaceBrush"], DataContext = vm };
         Layout(surface, 520, 900);
         var buttons = Descendants(surface).OfType<Button>().ToArray();
+        var picker = Descendants(surface).OfType<UserControl>().Single();
+        Assert.Single(Descendants(picker).OfType<Button>(), b => b.Visibility == Visibility.Visible);
         var template = buttons.Single(b => ReferenceEquals(b.Command, vm.SaveAsTemplateCommand));
         var clear = buttons.Single(b => ReferenceEquals(b.Command, vm.ClearCommand));
         var save = buttons.Single(b => ReferenceEquals(b.Command, vm.SaveCommand));
@@ -145,7 +156,98 @@ public sealed class TransactionTemplatesViewTests
         Assert.Equal(Visibility.Visible, template.Visibility);
         Assert.True(clear.TranslatePoint(new Point(), surface).X + clear.ActualWidth <= template.TranslatePoint(new Point(), surface).X);
         Assert.True(template.TranslatePoint(new Point(), surface).X + template.ActualWidth <= save.TranslatePoint(new Point(), surface).X);
+        vm.AmountText = "12,5";
+        vm.Description = "Zakupy";
+        Layout(surface, 520, 900);
+        var clearAmount = buttons.Single(b => ReferenceEquals(b.Command, vm.ClearAmountCommand));
+        var clearDescription = buttons.Single(b => ReferenceEquals(b.Command, vm.ClearDescriptionCommand));
+        Assert.True(clearAmount.Command.CanExecute(null));
+        Assert.True(clearDescription.Command.CanExecute(null));
+        Assert.Equal(Visibility.Visible, clearAmount.Visibility);
+        Assert.Equal(Visibility.Visible, clearDescription.Visibility);
+        Assert.Equal("✕", clearAmount.Content);
+        Assert.Equal(new Thickness(0), clearAmount.BorderThickness);
+        Assert.Equal(14, clearAmount.FontSize);
+        Assert.Equal(28, clearAmount.Width);
+        var clearSurface = Assert.IsType<Border>(clearAmount.Template.FindName("ClearBorder", clearAmount));
+        Assert.Equal(Colors.Transparent, Assert.IsType<SolidColorBrush>(clearSurface.Background).Color);
+        foreach (var trigger in clearAmount.Template.Triggers.OfType<Trigger>())
+            Assert.All(trigger.Setters.OfType<Setter>(), setter => Assert.Equal(Border.BackgroundProperty, setter.Property));
+        var amountBox = Descendants(surface).OfType<TextBox>().Single(b => AmountInputBehavior.GetIsEnabled(b));
+        Assert.Equal(VerticalAlignment.Center, amountBox.VerticalContentAlignment);
+        Assert.Equal(HorizontalAlignment.Left, clearAmount.HorizontalAlignment);
+        Assert.Equal(new Thickness(32, 0, 4, 0), amountBox.Padding);
+        var descriptionBox = Descendants(surface).OfType<TextBox>().Single(b => b.Text == "Zakupy");
+        Assert.Equal(VerticalAlignment.Center, descriptionBox.VerticalContentAlignment);
+        SavePreview(surface, theme + "-transaction-clear-fields", 520, 900);
+        clearAmount.Command.Execute(null);
+        clearDescription.Command.Execute(null);
+        Layout(surface, 520, 900);
+        Assert.Empty(vm.AmountText);
+        Assert.Empty(vm.Description!);
+        Assert.Empty(AmountInputBehavior.GetRawText(Descendants(surface).OfType<TextBox>().Single(b => AmountInputBehavior.GetIsEnabled(b))));
+        Assert.False(clearAmount.Command.CanExecute(null));
+        Assert.False(clearDescription.Command.CanExecute(null));
+        CommandManager.InvalidateRequerySuggested();
+        Layout(surface, 520, 900);
+        Assert.Equal(Visibility.Collapsed, clearAmount.Visibility);
+        Assert.Equal(Visibility.Collapsed, clearDescription.Visibility);
         SavePreview(surface, theme + "-transaction-template-button", 520, 900);
+        window.Close();
+    });
+
+    [Theory]
+    [InlineData("LightTheme")]
+    [InlineData("DarkTheme")]
+    public void DictionarySearch_RendersAndFiltersVisibleRows(string theme) => OnSta(() =>
+    {
+        using var h = new TransactionTemplatesTests.Harness("pl-PL");
+        var vm = new CategoriesViewModel(h.Scopes, h.Dialogs, h.Localization);
+        vm.LoadCommand.Execute(null);
+        while (vm.IsLoading) Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+        var view = (UserControl)Load("ReferenceListView.xaml", theme);
+        view.DataContext = vm;
+        Layout(view, 900, 560);
+        var search = Descendants(view).OfType<TextBox>().Single();
+        var list = Descendants(view).OfType<ListBox>().Single();
+        Assert.Single(list.Items);
+        search.Text = "PRACY";
+        Layout(view, 900, 560);
+        Assert.Single(list.Items);
+        Assert.Same(vm.SelectedItem, list.SelectedItem);
+        SavePreview(view, theme + "-dictionary-search", 900, 560);
+        search.Text = "brak";
+        Layout(view, 900, 560);
+        Assert.Empty(list.Items);
+        Assert.Null(list.SelectedItem);
+        Assert.Contains(Descendants(view).OfType<TextBlock>(), text => text.Text == "Brak pasujących pozycji." && text.Visibility == Visibility.Visible);
+        var clearSearch = Descendants(view).OfType<Button>().Single(b => ReferenceEquals(b.Command, vm.ClearSearchCommand));
+        Assert.True(clearSearch.Command.CanExecute(null));
+        clearSearch.Command.Execute(null);
+        Layout(view, 900, 560);
+        Assert.Empty(search.Text);
+        Assert.False(clearSearch.Command.CanExecute(null));
+        Assert.Single(list.Items);
+    });
+
+    [Theory]
+    [InlineData("LightTheme")]
+    [InlineData("DarkTheme")]
+    public void BackupMessageDialog_UsesThemeAndExistingCloseButton(string theme) => OnSta(() =>
+    {
+        var window = (Window)Load("MessageDialog.xaml", theme);
+        var content = (FrameworkElement)window.Content;
+        window.Content = null;
+        var message = "Kopia zapasowa została utworzona.\nC:\\backups\\saldo.db";
+        var surface = new Border { Child = content, Resources = window.Resources,
+            Background = (Brush)window.Resources["SurfaceBrush"], DataContext = new { Message = message } };
+        Layout(surface, 480, 200);
+        Assert.Contains(Descendants(surface).OfType<TextBlock>(), text => text.Text == message && text.TextWrapping == TextWrapping.Wrap);
+        var close = Assert.Single(Descendants(surface).OfType<Button>());
+        Assert.Equal("Zamknij", close.Content);
+        Assert.True(close.IsDefault);
+        Assert.True(close.IsCancel);
+        SavePreview(surface, theme + "-backup-message", 480, 200);
         window.Close();
     });
 
@@ -156,6 +258,19 @@ public sealed class TransactionTemplatesViewTests
         XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
         var source = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Views", file));
         var root = source.Root!;
+        // Inline the reusable control for loose-XAML tests; the compiled control normally resolves app-level resources.
+        foreach (var picker in root.Descendants().Where(e => e.Name.LocalName == "AddTransactionButton").ToArray())
+        {
+            var definition = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Views", "AddTransactionButton.xaml")).Root!;
+            var inline = new XElement(p + "UserControl", definition.Elements().Select(e => new XElement(e)));
+            foreach (var attribute in picker.Attributes().Where(a => a.Name.LocalName != "IsTemplateOnly"))
+                inline.SetAttributeValue(attribute.Name, attribute.Value);
+            inline.AddFirst(new XElement(p + "UserControl.Tag",
+                new XElement(XName.Get("Boolean", "clr-namespace:System;assembly=mscorlib"), "True")));
+            foreach (var attribute in inline.Descendants().Attributes().Where(a => a.Value.Contains("{Binding IsTemplateOnly,")))
+                attribute.Value = attribute.Value.Replace("{Binding IsTemplateOnly,", "{Binding Tag,");
+            picker.ReplaceWith(inline);
+        }
         root.Attribute(x + "Class")!.Remove();
         foreach (var attribute in root.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName is "Closing" or "PreviewKeyDown" or "Click" or "Opened" or "PreviewMouseLeftButtonUp").ToArray()) attribute.Remove();
         var controls = "clr-namespace:Saldo.Desktop.Wpf.Controls";
@@ -167,6 +282,10 @@ public sealed class TransactionTemplatesViewTests
             attribute.Remove();
         }
         root.SetAttributeValue(XNamespace.Xmlns + "controls", controls + ";assembly=Saldo.Desktop.Wpf");
+        var views = "clr-namespace:Saldo.Desktop.Wpf.Views";
+        foreach (var element in root.Descendants().Where(e => e.Name.NamespaceName == views).ToArray())
+            element.Name = XName.Get(element.Name.LocalName, views + ";assembly=Saldo.Desktop.Wpf");
+        root.SetAttributeValue(XNamespace.Xmlns + "views", views + ";assembly=Saldo.Desktop.Wpf");
         var localization = "clr-namespace:Saldo.Desktop.Wpf.Localization;assembly=Saldo.Desktop.Wpf";
         root.SetAttributeValue(XNamespace.Xmlns + "localization", localization);
         var resourceProperty = root.Element(p + (root.Name.LocalName + ".Resources"));
@@ -182,8 +301,7 @@ public sealed class TransactionTemplatesViewTests
         var application = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Views", "App.xaml"));
         var merged = dictionary.Element(p + "ResourceDictionary.MergedDictionaries");
         if (merged is null) { merged = new XElement(p + "ResourceDictionary.MergedDictionaries"); dictionary.AddFirst(merged); }
-        merged.AddFirst(new XElement(p + "ResourceDictionary",
-            application.Root!.Element(p + "Application.Resources")!.Elements().Select(element => new XElement(element))));
+        merged.AddFirst(new XElement(application.Root!.Element(p + "Application.Resources")!.Element(p + "ResourceDictionary")!));
         merged.AddAfterSelf(new XElement(XName.Get("LocalizationService", localization), new XAttribute(x + "Key", "Localization")));
         var parsed = XamlReader.Parse(source.ToString(SaveOptions.DisableFormatting), new ParserContext
         {

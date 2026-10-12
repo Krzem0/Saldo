@@ -15,6 +15,40 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class HyphenDatePickerTests
 {
+    [Theory]
+    [InlineData("pl-PL", 0, "7-10-2026", "15-10-2026", 2026, 10, 15)]
+    [InlineData("pl-PL", 3, "07-0-2026", "07-12-2026", 2026, 12, 7)]
+    [InlineData("en-US", 0, "0-07-2026", "12-07-2026", 2026, 12, 7)]
+    [InlineData("en-US", 3, "10-7-2026", "10-15-2026", 2026, 10, 15)]
+    public void DeleteAndReplacement_DoNotReinsertZeroesWhileEditing(string culture, int start, string afterDelete,
+        string replacement, int year, int month, int day) => OnSta(() =>
+    {
+        var picker = CreatePicker(culture);
+        var box = (DatePickerTextBox)picker.Template.FindName("PART_TextBox", picker);
+        box.Select(start, 0);
+        // TextBox's normal Delete action removes the character at the caret.
+        box.Text = box.Text.Remove(start, 1);
+        Assert.Equal(afterDelete, box.Text);
+        box.Select(start, 1);
+        box.SelectedText = replacement.Substring(start, 2);
+        Assert.Equal(replacement, box.Text);
+        box.RaiseEvent(new RoutedEventArgs(UIElement.LostFocusEvent));
+        Assert.Equal(new DateTime(year, month, day), picker.SelectedDate);
+    });
+
+    [Theory]
+    [InlineData("pl-PL", "7-1-2026", "07-01-2026")]
+    [InlineData("en-US", "1-7-2026", "01-07-2026")]
+    public void ShortSegments_ArePaddedOnCommitRatherThanDuringTyping(string culture, string typed, string formatted) => OnSta(() =>
+    {
+        var picker = CreatePicker(culture);
+        var box = (DatePickerTextBox)picker.Template.FindName("PART_TextBox", picker);
+        box.Text = typed;
+        Assert.Equal(typed, box.Text);
+        box.RaiseEvent(new RoutedEventArgs(UIElement.LostFocusEvent));
+        Assert.Equal(formatted, box.Text);
+    });
+
     [Fact]
     public void ArrowKeys_DefaultLanguageUsesPolishDateOrder() => OnSta(() =>
     {

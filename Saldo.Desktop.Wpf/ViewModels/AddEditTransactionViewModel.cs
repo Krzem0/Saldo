@@ -7,6 +7,7 @@ using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using Saldo.Application.DTOs;
 using Saldo.Application.Errors;
+using Saldo.Application.Interfaces;
 using Saldo.Application.UseCases;
 using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Infrastructure;
@@ -16,7 +17,7 @@ using Saldo.Domain.Enums;
 
 namespace Saldo.Desktop.Wpf.ViewModels;
 
-public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
+public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITransactionTemplatePickerHost
 {
     private const string AmountRequiredError = "Validation_AmountRequired";
     private const string AmountMustBeNumberError = "Validation_AmountMustBeNumber";
@@ -45,7 +46,9 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     private readonly Dictionary<string, List<string>> _validationErrorCodes = [];
     private string _templateSaveMessage = string.Empty;
     private string? _lastTemplateName;
+    private string? _sourceTemplateName;
     private bool _isSavingTemplate;
+    private bool _isLoadingTemplate;
     public string TemplateSaveMessage { get => _templateSaveMessage; private set { if (SetField(ref _templateSaveMessage, value)) OnPropertyChanged(nameof(HasTemplateSaveMessage)); } }
     public bool HasTemplateSaveMessage => TemplateSaveMessage.Length > 0;
 
@@ -93,9 +96,16 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     public bool IsRestoredDraft => _isRestoredDraft;
     public bool ShowRestoredDraftNotice => _showRestoredDraftNotice;
     public bool HasDraftContent => !DraftsMatch(_emptyDraft, CreateDraft());
-    public string Title => _isRestoredDraft
-        ? T("Transaction_AddDraftTitle")
-        : TransactionId.HasValue ? T("Transaction_EditTitle") : T("Transaction_AddTitle");
+    public string Title
+    {
+        get
+        {
+            var title = _isRestoredDraft ? T("Transaction_AddDraftTitle")
+                : TransactionId.HasValue ? T("Transaction_EditTitle") : T("Transaction_AddTitle");
+            return _sourceTemplateName is null ? title
+                : title + string.Format(Localization.CurrentCulture, T("Transaction_TemplateTitleSuffix"), _sourceTemplateName);
+        }
+    }
 
     public DateTime Date { get => _date; set => SetField(ref _date, value); }
 
@@ -238,6 +248,9 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     public event Action<bool>? RequestClose;
 
     public ICommand SaveCommand { get; }
+    public ICommand ClearAmountCommand { get; }
+    public ICommand ClearDescriptionCommand { get; }
+    public TransactionTemplatePickerViewModel TemplatePicker { get; }
     public ICommand SaveAsTemplateCommand { get; }
     public ICommand ClearCommand { get; }
     public ICommand AddCategoryCommand { get; }
@@ -279,21 +292,11 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         }
 
         _emptyDraft = CreateDraft();
+        TemplatePicker = new TransactionTemplatePickerViewModel(scopeFactory, localization, LoadTemplateAsync);
 
         if (template is not null)
         {
-            _selectedType = Types.First(type => type.Value == template.TransactionType);
-            _amountText = template.Amount?.ToString("0.##", CultureInfo.CurrentCulture) ?? string.Empty;
-            _description = template.Description;
-            _selectedCategory = Categories.FirstOrDefault(c => c.Id == template.CategoryId);
-            _categoryText = _selectedCategory?.Name ?? string.Empty;
-            _selectedPayer = Parties.FirstOrDefault(p => p.Id == template.PayerId);
-            _payerText = _selectedPayer?.Name ?? string.Empty;
-            _selectedCounterparty = Parties.FirstOrDefault(p => p.Id == template.CounterpartyId);
-            _counterpartyText = _selectedCounterparty?.Name ?? string.Empty;
-            _selectedLocation = Locations.FirstOrDefault(l => l.Id == template.LocationId);
-            _locationText = _selectedLocation?.Name ?? string.Empty;
-            SelectTags(template.TagIds);
+            ApplyTemplate(template);
         }
 
         if (existing is not null)
@@ -309,9 +312,13 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             ApplyDraft(draft);
         }
 
-        SaveCommand = new AsyncRelayCommand(SaveAsync, () => !_isSavingTemplate);
+        SaveCommand = new AsyncRelayCommand(SaveAsync, () => !_isSavingTemplate && !_isLoadingTemplate);
+        ClearAmountCommand = new RelayCommand(() => AmountText = string.Empty,
+            () => !_isSavingTemplate && !_isLoadingTemplate && AmountText.Length > 0);
+        ClearDescriptionCommand = new RelayCommand(() => Description = string.Empty,
+            () => !_isSavingTemplate && !_isLoadingTemplate && !string.IsNullOrEmpty(Description));
         SaveAsTemplateCommand = new AsyncRelayCommand(SaveAsTemplateAsync, () => IsNewTransaction && SaveCommand.CanExecute(null));
-        ClearCommand = new RelayCommand(Clear, () => IsNewTransaction && HasDraftContent && !_isSavingTemplate);
+        ClearCommand = new RelayCommand(Clear, () => IsNewTransaction && HasDraftContent && !_isSavingTemplate && !_isLoadingTemplate);
         AddCategoryCommand = new AsyncRelayCommand(AddCategoryAsync);
         AddPayerCommand = new AsyncRelayCommand(AddPayerAsync);
         AddCounterpartyCommand = new AsyncRelayCommand(AddCounterpartyAsync);
@@ -336,6 +343,92 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         CommandManager.InvalidateRequerySuggested();
     }
 
+    private void ApplyTemplate(TransactionTemplateDto template)
+    {
+        _sourceTemplateName = template.Name;
+        _lastTemplateName = template.Name;
+        OnPropertyChanged(nameof(Title));
+        SelectedType = Types.First(type => type.Value == template.TransactionType);
+        if (template.Amount.HasValue) AmountText = template.Amount.Value.ToString("0.##", CultureInfo.CurrentCulture);
+        if (!string.IsNullOrWhiteSpace(template.Description)) Description = template.Description;
+        if (template.CategoryId.HasValue)
+        {
+            SelectedCategory = Categories.FirstOrDefault(c => c.Id == template.CategoryId);
+            CategoryText = SelectedCategory?.Name ?? string.Empty;
+        }
+        if (template.PayerId.HasValue)
+        {
+            SelectedPayer = Parties.FirstOrDefault(p => p.Id == template.PayerId);
+            PayerText = SelectedPayer?.Name ?? string.Empty;
+        }
+        if (template.CounterpartyId.HasValue)
+        {
+            SelectedCounterparty = Parties.FirstOrDefault(p => p.Id == template.CounterpartyId);
+            CounterpartyText = SelectedCounterparty?.Name ?? string.Empty;
+        }
+        if (template.LocationId.HasValue)
+        {
+            SelectedLocation = Locations.FirstOrDefault(l => l.Id == template.LocationId);
+            LocationText = SelectedLocation?.Name ?? string.Empty;
+        }
+        if (template.TagIds.Count > 0) SelectTags(template.TagIds);
+    }
+
+    public async Task LoadTemplateAsync(int id)
+    {
+        if (!IsNewTransaction || _isLoadingTemplate || _isSavingTemplate || !SaveCommand.CanExecute(null)) return;
+        _isLoadingTemplate = true;
+        CommandManager.InvalidateRequerySuggested();
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var services = scope.ServiceProvider;
+            var result = await services.GetRequiredService<GetTransactionTemplate>().ExecuteAsync(id);
+            if (result.IsFailed) { TemplatePicker.ReportError("Template_NotFound"); return; }
+            // One scope shares a DbContext, so read dictionaries sequentially before changing the form.
+            var categories = await services.GetRequiredService<ICategoryRepository>().GetAllAsync();
+            var parties = await services.GetRequiredService<IPartyRepository>().GetAllAsync();
+            var locations = await services.GetRequiredService<ILocationRepository>().GetAllAsync();
+            var tags = await services.GetRequiredService<ITagRepository>().GetAllAsync();
+            var previous = CreateDraft();
+            Categories.Clear(); foreach (var category in categories) Categories.Add(category);
+            Parties.Clear(); foreach (var party in parties) Parties.Add(party);
+            Locations.Clear(); foreach (var location in locations) Locations.Add(location);
+            foreach (var tag in Tags) tag.PropertyChanged -= OnFormChanged;
+            Tags.Clear();
+            foreach (var tag in tags)
+            {
+                var selectable = new SelectableTag(tag.Id, tag.Name, tag.ColorCode, tag.IconKey);
+                selectable.PropertyChanged += OnFormChanged;
+                Tags.Add(selectable);
+            }
+            // Rebind existing choices after refreshing dictionary instances, retaining typed text and tag selection.
+            SelectedCategory = Categories.FirstOrDefault(c => c.Id == previous.CategoryId);
+            CategoryText = previous.CategoryText;
+            SelectedPayer = Parties.FirstOrDefault(p => p.Id == previous.PayerId);
+            PayerText = previous.PayerText;
+            SelectedCounterparty = Parties.FirstOrDefault(p => p.Id == previous.CounterpartyId);
+            CounterpartyText = previous.CounterpartyText;
+            SelectedLocation = Locations.FirstOrDefault(l => l.Id == previous.LocationId);
+            LocationText = previous.LocationText;
+            SelectTags(previous.TagIds);
+            ApplyTemplate(result.Value);
+            ApplyValidationErrors([]);
+            TemplateSaveMessage = string.Empty;
+            _isRestoredDraft = false;
+            DismissRestoredDraftNotice();
+            OnPropertyChanged(nameof(IsRestoredDraft));
+            OnPropertyChanged(nameof(Title));
+            TemplatePicker.IsTemplatePickerOpen = false;
+        }
+        catch (Exception) { TemplatePicker.ReportError("TemplatePicker_LoadFailed"); }
+        finally
+        {
+            _isLoadingTemplate = false;
+            CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
     private void DismissRestoredDraftNotice()
     {
         if (!_showRestoredDraftNotice) return;
@@ -346,6 +439,8 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     private void Clear()
     {
         if (!IsNewTransaction) return;
+        _sourceTemplateName = null;
+        _lastTemplateName = null;
 
         SelectedType = Types.First(type => type.Value == _emptyDraft.Type);
         AmountText = string.Empty;
@@ -511,6 +606,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
     public TransactionDraft CreateDraft() => new()
     {
+        SourceTemplateName = _sourceTemplateName,
         TransactionId = TransactionId,
         Date = Date,
         Type = SelectedType.Value,
@@ -531,7 +627,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
     public bool CanClose()
     {
-        if (_isSavingTemplate) return false;
+        if (_isSavingTemplate || _isLoadingTemplate) return false;
         if (!HasUnsavedChanges) return true;
 
         var choice = _dialogService.ConfirmUnsavedChanges(
@@ -564,6 +660,8 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
     private void ApplyDraft(TransactionDraft draft)
     {
+        _sourceTemplateName = draft.SourceTemplateName;
+        _lastTemplateName = draft.SourceTemplateName;
         TransactionId = draft.TransactionId;
         _date = draft.Date;
         _selectedType = Types.FirstOrDefault(type => type.Value == draft.Type) ?? Types[0];

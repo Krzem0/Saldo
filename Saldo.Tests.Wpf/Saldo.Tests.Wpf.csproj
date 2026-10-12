@@ -15,6 +15,8 @@
     <None Include="..\Saldo.Desktop.Wpf\Views\TransactionTemplatesView.xaml" Link="Views\TransactionTemplatesView.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\Saldo.Desktop.Wpf\Views\TransactionTemplateDialog.xaml" Link="Views\TransactionTemplateDialog.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\Saldo.Desktop.Wpf\Views\AddTransactionButton.xaml" Link="Views\AddTransactionButton.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Saldo.Desktop.Wpf\Views\ReferenceListView.xaml" Link="Views\ReferenceListView.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Saldo.Desktop.Wpf\Views\MessageDialog.xaml" Link="Views\MessageDialog.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\Saldo.Desktop.Wpf\Views\AddEditTransactionDialog.xaml" Link="Views\AddEditTransactionDialog.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\Saldo.Desktop.Wpf\App.xaml" Link="Views\App.xaml" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="..\Saldo.Tests.Unit\Fakes\FakeTransactionRepository.cs" Link="Fakes\FakeTransactionRepository.cs" />

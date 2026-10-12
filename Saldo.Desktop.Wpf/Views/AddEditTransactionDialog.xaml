@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:Saldo.Desktop.Wpf.Controls"
+        xmlns:views="clr-namespace:Saldo.Desktop.Wpf.Views"
         xmlns:domainEnums="clr-namespace:Saldo.Domain.Enums;assembly=Saldo.Domain"
         Title="{Binding Title}"
         Width="520" SizeToContent="Height"
@@ -133,11 +134,19 @@
             </StackPanel>
             <StackPanel Grid.Column="1" Margin="4,0">
                 <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Amount]}" Style="{StaticResource FieldLabelStyle}"/>
-                <TextBox controls:AmountInputBehavior.RawText="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                <Grid>
+                <TextBox x:Name="AmountBox" controls:AmountInputBehavior.RawText="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          Margin="0"
+                         Padding="32,0,4,0"
                          MinHeight="30"
+                         VerticalContentAlignment="Center"
                          HorizontalContentAlignment="Right"
                          controls:AmountInputBehavior.IsEnabled="True"/>
+                <Button Command="{Binding ClearAmountCommand}" Click="ClearAmount_Click" Margin="4,0,0,0" HorizontalAlignment="Left"
+                        ToolTip="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                        AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                        Style="{StaticResource ClearTextButtonStyle}"/>
+                </Grid>
                 <TextBlock Text="{Binding AmountError}" Style="{StaticResource FieldErrorStyle}"
                            Visibility="{Binding HasAmountError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
             </StackPanel>
@@ -159,7 +168,18 @@
 
         <StackPanel Margin="0,0,0,12">
             <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Description]}" Style="{StaticResource FieldLabelStyle}"/>
-            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0"/>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <Grid>
+                    <TextBox x:Name="DescriptionBox" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0" Padding="4,0,32,0" MinHeight="30" VerticalContentAlignment="Center"/>
+                    <Button Command="{Binding ClearDescriptionCommand}" Click="ClearDescription_Click" Margin="0,0,4,0"
+                            ToolTip="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                            AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                            Style="{StaticResource ClearTextButtonStyle}"/>
+                </Grid>
+                <views:AddTransactionButton Grid.Column="1" IsTemplateOnly="True" Margin="6,0,0,0"
+                    Visibility="{Binding IsNewTransaction, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            </Grid>
             <TextBlock Text="{Binding DescriptionError}" Style="{StaticResource FieldErrorStyle}"
                        Visibility="{Binding HasDescriptionError, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>

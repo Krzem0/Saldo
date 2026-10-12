@@ -7,6 +7,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Surface" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
@@ -20,10 +21,36 @@
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Surface" Property="Background" Value="{DynamicResource PrimaryDisabledBrush}"/>
                             </Trigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsTemplateOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True"/>
+                                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource TemplatedParent}}" Value="True"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="Surface" Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                            </MultiDataTrigger>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding IsTemplateOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True"/>
+                                    <Condition Binding="{Binding IsPressed, RelativeSource={RelativeSource TemplatedParent}}" Value="True"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter TargetName="Surface" Property="Background" Value="{DynamicResource ControlPressedBrush}"/>
+                            </MultiDataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+        <Style x:Key="TemplateArrow" TargetType="Button" BasedOn="{StaticResource SplitButton}">
+            <Setter Property="Tag"><Setter.Value><CornerRadius>0,5,5,0</CornerRadius></Setter.Value></Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsTemplateOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Tag"><Setter.Value><CornerRadius>4</CornerRadius></Setter.Value></Setter>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
         <Style TargetType="ListBoxItem">
             <Setter Property="Padding" Value="10,9"/>
@@ -47,23 +74,39 @@
             </Setter>
         </Style>
     </UserControl.Resources>
-    <Grid x:Name="ButtonGroup">
+    <Grid x:Name="ButtonGroup" DataContext="{Binding TemplatePicker}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
         <Button Content="{Binding Source={StaticResource Localization}, Path=[Transaction_AddTitle]}"
-                Command="{Binding AddCommand}" Style="{StaticResource SplitButton}">
+                Command="{Binding DataContext.AddCommand, RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <Button.Style>
+                <Style TargetType="Button" BasedOn="{StaticResource SplitButton}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsTemplateOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
             <Button.Tag><CornerRadius>5,0,0,5</CornerRadius></Button.Tag>
         </Button>
         <Button Grid.Column="1" Padding="12,9" Command="{Binding OpenTemplatePickerCommand}"
-                Style="{StaticResource SplitButton}"
+                Style="{StaticResource TemplateArrow}"
                 ToolTip="{Binding Source={StaticResource Localization}, Path=[TemplatePicker_Title]}"
                 AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[TemplatePicker_Title]}">
-            <Button.Tag><CornerRadius>0,5,5,0</CornerRadius></Button.Tag>
-            <Path Data="M 0 0 L 5 5 L 10 0" Stroke="White" StrokeThickness="1.6" Width="10" Height="5"/>
+            <Path Data="M 0 0 L 5 5 L 10 0" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.6" Width="10" Height="5"/>
         </Button>
-        <Border Grid.Column="1" Width="1" Background="#55FFFFFF" HorizontalAlignment="Left" Margin="0,8" IsHitTestVisible="False"/>
+        <Border Grid.Column="1" Width="1" Background="#55FFFFFF" HorizontalAlignment="Left" Margin="0,8" IsHitTestVisible="False">
+            <Border.Style>
+                <Style TargetType="Border"><Style.Triggers>
+                    <DataTrigger Binding="{Binding IsTemplateOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                </Style.Triggers></Style>
+            </Border.Style>
+        </Border>
         <Popup x:Name="TemplatePopup" IsOpen="{Binding IsTemplatePickerOpen, Mode=TwoWay}"
                PlacementTarget="{Binding ElementName=ButtonGroup}" Placement="Bottom"
                StaysOpen="False" AllowsTransparency="True" Opened="OnPopupOpened">
@@ -76,10 +119,16 @@
                                Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="SemiBold" Margin="4,2,4,8"/>
                     <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[TemplatePicker_Search]}"
                                Foreground="{DynamicResource SecondaryTextBrush}" Margin="4,0,4,4"/>
+                    <Grid Margin="0,0,0,6">
                     <TextBox x:Name="SearchBox" Text="{Binding TemplateSearch, UpdateSourceTrigger=PropertyChanged}"
-                             Padding="8,6" Margin="0,0,0,6"
+                             Padding="8,6,36,6"
                              ToolTip="{Binding Source={StaticResource Localization}, Path=[TemplatePicker_Search]}"
                              AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[TemplatePicker_Search]}"/>
+                    <Button Command="{Binding ClearSearchCommand}" Click="ClearSearch_Click" Margin="0,0,5,0"
+                            ToolTip="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                            AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                            Style="{StaticResource ClearTextButtonStyle}"/>
+                    </Grid>
                     <TextBlock Text="{Binding TemplatePickerStatus}" TextWrapping="Wrap" Margin="4,0"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <ListBox x:Name="TemplateList" ItemsSource="{Binding FilteredTemplates}"

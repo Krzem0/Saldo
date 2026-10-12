@@ -190,13 +190,12 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
             await using var scope = _scopeFactory.CreateAsyncScope();
             await scope.ServiceProvider.GetRequiredService<IDatabaseBackupService>().CreateAsync(path);
             _logger.LogInformation("Database backup created at {BackupPath}.", path);
-            MessageBox.Show(string.Format(CultureInfo.CurrentCulture, T("BackupSuccessMessage"), path),
-                T("BackupTitle"), MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogService.ShowMessage(T("BackupTitle"), string.Format(CultureInfo.CurrentCulture, T("BackupSuccessMessage"), path));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Database backup failed.");
-            MessageBox.Show(T("BackupFailedMessage"), T("BackupTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.ShowMessage(T("BackupTitle"), T("BackupFailedMessage"));
         }
     }
 

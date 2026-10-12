@@ -172,4 +172,8 @@
   <data name="Template_ContentRequired" xml:space="preserve"><value>Fill in at least one template field besides its name and type.</value></data>
   <data name="Template_ContentDuplicate" xml:space="preserve"><value>A template with the same fields already exists.</value></data>
   <data name="Template_CategoryInvalid" xml:space="preserve"><value>The selected category is invalid. Choose it again.</value></data>
+  <data name="ReferenceList_Search" xml:space="preserve"><value>Search by name</value></data>
+  <data name="ReferenceList_NoMatches" xml:space="preserve"><value>No matching entries.</value></data>
+  <data name="ClearText" xml:space="preserve"><value>Clear field</value></data>
+  <data name="Transaction_TemplateTitleSuffix" xml:space="preserve"><value> — template: “{0}”</value></data>
 </root>

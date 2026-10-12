@@ -21,6 +21,27 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
     private ObservableCollection<T> _items = [];
     private T? _selectedItem;
     private bool _isLoading;
+    private IReadOnlyList<T> _allItems = [];
+    private string _searchText = string.Empty;
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (SetField(ref _searchText, value)) FilterItems(SelectedItem is null ? null : GetId(SelectedItem));
+        }
+    }
+    public string EmptyMessage => T(_allItems.Count == 0 ? "ReferenceList_Empty" : "ReferenceList_NoMatches");
+
+    private void FilterItems(int? selectedId)
+    {
+        var query = SearchText.Trim();
+        SelectedItem = null;
+        Items = new ObservableCollection<T>(_allItems.Where(item => GetName(item).Contains(query, StringComparison.OrdinalIgnoreCase)));
+        SelectedItem = (selectedId.HasValue ? Items.FirstOrDefault(item => GetId(item) == selectedId.Value) : null)
+            ?? Items.FirstOrDefault();
+        OnPropertyChanged(nameof(EmptyMessage));
+    }
 
     public ObservableCollection<T> Items
     {
@@ -44,6 +65,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
     public ICommand AddCommand { get; }
     public ICommand EditCommand { get; }
     public ICommand DeleteCommand { get; }
+    public ICommand ClearSearchCommand { get; }
 
    protected ReferenceListViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService, ILocalizationService localization)
         : base(localization)
@@ -52,6 +74,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         DialogService = dialogService;
 
         LoadCommand = new AsyncRelayCommand(LoadAsync);
+        ClearSearchCommand = new RelayCommand(() => SearchText = string.Empty, () => SearchText.Length > 0);
         AddCommand = new AsyncRelayCommand(AddAsync);
         EditCommand = new AsyncRelayCommand(EditAsync, () => !IsLoading && SelectedItem is not null);
         DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => !IsLoading && SelectedItem is not null);
@@ -88,6 +111,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
     protected override void OnCultureChanged()
     {
         OnPropertyChanged(nameof(Title));
+        OnPropertyChanged(nameof(EmptyMessage));
     }
 
     private async Task LoadAsync()
@@ -100,10 +124,8 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
             var selectedId = SelectedItem is null ? (int?)null : GetId(SelectedItem);
             // Reloading creates new entity instances. Never retain a selection outside Items;
             // restore by identity after the view has processed the collection replacement.
-            SelectedItem = null;
-            Items = new ObservableCollection<T>(list);
-            SelectedItem = (selectedId.HasValue ? Items.FirstOrDefault(item => GetId(item) == selectedId.Value) : null)
-                ?? Items.FirstOrDefault();
+            _allItems = list;
+            FilterItems(selectedId);
         }
         catch (Exception ex)
         {

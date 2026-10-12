@@ -19,6 +19,7 @@ This document tracks planned work. Implemented behavior and architectural decisi
 
 - [x] Select a named template from the Add transaction split button, with name search and scrolling. It opens a new form with template fields, optional amount, and the current new-transaction date, preserving any existing draft.
 - [x] Save the new-transaction form as a named template without saving the transaction.
+- [x] Load a template into an already open new-transaction form through a searchable picker beside Description, preserving the date.
 - [ ] Consider creating templates from existing saved transactions.
 - [ ] Replace the full transaction tag cloud with a dropdown for choosing tags; display only selected tags below it using the current chip appearance (the current form still displays all available tags as selectable chips)
 - [ ] Further WPF visual polish and accessibility review

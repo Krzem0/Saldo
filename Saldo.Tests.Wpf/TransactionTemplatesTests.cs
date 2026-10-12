@@ -238,16 +238,24 @@ public sealed class TransactionTemplatesTests
     internal sealed class TestDialogs : IDialogService
     {
         public string? NameResult { get; set; }
+        public string? NameInitialValue { get; private set; }
         public ReferenceColorDialogResult? ReferenceResult { get; set; }
         public bool DeleteConfirmed { get; set; }
         public UnsavedChangesChoice UnsavedChoice { get; set; } = UnsavedChangesChoice.Cancel;
         public Func<AddEditTransactionViewModel, bool?>? TransactionCallback { get; set; }
+        public string? BackupPath { get; set; }
+        public List<(string Title, string Message)> Messages { get; } = [];
+        public void ShowMessage(string title, string message) => Messages.Add((title, message));
         public bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel) => TransactionCallback?.Invoke(viewModel);
-        public string? ShowNameDialog(string title, string? initialValue = null) => NameResult;
+        public string? ShowNameDialog(string title, string? initialValue = null)
+        {
+            NameInitialValue = initialValue;
+            return NameResult;
+        }
         public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null,
             string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null) => ReferenceResult;
         public bool ConfirmDelete(string title, string message) => DeleteConfirmed;
         public UnsavedChangesChoice ConfirmUnsavedChanges(string title, string message) => UnsavedChoice;
-        public string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter) => throw new NotSupportedException();
+        public string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter) => BackupPath;
     }
 }

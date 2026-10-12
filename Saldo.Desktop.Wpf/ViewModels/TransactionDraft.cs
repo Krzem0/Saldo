@@ -8,6 +8,7 @@ namespace Saldo.Desktop.Wpf.ViewModels;
 /// </summary>
 public sealed class TransactionDraft
 {
+    public string? SourceTemplateName { get; init; }
     public int? TransactionId { get; init; }
     public DateTime Date { get; set; }
     public TransactionType Type { get; init; }

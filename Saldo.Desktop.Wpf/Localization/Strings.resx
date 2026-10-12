@@ -172,4 +172,8 @@
   <data name="Template_ContentRequired" xml:space="preserve"><value>Uzupełnij przynajmniej jedno pole szablonu poza nazwą i typem.</value></data>
   <data name="Template_ContentDuplicate" xml:space="preserve"><value>Szablon z takimi samymi polami już istnieje.</value></data>
   <data name="Template_CategoryInvalid" xml:space="preserve"><value>Wybrana kategoria jest nieprawidłowa. Wybierz ją ponownie.</value></data>
+  <data name="ReferenceList_Search" xml:space="preserve"><value>Szukaj po nazwie</value></data>
+  <data name="ReferenceList_NoMatches" xml:space="preserve"><value>Brak pasujących pozycji.</value></data>
+  <data name="ClearText" xml:space="preserve"><value>Wyczyść pole</value></data>
+  <data name="Transaction_TemplateTitleSuffix" xml:space="preserve"><value> — szablon: „{0}”</value></data>
 </root>
