@@ -17,6 +17,7 @@
             <ResourceDictionary>
                 <ResourceDictionary.MergedDictionaries>
                     <ResourceDictionary Source="../Themes/TagChipStyles.xaml"/>
+                    <ResourceDictionary Source="../Themes/TransactionFormStyles.xaml"/>
                 </ResourceDictionary.MergedDictionaries>
                 <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
                 <Style TargetType="TextBlock">
@@ -114,62 +115,7 @@
                     <Setter Property="Padding" Value="0"/>
                     <Setter Property="FontWeight" Value="SemiBold"/>
                 </Style>
-                <Style x:Key="TransactionTypeButtonStyle" TargetType="RadioButton">
-                    <Setter Property="Background" Value="Transparent"/>
-                    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
-                    <Setter Property="BorderBrush" Value="Transparent"/>
-                    <Setter Property="BorderThickness" Value="1"/>
-                    <Setter Property="Margin" Value="1"/>
-                    <Setter Property="Padding" Value="2,0"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                    <Setter Property="VerticalContentAlignment" Value="Center"/>
-                    <Setter Property="Cursor" Value="Hand"/>
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="RadioButton">
-                                <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3"
-                                        Padding="{TemplateBinding Padding}">
-                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                      RecognizesAccessKey="True"/>
-                                </Border>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                    <Style.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                        </Trigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="IsChecked" Value="True"/>
-                                <Condition Property="Tag" Value="{x:Static domainEnums:TransactionType.Expense}"/>
-                            </MultiTrigger.Conditions>
-                            <Setter Property="Background" Value="{DynamicResource ExpenseBackgroundBrush}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource ExpenseTextBrush}"/>
-                            <Setter Property="BorderBrush" Value="{DynamicResource ExpenseTextBrush}"/>
-                        </MultiTrigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="IsChecked" Value="True"/>
-                                <Condition Property="Tag" Value="{x:Static domainEnums:TransactionType.Income}"/>
-                            </MultiTrigger.Conditions>
-                            <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}"/>
-                            <Setter Property="Foreground" Value="{DynamicResource SuccessTextBrush}"/>
-                            <Setter Property="BorderBrush" Value="{DynamicResource SuccessTextBrush}"/>
-                        </MultiTrigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.5"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
+
             </ResourceDictionary>
         </StackPanel.Resources>
 
@@ -334,6 +280,9 @@
         </Border>
 
         <!-- Buttons -->
+        <TextBlock Text="{Binding TemplateSaveMessage}" Margin="0,0,0,10" TextWrapping="Wrap"
+                   Foreground="{DynamicResource PrimaryTextBrush}"
+                   Visibility="{Binding HasTemplateSaveMessage, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -344,6 +293,10 @@
                     Visibility="{Binding IsNewTransaction, Converter={StaticResource BooleanToVisibilityConverter}}"
                     HorizontalAlignment="Left" Width="80" Padding="0,5" Style="{StaticResource SecondaryActionButtonStyle}"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="{Binding Source={StaticResource Localization}, Path=[Transaction_SaveAsTemplate]}"
+                        Command="{Binding SaveAsTemplateCommand}" Padding="10,5" Margin="0,0,8,0"
+                        Visibility="{Binding IsNewTransaction, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Style="{StaticResource SecondaryActionButtonStyle}"/>
                 <Button Content="{Binding Source={StaticResource Localization}, Path=[Save]}" Command="{Binding SaveCommand}"
                         Width="80" Padding="0,5" Margin="0,0,8,0" IsDefault="True" Style="{StaticResource PrimaryActionButtonStyle}"/>
                 <Button Content="{Binding Source={StaticResource Localization}, Path=[Close]}" Click="Cancel_Click"

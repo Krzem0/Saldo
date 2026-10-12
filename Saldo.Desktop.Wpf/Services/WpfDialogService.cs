@@ -6,6 +6,13 @@ namespace Saldo.Desktop.Wpf.Services;
 
 public sealed class WpfDialogService : IDialogService
 {
+    public bool? ShowTransactionTemplate(TransactionTemplateFormViewModel viewModel)
+    {
+        var dialog = new TransactionTemplateDialog { DataContext = viewModel };
+        SetOwner(dialog);
+        return dialog.ShowDialog();
+    }
+
     public bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel)
     {
         var dialog = new AddEditTransactionDialog { DataContext = viewModel };

@@ -8,6 +8,9 @@
         Background="{DynamicResource AppBackgroundBrush}"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
+        <DataTemplate DataType="{x:Type viewModels:TransactionTemplatesViewModel}">
+            <views:TransactionTemplatesView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type viewModels:TransactionListViewModel}">
             <views:TransactionListView/>
         </DataTemplate>
@@ -80,10 +83,8 @@
                            FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"
                            VerticalAlignment="Center"/>
 
-                <Button Grid.Column="2"
-                        Content="{Binding Source={StaticResource Localization}, Path=[Transaction_AddTitle]}"
-                        Command="{Binding TransactionList.AddCommand}"
-                        Style="{StaticResource PrimaryActionButtonStyle}"
+                <views:AddTransactionButton Grid.Column="2"
+                        DataContext="{Binding TransactionList}"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"/>
             </Grid>
@@ -107,6 +108,11 @@
                                      IsChecked="{Binding IsTransactionsSelected, Mode=OneWay}"
                                      Style="{StaticResource NavigationItemStyle}"/>
 
+                        <RadioButton GroupName="Navigation"
+                                     Content="{Binding Source={StaticResource Localization}, Path=[Templates], Mode=OneWay}"
+                                     Command="{Binding ShowTemplatesCommand}"
+                                     IsChecked="{Binding IsTemplatesSelected, Mode=OneWay}"
+                                     Style="{StaticResource NavigationItemStyle}"/>
                         <Separator Margin="8,18,8,14" Background="#CDDDD6"/>
 
                         <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Navigation_ReferenceData]}"

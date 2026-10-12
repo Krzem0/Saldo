@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using Saldo.Desktop.Wpf.Controls;
 
@@ -12,6 +13,65 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class AmountInputBehaviorTests
 {
+    [Theory]
+    [InlineData("pl-PL", "25", 2, 0, "25,", 3)]
+    [InlineData("en-US", "25", 2, 0, "25.", 3)]
+    [InlineData("pl-PL", "25,51", 2, 1, "25,51", 3)]
+    [InlineData("pl-PL", "25,51", 5, 0, "25,51", 5)]
+    [InlineData("en-US", "25.51", 5, 0, "25.51", 5)]
+    public void NumericKeypadDecimal_UsesLocalizedSeparatorAndRespectsSelectionAndValidation(
+        string culture, string raw, int selectionStart, int selectionLength, string expected, int expectedCaret) => OnSta(() =>
+    {
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+        var state = new AmountState { Raw = raw };
+        var box = CreateBox(state);
+        Focus(box, true);
+        box.Select(selectionStart, selectionLength);
+        using var source = new HwndSource(new HwndSourceParameters("Amount keypad verification")
+            { Width = 1, Height = 1, WindowStyle = 0 });
+        var key = new KeyEventArgs(Keyboard.PrimaryDevice, source, Environment.TickCount, Key.Decimal)
+            { RoutedEvent = Keyboard.PreviewKeyDownEvent };
+        box.RaiseEvent(key);
+        Assert.True(key.Handled);
+        Assert.Equal(expected, box.Text);
+        Assert.Equal(expectedCaret, box.CaretIndex);
+        if (selectionLength > 0 || !raw.Contains(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator))
+            Assert.Equal(expected, state.Raw);
+        Assert.NotNull(BindingOperations.GetBindingExpression(box, AmountInputBehavior.RawTextProperty));
+    });
+
+    [Theory]
+    [InlineData("pl-PL", ".", "25,", "25,51")]
+    [InlineData("pl-PL", ",", "25,", "25,51")]
+    [InlineData("en-US", ".", "25.", "25.51")]
+    [InlineData("en-US", ",", "25.", "25.51")]
+    public void OrdinaryDotAndComma_InsertLocalizedSeparatorWithoutDuplicatingIt(
+        string culture, string keyText, string expected, string fractional) => OnSta(() =>
+    {
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+        var state = new AmountState { Raw = "25" };
+        var box = CreateBox(state);
+        Focus(box, true);
+        box.CaretIndex = 2;
+        void TypeSeparator()
+        {
+            var input = new TextCompositionEventArgs(Keyboard.PrimaryDevice, new TextComposition(InputManager.Current, box, keyText))
+                { RoutedEvent = TextCompositionManager.PreviewTextInputEvent };
+            box.RaiseEvent(input);
+            Assert.True(input.Handled);
+        }
+        TypeSeparator();
+        Assert.Equal(expected, box.Text); Assert.Equal(expected, state.Raw);
+        TypeSeparator();
+        Assert.Equal(expected, box.Text);
+        box.Text = fractional;
+        box.Select(2, 1);
+        TypeSeparator();
+        Assert.Equal(fractional, box.Text); Assert.Equal(fractional, state.Raw);
+        Assert.Equal(3, box.CaretIndex);
+        Assert.NotNull(BindingOperations.GetBindingExpression(box, AmountInputBehavior.RawTextProperty));
+    });
+
     [Theory]
     [InlineData("pl-PL", "25", "25")]
     [InlineData("pl-PL", "1234,5", "1234,5")]

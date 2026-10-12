@@ -261,6 +261,25 @@ Rules:
 
 ## Future Extensions
 
+### Transaction templates
+
+`AddTransactionButton` exposes the normal add command and a separate template picker. `TransactionListViewModel` reloads templates on opening, filters names locally, and fetches the chosen template again before opening the form. `AddEditTransactionViewModel` applies template IDs against current dictionaries without changing the date or setting the restored-draft state. Template forms do not overwrite an existing transaction draft; cancellation creates a draft only when no previous draft exists.
+
+The new-transaction form's `SaveAsTemplateCommand` uses the existing name dialog and `AddTransactionTemplate` use case. It copies the current type, description, dictionary references, optional amount, and selected tag IDs without the date. Validation errors appear on the transaction form; success shows an inline confirmation without saving a transaction or closing the form.
+
+`TransactionTemplate` and `TransactionTemplateTag` are Domain entities independent of WPF drafts. Templates have no date or recurrence fields. `SaveTransactionTemplateCommand`, `TransactionTemplateDto`, and the add/edit/get/list/delete use cases expose core CRUD. `TransactionTemplateInput` shares validation and dictionary-reference checks between add/edit; expected failures use `Result` with stable codes and property metadata. Optional amounts must be positive; duplicate tag IDs are normalized to one link.
+
+Name and type are required along with at least one of description, amount, category, payer, counterparty, location, or tags (`ContentRequired`). Description is nullable and normalized to trimmed text or NULL when blank; category IDs and navigation are nullable. Application rejects duplicate content independently of name (`ContentDuplicate`), comparing type, trimmed description without case, decimal amount, reference IDs, and tag sets. Editing excludes the current ID. Name duplicates retain their specific error. Existing records are not changed by these rules.
+
+`ITransactionTemplateRepository` is implemented by SQLite Infrastructure. Updates save scalar fields and tag changes in one database transaction. Category, payer, counterparty, location, and tag references use restrictive deletion; template deletion cascades only to its tag links. Saved transactions have no foreign key to a template.
+
+WPF exposes a separate Templates page through `TransactionTemplatesViewModel`, and an owned `TransactionTemplateDialog` with `TransactionTemplateFormViewModel`. Page actions use a fresh scope and Application CRUD, with dictionary names resolved for display. The form parses optional localized amount text, passes selected dictionary IDs/tag IDs to Application, and maps validation codes to localized field errors. Optional references can be cleared, and changed forms confirm save/discard/cancel on close or Escape. The page refreshes on navigation and after successful changes. Templates are selected through the header split button and can be created from the new-transaction form. WPF tests cover save/edit, optional fields and tags, localized validation, duplicate names, selection after reload/delete, close confirmation, and actual XAML rendering in both themes.
+
+Both transaction and template forms use `TransactionFormStyles.xaml` for the expense/income toggle, `AmountInputBehavior` for numeric input and display, `AutocompleteComboBox` for dictionary search/selection/clearing, `CategoryBadge` for category color/icon presentation, and the existing tag chip style. Template quick-add calls the same category/party/location/tag Application use cases, preserving selected values and tags. Typed reference text is tracked for unsaved-change detection and must resolve to an existing entry before saving; unselected partial/unknown names are rejected rather than silently clearing optional fields.
+
+The initial migration, designer, and model snapshot include `TransactionTemplates` and `TransactionTemplateTags` with nullable template descriptions and categories. Existing databases are updated manually; there is no additional upgrade migration. Integration tests cover Application CRUD, each standalone additional field, empty-content rejection, duplicate-content checks on add/edit, manual SQL upgrades preserving templates and tag links, same-context edits, reference deletion protection, rollback, and initial migration/model agreement.
+
+
 - CSV import/export
 - Recurring transactions
 - Tag filtering and summaries

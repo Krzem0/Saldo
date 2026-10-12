@@ -13,6 +13,7 @@ public sealed class MainViewModel : ViewModelBase
     public LocationsViewModel Locations { get; }
     public TagsViewModel Tags { get; }
     public SettingsViewModel Settings { get; }
+    public TransactionTemplatesViewModel Templates { get; }
 
     public object CurrentPage => _selectedPage switch
     {
@@ -21,6 +22,7 @@ public sealed class MainViewModel : ViewModelBase
         MainPage.Parties => Parties,
         MainPage.Locations => Locations,
         MainPage.Tags => Tags,
+        MainPage.Templates => Templates,
         MainPage.Settings => Settings,
         _ => TransactionList
     };
@@ -31,6 +33,7 @@ public sealed class MainViewModel : ViewModelBase
     public bool IsLocationsSelected => _selectedPage == MainPage.Locations;
     public bool IsSettingsSelected => _selectedPage == MainPage.Settings;
     public bool IsTagsSelected => _selectedPage == MainPage.Tags;
+    public bool IsTemplatesSelected => _selectedPage == MainPage.Templates;
 
     public ICommand ShowTransactionsCommand { get; }
     public ICommand ShowCategoriesCommand { get; }
@@ -38,6 +41,7 @@ public sealed class MainViewModel : ViewModelBase
     public ICommand ShowLocationsCommand { get; }
     public ICommand ShowSettingsCommand { get; }
     public ICommand ShowTagsCommand { get; }
+    public ICommand ShowTemplatesCommand { get; }
 
     public MainViewModel(
         TransactionListViewModel transactionList,
@@ -45,7 +49,8 @@ public sealed class MainViewModel : ViewModelBase
         PartiesViewModel parties,
         LocationsViewModel locations,
         SettingsViewModel settings,
-        TagsViewModel tags)
+        TagsViewModel tags,
+        TransactionTemplatesViewModel templates)
     {
         TransactionList = transactionList;
         Categories = categories;
@@ -53,6 +58,7 @@ public sealed class MainViewModel : ViewModelBase
         Locations = locations;
         Settings = settings;
         Tags = tags;
+        Templates = templates;
 
         ShowTransactionsCommand = new RelayCommand(() => SelectPage(MainPage.Transactions));
         ShowCategoriesCommand = new RelayCommand(() => SelectPage(MainPage.Categories));
@@ -60,6 +66,7 @@ public sealed class MainViewModel : ViewModelBase
         ShowLocationsCommand = new RelayCommand(() => SelectPage(MainPage.Locations));
         ShowSettingsCommand = new RelayCommand(() => SelectPage(MainPage.Settings));
         ShowTagsCommand = new RelayCommand(() => SelectPage(MainPage.Tags));
+        ShowTemplatesCommand = new RelayCommand(() => SelectPage(MainPage.Templates));
     }
 
     private void SelectPage(MainPage page)
@@ -78,9 +85,13 @@ public sealed class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsLocationsSelected));
         OnPropertyChanged(nameof(IsSettingsSelected));
         OnPropertyChanged(nameof(IsTagsSelected));
+        OnPropertyChanged(nameof(IsTemplatesSelected));
 
         switch (page)
         {
+            case MainPage.Templates:
+                Templates.LoadCommand.Execute(null);
+                break;
             case MainPage.Settings:
                 Settings.LoadCommand.Execute(null);
                 break;
@@ -109,6 +120,7 @@ public sealed class MainViewModel : ViewModelBase
         Parties,
         Locations,
         Tags,
+        Templates,
         Settings
     }
 }

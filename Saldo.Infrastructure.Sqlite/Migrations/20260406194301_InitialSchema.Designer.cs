@@ -18,18 +18,7 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
-
-            modelBuilder.Entity("Saldo.Domain.Entities.TransactionSettings", b =>
-                {
-                    b.Property<int>("Id").HasColumnType("INTEGER");
-                    b.Property<int?>("DefaultPayerId").HasColumnType("INTEGER");
-                    b.Property<int?>("DefaultLocationId").HasColumnType("INTEGER");
-                    b.HasKey("Id");
-                    b.HasIndex("DefaultPayerId");
-                    b.HasIndex("DefaultLocationId");
-                    b.ToTable("TransactionSettings", t => t.HasCheckConstraint("CK_TransactionSettings_Singleton", "Id = 1"));
-                });
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.5");
 
             modelBuilder.Entity("Saldo.Domain.Entities.Category", b =>
                 {
@@ -37,12 +26,12 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("IconKey")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("ColorCode")
                         .HasMaxLength(7)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IconKey")
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -56,25 +45,6 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                         .IsUnique();
 
                     b.ToTable("Categories", (string)null);
-                });
-
-            modelBuilder.Entity("Saldo.Domain.Entities.Party", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("Parties", (string)null);
                 });
 
             modelBuilder.Entity("Saldo.Domain.Entities.Location", b =>
@@ -96,19 +66,38 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     b.ToTable("Locations", (string)null);
                 });
 
+            modelBuilder.Entity("Saldo.Domain.Entities.Party", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Parties", (string)null);
+                });
+
             modelBuilder.Entity("Saldo.Domain.Entities.Tag", b =>
                 {
-                    b.Property<string>("IconKey")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("ColorCode")
                         .HasMaxLength(7)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("IconKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -147,13 +136,13 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("LocationId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("PayerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Type")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -173,6 +162,29 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     b.ToTable("Transactions", (string)null);
                 });
 
+            modelBuilder.Entity("Saldo.Domain.Entities.TransactionSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DefaultLocationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DefaultPayerId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DefaultLocationId");
+
+                    b.HasIndex("DefaultPayerId");
+
+                    b.ToTable("TransactionSettings", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_TransactionSettings_Singleton", "Id = 1");
+                        });
+                });
+
             modelBuilder.Entity("Saldo.Domain.Entities.TransactionTag", b =>
                 {
                     b.Property<int>("TransactionId")
@@ -188,6 +200,71 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     b.ToTable("TransactionTags", (string)null);
                 });
 
+            modelBuilder.Entity("Saldo.Domain.Entities.TransactionTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CounterpartyId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PayerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TransactionType")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("CounterpartyId");
+
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("PayerId");
+
+                    b.ToTable("TransactionTemplates", (string)null);
+                });
+
+            modelBuilder.Entity("Saldo.Domain.Entities.TransactionTemplateTag", b =>
+                {
+                    b.Property<int>("TransactionTemplateId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TagId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("TransactionTemplateId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("TransactionTemplateTags", (string)null);
+                });
+
             modelBuilder.Entity("Saldo.Domain.Entities.Transaction", b =>
                 {
                     b.HasOne("Saldo.Domain.Entities.Category", "Category")
@@ -196,14 +273,14 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Saldo.Domain.Entities.Location", "Location")
-                        .WithMany("Transactions")
-                        .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Saldo.Domain.Entities.Party", "Counterparty")
                         .WithMany("CounterpartyTransactions")
                         .HasForeignKey("CounterpartyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Saldo.Domain.Entities.Location", "Location")
+                        .WithMany("Transactions")
+                        .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Saldo.Domain.Entities.Party", "Payer")
@@ -223,10 +300,14 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
             modelBuilder.Entity("Saldo.Domain.Entities.TransactionSettings", b =>
                 {
                     b.HasOne("Saldo.Domain.Entities.Location", null)
-                        .WithMany().HasForeignKey("DefaultLocationId").OnDelete(DeleteBehavior.SetNull);
+                        .WithMany()
+                        .HasForeignKey("DefaultLocationId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Saldo.Domain.Entities.Party", null)
-                        .WithMany().HasForeignKey("DefaultPayerId").OnDelete(DeleteBehavior.SetNull);
+                        .WithMany()
+                        .HasForeignKey("DefaultPayerId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Saldo.Domain.Entities.TransactionTag", b =>
@@ -248,6 +329,56 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                     b.Navigation("Transaction");
                 });
 
+            modelBuilder.Entity("Saldo.Domain.Entities.TransactionTemplate", b =>
+                {
+                    b.HasOne("Saldo.Domain.Entities.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Saldo.Domain.Entities.Party", "Counterparty")
+                        .WithMany()
+                        .HasForeignKey("CounterpartyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Saldo.Domain.Entities.Location", "Location")
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Saldo.Domain.Entities.Party", "Payer")
+                        .WithMany()
+                        .HasForeignKey("PayerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Counterparty");
+
+                    b.Navigation("Location");
+
+                    b.Navigation("Payer");
+                });
+
+            modelBuilder.Entity("Saldo.Domain.Entities.TransactionTemplateTag", b =>
+                {
+                    b.HasOne("Saldo.Domain.Entities.Tag", "Tag")
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Saldo.Domain.Entities.TransactionTemplate", "TransactionTemplate")
+                        .WithMany("Tags")
+                        .HasForeignKey("TransactionTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tag");
+
+                    b.Navigation("TransactionTemplate");
+                });
+
             modelBuilder.Entity("Saldo.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Transactions");
@@ -261,6 +392,7 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
             modelBuilder.Entity("Saldo.Domain.Entities.Party", b =>
                 {
                     b.Navigation("CounterpartyTransactions");
+
                     b.Navigation("PayerTransactions");
                 });
 
@@ -270,6 +402,11 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                 });
 
             modelBuilder.Entity("Saldo.Domain.Entities.Transaction", b =>
+                {
+                    b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("Saldo.Domain.Entities.TransactionTemplate", b =>
                 {
                     b.Navigation("Tags");
                 });

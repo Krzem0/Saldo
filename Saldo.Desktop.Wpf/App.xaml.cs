@@ -100,6 +100,13 @@ public partial class App : System.Windows.Application
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IPartyRepository, PartyRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
+        services.AddScoped<ITransactionTemplateRepository, TransactionTemplateRepository>();
+        services.AddScoped<TransactionTemplateInput>();
+        services.AddScoped<AddTransactionTemplate>();
+        services.AddScoped<EditTransactionTemplate>();
+        services.AddScoped<GetTransactionTemplate>();
+        services.AddScoped<ListTransactionTemplates>();
+        services.AddScoped<DeleteTransactionTemplate>();
         services.AddScoped<IDatabaseBackupService, SqliteDatabaseBackupService>();
 
         services.AddScoped<IValidator<AddTransactionCommand>, AddTransactionCommandValidator>();
@@ -127,6 +134,7 @@ public partial class App : System.Windows.Application
         services.AddTransient<TransactionListViewModel>();
         services.AddTransient<CategoriesViewModel>();
         services.AddTransient<TagsViewModel>();
+        services.AddTransient<TransactionTemplatesViewModel>();
         services.AddTransient<PartiesViewModel>();
         services.AddTransient<LocationsViewModel>();
         services.AddTransient<SettingsViewModel>();

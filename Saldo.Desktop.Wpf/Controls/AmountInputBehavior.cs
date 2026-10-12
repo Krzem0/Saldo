@@ -42,6 +42,7 @@ public static partial class AmountInputBehavior
         if ((bool)e.OldValue)
         {
             textBox.PreviewTextInput -= OnPreviewTextInput;
+            textBox.PreviewKeyDown -= OnPreviewKeyDown;
             textBox.TextChanged -= OnTextChanged;
             textBox.GotKeyboardFocus -= OnGotKeyboardFocus;
             textBox.LostKeyboardFocus -= OnLostKeyboardFocus;
@@ -51,6 +52,7 @@ public static partial class AmountInputBehavior
         if ((bool)e.NewValue)
         {
             textBox.PreviewTextInput += OnPreviewTextInput;
+            textBox.PreviewKeyDown += OnPreviewKeyDown;
             textBox.TextChanged += OnTextChanged;
             textBox.GotKeyboardFocus += OnGotKeyboardFocus;
             textBox.LostKeyboardFocus += OnLostKeyboardFocus;
@@ -105,8 +107,35 @@ public static partial class AmountInputBehavior
     {
         if (sender is TextBox textBox)
         {
+            if (e.Text is "." or ",")
+            {
+                e.Handled = true;
+                InsertDecimalSeparator(textBox);
+                return;
+            }
             e.Handled = !IsValidAmount(GetCandidateText(textBox, e.Text));
         }
+    }
+
+    private static void OnPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender is not TextBox textBox || e.Key != Key.Decimal || Keyboard.Modifiers != ModifierKeys.None)
+            return;
+
+        // The numeric keypad can emit a dot even when the selected culture uses a comma.
+        // Handle the key before text composition so only the localized separator is inserted.
+        e.Handled = true;
+        InsertDecimalSeparator(textBox);
+    }
+
+    private static void InsertDecimalSeparator(TextBox textBox)
+    {
+        var separator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+        if (!IsValidAmount(GetCandidateText(textBox, separator))) return;
+        var caret = textBox.SelectionStart + separator.Length;
+        textBox.SelectedText = separator;
+        textBox.CaretIndex = caret;
+        textBox.SelectionLength = 0;
     }
 
     private static void OnPasting(object sender, DataObjectPastingEventArgs e)

@@ -43,6 +43,11 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     private string _locationText = string.Empty;
     private string? _description;
     private readonly Dictionary<string, List<string>> _validationErrorCodes = [];
+    private string _templateSaveMessage = string.Empty;
+    private string? _lastTemplateName;
+    private bool _isSavingTemplate;
+    public string TemplateSaveMessage { get => _templateSaveMessage; private set { if (SetField(ref _templateSaveMessage, value)) OnPropertyChanged(nameof(HasTemplateSaveMessage)); } }
+    public bool HasTemplateSaveMessage => TemplateSaveMessage.Length > 0;
 
     public sealed class TypeItem : ViewModelBase
     {
@@ -233,6 +238,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
     public event Action<bool>? RequestClose;
 
     public ICommand SaveCommand { get; }
+    public ICommand SaveAsTemplateCommand { get; }
     public ICommand ClearCommand { get; }
     public ICommand AddCategoryCommand { get; }
     public ICommand AddPayerCommand { get; }
@@ -250,7 +256,8 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         IReadOnlyList<Tag> tags,
         NewTransactionDefaultsDto? defaults = null,
         TransactionDto? existing = null,
-        TransactionDraft? draft = null)
+        TransactionDraft? draft = null,
+        TransactionTemplateDto? template = null)
         : base(localization)
     {
         _scopeFactory = scopeFactory;
@@ -273,6 +280,22 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
         _emptyDraft = CreateDraft();
 
+        if (template is not null)
+        {
+            _selectedType = Types.First(type => type.Value == template.TransactionType);
+            _amountText = template.Amount?.ToString("0.##", CultureInfo.CurrentCulture) ?? string.Empty;
+            _description = template.Description;
+            _selectedCategory = Categories.FirstOrDefault(c => c.Id == template.CategoryId);
+            _categoryText = _selectedCategory?.Name ?? string.Empty;
+            _selectedPayer = Parties.FirstOrDefault(p => p.Id == template.PayerId);
+            _payerText = _selectedPayer?.Name ?? string.Empty;
+            _selectedCounterparty = Parties.FirstOrDefault(p => p.Id == template.CounterpartyId);
+            _counterpartyText = _selectedCounterparty?.Name ?? string.Empty;
+            _selectedLocation = Locations.FirstOrDefault(l => l.Id == template.LocationId);
+            _locationText = _selectedLocation?.Name ?? string.Empty;
+            SelectTags(template.TagIds);
+        }
+
         if (existing is not null)
         {
             PopulateFrom(existing);
@@ -286,8 +309,9 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
             ApplyDraft(draft);
         }
 
-        SaveCommand = new AsyncRelayCommand(SaveAsync);
-        ClearCommand = new RelayCommand(Clear, () => IsNewTransaction && HasDraftContent);
+        SaveCommand = new AsyncRelayCommand(SaveAsync, () => !_isSavingTemplate);
+        SaveAsTemplateCommand = new AsyncRelayCommand(SaveAsTemplateAsync, () => IsNewTransaction && SaveCommand.CanExecute(null));
+        ClearCommand = new RelayCommand(Clear, () => IsNewTransaction && HasDraftContent && !_isSavingTemplate);
         AddCategoryCommand = new AsyncRelayCommand(AddCategoryAsync);
         AddPayerCommand = new AsyncRelayCommand(AddPayerAsync);
         AddCounterpartyCommand = new AsyncRelayCommand(AddCounterpartyAsync);
@@ -307,6 +331,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
                 or nameof(Description))
         {
             DismissRestoredDraftNotice();
+            TemplateSaveMessage = string.Empty;
         }
         CommandManager.InvalidateRequerySuggested();
     }
@@ -506,6 +531,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
 
     public bool CanClose()
     {
+        if (_isSavingTemplate) return false;
         if (!HasUnsavedChanges) return true;
 
         var choice = _dialogService.ConfirmUnsavedChanges(
@@ -633,6 +659,84 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         RequestClose?.Invoke(true);
     }
 
+    public async Task SaveAsTemplateAsync()
+    {
+        if (_isSavingTemplate || !IsNewTransaction) return;
+        TemplateSaveMessage = string.Empty;
+        ApplyValidationErrors([]);
+        decimal? amount = null;
+        if (!string.IsNullOrWhiteSpace(AmountText))
+        {
+            if (!decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.CurrentCulture, out var parsed))
+            {
+                SetFieldError(nameof(AmountText), AmountMustBeNumberError);
+                return;
+            }
+            amount = parsed;
+        }
+        // Resolve complete typed names without creating new dictionary entries.
+        var category = SelectedCategory ?? Categories.FirstOrDefault(c => string.Equals(c.Name, CategoryText.Trim(), StringComparison.OrdinalIgnoreCase));
+        var payer = SelectedPayer ?? Parties.FirstOrDefault(p => string.Equals(p.Name, PayerText.Trim(), StringComparison.OrdinalIgnoreCase));
+        var counterparty = SelectedCounterparty ?? Parties.FirstOrDefault(p => string.Equals(p.Name, CounterpartyText.Trim(), StringComparison.OrdinalIgnoreCase));
+        var location = SelectedLocation ?? Locations.FirstOrDefault(l => string.Equals(l.Name, LocationText.Trim(), StringComparison.OrdinalIgnoreCase));
+        void Check(object? selected, string text, string field)
+        {
+            if (selected is null && !string.IsNullOrWhiteSpace(text)) SetFieldError(field, ReferenceSelectionRequiredError);
+        }
+        Check(category, CategoryText, nameof(SelectedCategory)); Check(payer, PayerText, nameof(PayerText));
+        Check(counterparty, CounterpartyText, nameof(CounterpartyText)); Check(location, LocationText, nameof(LocationText));
+        if (_validationErrorCodes.Count > 0) return;
+
+        var name = _dialogService.ShowNameDialog(T("Transaction_SaveAsTemplate"), _lastTemplateName);
+        if (name is null) return;
+        _lastTemplateName = name;
+        _isSavingTemplate = true;
+        CommandManager.InvalidateRequerySuggested();
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var result = await scope.ServiceProvider.GetRequiredService<AddTransactionTemplate>().ExecuteAsync(
+                new SaveTransactionTemplateCommand(name, SelectedType.Value, Description ?? string.Empty,
+                    category?.Id, payer?.Id, counterparty?.Id, location?.Id, amount, SelectedTagIds));
+            if (result.IsSuccess) TemplateSaveMessage = T("Transaction_TemplateSaved");
+            else
+            {
+                foreach (var error in result.Errors)
+                {
+                    var field = error.Metadata.TryGetValue("PropertyName", out var property) ? property as string : null;
+                    var target = field switch
+                    {
+                        "Description" => nameof(Description), "Amount" => nameof(AmountText),
+                        "CategoryId" => nameof(SelectedCategory), "PayerId" => nameof(PayerText),
+                        "CounterpartyId" => nameof(CounterpartyText), "LocationId" => nameof(LocationText), _ => string.Empty
+                    };
+                    var code = error.Message switch
+                    {
+                        "TransactionTemplate.NameRequired" => "Validation_NameRequired",
+                        "TransactionTemplate.NameTooLong" => "Template_NameTooLong",
+                        "TransactionTemplate.NameDuplicate" => "Template_NameDuplicate",
+                        "TransactionTemplate.ContentRequired" => "Template_ContentRequired",
+                        "TransactionTemplate.ContentDuplicate" => "Template_ContentDuplicate",
+                        "TransactionTemplate.DescriptionTooLong" => "Validation_DescriptionTooLong",
+                        "TransactionTemplate.AmountMustBePositive" => "Validation_AmountMustBePositive",
+                        "TransactionTemplate.CategoryInvalid" => "Template_CategoryInvalid",
+                        _ => "Template_InvalidReference"
+                    };
+                    SetFieldError(target, code);
+                }
+            }
+        }
+        catch (Exception)
+        {
+            SetFieldError(string.Empty, "Template_SaveFailed");
+        }
+        finally
+        {
+            _isSavingTemplate = false;
+            CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
     protected override void OnCultureChanged()
     {
         OnPropertyChanged(nameof(Title));
@@ -726,7 +830,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase
         ErrorCodes.Transaction.LocationInvalid => T("Validation_LocationInvalid"),
         ReferenceSelectionRequiredError => T(ReferenceSelectionRequiredError),
         ErrorCodes.Transaction.NotFound => T("Validation_TransactionNotFound"),
-        _ => errorCode
+        _ => T(errorCode)
     };
 
     private void SetFieldError(string propertyName, string errorCode)

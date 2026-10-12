@@ -12,6 +12,8 @@ public sealed class SaldoDbContext : DbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<TransactionTag> TransactionTags => Set<TransactionTag>();
+    public DbSet<TransactionTemplate> TransactionTemplates => Set<TransactionTemplate>();
+    public DbSet<TransactionTemplateTag> TransactionTemplateTags => Set<TransactionTemplateTag>();
 
     public SaldoDbContext(DbContextOptions<SaldoDbContext> options)
         : base(options)

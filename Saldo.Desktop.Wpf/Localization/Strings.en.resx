@@ -146,4 +146,30 @@
   <data name="DefaultLocationLabel" xml:space="preserve"><value>Default location</value></data>
   <data name="DefaultLocationDescription" xml:space="preserve"><value>The location automatically selected for a new transaction.</value></data>
   <data name="ClearDefaultLocation" xml:space="preserve"><value>Clear default location</value></data>
+  <data name="Templates" xml:space="preserve"><value>Templates</value></data>
+  <data name="Template_AddTitle" xml:space="preserve"><value>Add template</value></data>
+  <data name="Template_EditTitle" xml:space="preserve"><value>Edit template</value></data>
+  <data name="Template_DeleteTitle" xml:space="preserve"><value>Delete template</value></data>
+  <data name="Template_OptionalAmount" xml:space="preserve"><value>Amount (optional)</value></data>
+  <data name="Template_ClearReference" xml:space="preserve"><value>Clear selection</value></data>
+  <data name="Template_Empty" xml:space="preserve"><value>No templates yet. Add your first template to get started.</value></data>
+  <data name="Template_UnsavedChanges" xml:space="preserve"><value>This template has unsaved changes. Save them before closing?</value></data>
+  <data name="Template_NameTooLong" xml:space="preserve"><value>The name can contain up to 100 characters.</value></data>
+  <data name="Template_NameDuplicate" xml:space="preserve"><value>A template with this name already exists. Choose another name.</value></data>
+  <data name="Template_NotFound" xml:space="preserve"><value>Template not found. Refresh the list.</value></data>
+  <data name="Template_InvalidReference" xml:space="preserve"><value>A selected dictionary entry is invalid. Reopen the form and check your selection.</value></data>
+  <data name="Template_SaveFailed" xml:space="preserve"><value>Could not save the template. Please try again.</value></data>
+  <data name="Template_LoadFailed" xml:space="preserve"><value>Could not load templates. Please reopen the page.</value></data>
+  <data name="Template_DeleteFailed" xml:space="preserve"><value>Could not delete the template. Please try again.</value></data>
+  <data name="TemplatePicker_Title" xml:space="preserve"><value>Choose a transaction template</value></data>
+  <data name="TemplatePicker_Search" xml:space="preserve"><value>Search templates by name</value></data>
+  <data name="TemplatePicker_Loading" xml:space="preserve"><value>Loading templates…</value></data>
+  <data name="TemplatePicker_Empty" xml:space="preserve"><value>No templates. Add one on the Templates page.</value></data>
+  <data name="TemplatePicker_NoMatches" xml:space="preserve"><value>No matching templates.</value></data>
+  <data name="TemplatePicker_LoadFailed" xml:space="preserve"><value>Could not load the template. Close the list and try again.</value></data>
+  <data name="Transaction_SaveAsTemplate" xml:space="preserve"><value>Save as template</value></data>
+  <data name="Transaction_TemplateSaved" xml:space="preserve"><value>Template saved. You can continue editing the transaction.</value></data>
+  <data name="Template_ContentRequired" xml:space="preserve"><value>Fill in at least one template field besides its name and type.</value></data>
+  <data name="Template_ContentDuplicate" xml:space="preserve"><value>A template with the same fields already exists.</value></data>
+  <data name="Template_CategoryInvalid" xml:space="preserve"><value>The selected category is invalid. Choose it again.</value></data>
 </root>

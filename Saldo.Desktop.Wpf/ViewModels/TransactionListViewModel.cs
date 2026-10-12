@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,107 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
     private bool _isLoading;
     private TransactionDraft? _newTransactionDraft;
     private DateOnly _lastNewTransactionDate = DateOnly.FromDateTime(DateTime.Today);
+    private IReadOnlyList<TransactionTemplateDto> _templates = [];
+    private bool _isTemplatePickerOpen;
+    private bool _isLoadingTemplates;
+    private string _templateSearch = string.Empty;
+    private string _templatePickerError = string.Empty;
+    private TransactionTemplateDto? _selectedTemplate;
+
+    public bool IsTemplatePickerOpen { get => _isTemplatePickerOpen; set => SetField(ref _isTemplatePickerOpen, value); }
+    public bool IsLoadingTemplates { get => _isLoadingTemplates; private set => SetField(ref _isLoadingTemplates, value); }
+    public string TemplatePickerError { get => _templatePickerError; private set => SetField(ref _templatePickerError, value); }
+    public ObservableCollection<TransactionTemplateDto> FilteredTemplates { get; } = [];
+    public TransactionTemplateDto? SelectedTemplate
+    {
+        get => _selectedTemplate;
+        set { SetField(ref _selectedTemplate, value); CommandManager.InvalidateRequerySuggested(); }
+    }
+    public string TemplateSearch
+    {
+        get => _templateSearch;
+        set { if (SetField(ref _templateSearch, value)) FilterTemplates(); }
+    }
+    public string TemplatePickerStatus => IsLoadingTemplates ? T("TemplatePicker_Loading")
+        : TemplatePickerError.Length > 0 ? TemplatePickerError
+        : FilteredTemplates.Count > 0 ? string.Empty
+        : _templates.Count == 0 ? T("TemplatePicker_Empty") : T("TemplatePicker_NoMatches");
+    public ICommand OpenTemplatePickerCommand { get; }
+    public ICommand UseTemplateCommand { get; }
+
+    private void FilterTemplates()
+    {
+        FilteredTemplates.Clear();
+        var query = SearchText(TemplateSearch.Trim());
+        foreach (var template in _templates.Where(t => SearchText(t.Name).Contains(query, StringComparison.OrdinalIgnoreCase))
+                     .OrderBy(t => t.Name, StringComparer.CurrentCultureIgnoreCase))
+            FilteredTemplates.Add(template);
+        SelectedTemplate = FilteredTemplates.FirstOrDefault();
+        OnPropertyChanged(nameof(TemplatePickerStatus));
+    }
+
+    private static string SearchText(string value) => new(value.Normalize(NormalizationForm.FormD)
+        .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+        .Select(c => c switch { 'ł' => 'l', 'Ł' => 'L', _ => c }).ToArray());
+
+    public async Task OpenTemplatePickerAsync()
+    {
+        if (IsTemplatePickerOpen) { IsTemplatePickerOpen = false; return; }
+        IsTemplatePickerOpen = true;
+        TemplateSearch = string.Empty;
+        IsLoadingTemplates = true;
+        TemplatePickerError = string.Empty;
+        _templates = [];
+        FilterTemplates();
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            _templates = await scope.ServiceProvider.GetRequiredService<ListTransactionTemplates>().ExecuteAsync();
+        }
+        catch (Exception)
+        {
+            TemplatePickerError = T("TemplatePicker_LoadFailed");
+        }
+        finally
+        {
+            IsLoadingTemplates = false;
+            FilterTemplates();
+        }
+    }
+
+    public async Task AddFromTemplateAsync(int id)
+    {
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var result = await scope.ServiceProvider.GetRequiredService<GetTransactionTemplate>().ExecuteAsync(id);
+            if (result.IsFailed)
+            {
+                TemplatePickerError = T("Template_NotFound");
+                OnPropertyChanged(nameof(TemplatePickerStatus));
+                return;
+            }
+            var (categories, parties, locations, tags, defaults) = await LoadNewTransactionDataAsync();
+            defaults = defaults with { Date = _lastNewTransactionDate };
+            var form = new AddEditTransactionViewModel(_scopeFactory, _dialogService, Localization,
+                categories, parties, locations, tags, defaults, template: result.Value);
+            IsTemplatePickerOpen = false;
+            if (_dialogService.ShowAddEditTransaction(form) == true)
+            {
+                _lastNewTransactionDate = DateOnly.FromDateTime(form.Date);
+                await LoadAsync();
+            }
+            else if (_newTransactionDraft is null && form.HasDraftContent)
+            {
+                _newTransactionDraft = form.CreateDraft();
+            }
+        }
+        catch (Exception)
+        {
+            TemplatePickerError = T("TemplatePicker_LoadFailed");
+            OnPropertyChanged(nameof(TemplatePickerStatus));
+        }
+    }
 
     public sealed class MonthItem : ViewModelBase
     {
@@ -172,6 +274,9 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
         NextPickerYearCommand     = new RelayCommand(() => PickerYear++);
         SelectMonthCommand        = new RelayCommand<int>(SelectMonth);
         AddCommand                = new AsyncRelayCommand(AddAsync);
+        OpenTemplatePickerCommand = new AsyncRelayCommand(OpenTemplatePickerAsync);
+        UseTemplateCommand = new AsyncRelayCommand(
+            () => AddFromTemplateAsync(SelectedTemplate!.Id), () => SelectedTemplate is not null && !IsLoadingTemplates);
         EditCommand               = new AsyncRelayCommand(EditAsync,   () => SelectedTransaction is not null);
         DeleteCommand             = new AsyncRelayCommand(DeleteAsync, () => SelectedTransaction is not null);
     }
@@ -264,6 +369,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
 
     private async Task AddAsync()
     {
+        IsTemplatePickerOpen = false;
         var (categories, parties, locations, tags, defaults) = await LoadNewTransactionDataAsync();
         defaults = defaults with { Date = _lastNewTransactionDate };
         var dialogVm = new AddEditTransactionViewModel(
@@ -350,6 +456,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase
 
     protected override void OnCultureChanged()
     {
+        FilterTemplates();
         OnPropertyChanged(nameof(MonthLabel));
         LoadCommand.Execute(null);
     }

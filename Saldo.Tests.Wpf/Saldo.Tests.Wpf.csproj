@@ -12,6 +12,11 @@
     <Using Include="Xunit" />
     <None Include="..\Saldo.Desktop.Wpf\Views\TransactionListView.xaml" Link="Views\TransactionListView.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\Saldo.Desktop.Wpf\Views\SettingsView.xaml" Link="Views\SettingsView.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Saldo.Desktop.Wpf\Views\TransactionTemplatesView.xaml" Link="Views\TransactionTemplatesView.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Saldo.Desktop.Wpf\Views\TransactionTemplateDialog.xaml" Link="Views\TransactionTemplateDialog.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Saldo.Desktop.Wpf\Views\AddTransactionButton.xaml" Link="Views\AddTransactionButton.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Saldo.Desktop.Wpf\Views\AddEditTransactionDialog.xaml" Link="Views\AddEditTransactionDialog.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\Saldo.Desktop.Wpf\App.xaml" Link="Views\App.xaml" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="..\Saldo.Tests.Unit\Fakes\FakeTransactionRepository.cs" Link="Fakes\FakeTransactionRepository.cs" />
     <Compile Include="..\Saldo.Tests.Unit\Fakes\FakePartyRepository.cs" Link="Fakes\FakePartyRepository.cs" />
     <Compile Include="..\Saldo.Tests.Unit\Fakes\FakeLocationRepository.cs" Link="Fakes\FakeLocationRepository.cs" />

@@ -158,6 +158,106 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+
+            migrationBuilder.CreateTable(
+                name: "TransactionTemplates",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    TransactionType = table.Column<int>(type: "INTEGER", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    Amount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
+                    CategoryId = table.Column<int>(type: "INTEGER", nullable: true),
+                    PayerId = table.Column<int>(type: "INTEGER", nullable: true),
+                    CounterpartyId = table.Column<int>(type: "INTEGER", nullable: true),
+                    LocationId = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TransactionTemplates", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TransactionTemplates_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_TransactionTemplates_Locations_LocationId",
+                        column: x => x.LocationId,
+                        principalTable: "Locations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_TransactionTemplates_Parties_CounterpartyId",
+                        column: x => x.CounterpartyId,
+                        principalTable: "Parties",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_TransactionTemplates_Parties_PayerId",
+                        column: x => x.PayerId,
+                        principalTable: "Parties",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TransactionTemplateTags",
+                columns: table => new
+                {
+                    TransactionTemplateId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TagId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TransactionTemplateTags", x => new { x.TransactionTemplateId, x.TagId });
+                    table.ForeignKey(
+                        name: "FK_TransactionTemplateTags_Tags_TagId",
+                        column: x => x.TagId,
+                        principalTable: "Tags",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_TransactionTemplateTags_TransactionTemplates_TransactionTemplateId",
+                        column: x => x.TransactionTemplateId,
+                        principalTable: "TransactionTemplates",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionTemplates_CategoryId",
+                table: "TransactionTemplates",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionTemplates_CounterpartyId",
+                table: "TransactionTemplates",
+                column: "CounterpartyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionTemplates_LocationId",
+                table: "TransactionTemplates",
+                column: "LocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionTemplates_Name",
+                table: "TransactionTemplates",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionTemplates_PayerId",
+                table: "TransactionTemplates",
+                column: "PayerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionTemplateTags_TagId",
+                table: "TransactionTemplateTags",
+                column: "TagId");
+
             migrationBuilder.CreateIndex(
                 name: "IX_Categories_Name",
                 table: "Categories",
@@ -221,6 +321,8 @@ namespace Saldo.Infrastructure.Sqlite.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(name: "TransactionTemplateTags");
+            migrationBuilder.DropTable(name: "TransactionTemplates");
             migrationBuilder.DropTable(name: "TransactionSettings");
             migrationBuilder.DropTable(
                 name: "TransactionTags");

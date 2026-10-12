@@ -79,6 +79,19 @@
 - Use `Result<T>` for expected validation failures when a use case should return success/failure without throwing
 - Reserve exceptions for unexpected technical failures
 
+## Transaction Templates
+
+- The Templates page supports adding, editing, and permanently deleting named reusable templates. The list shows name, description, category, transaction type, and optional amount. It reloads on navigation and preserves selection by ID.
+- The owned add/edit dialog has a name, type, optional amount, description, category, optional counterparty/payer/location, and selectable tags. It uses the transaction form's expense/income toggle, amount formatting/input behavior, searchable autocomplete selectors, category color/icon badges, tag chips, and explicit quick-add buttons. Optional references can be cleared with X; a blank amount is stored as `null`. Typed full dictionary names resolve to existing entries; partial or unknown names cannot be saved implicitly. Validation appears beside fields, and closing a changed form asks whether to save, discard, or continue editing. Polish/English labels and both appearance themes are supported.
+- The header's Add transaction split button opens the usual form on its main part; its arrow opens a searchable template list with bounded scrolling. Search matches names without case or diacritics. Choosing a template opens a new transaction with its fields and optional amount, keeping the current new-transaction date. References and templates are read fresh. An existing draft is preserved; cancelling a template form creates a draft only if none already exists.
+- The new-transaction form's Save as template button asks for a name and saves the current fields and selected tags without the date. An empty amount stays optional. Saving a template leaves the transaction form open and does not save a transaction. Duplicate names and invalid fields are reported without creating a template.
+- Templates require a name, a valid transaction type, and at least one additional field: description, category, payer, counterparty, location, positive amount, or a tag. Each additional field is individually optional. They have no date or recurrence fields and no link to saved transactions.
+- `SaveTransactionTemplateCommand` is shared by add/edit. Names and descriptions are trimmed; names are limited to 100 characters and checked for duplicates case-insensitively. Descriptions are limited to 500 characters. All supplied reference IDs must exist; repeated tag IDs are deduplicated.
+- Shared Application validation rejects identical content under a different name on add and edit, excluding the edited template itself. It compares type, trimmed description without case, amount, reference IDs, and the tag set without order or repetition. Null, empty, and whitespace descriptions are stored as NULL; empty categories are also stored as NULL. Empty templates return `TransactionTemplate.ContentRequired`; matching content returns `TransactionTemplate.ContentDuplicate`. Both WPF save paths display these errors.
+- Validation returns `Result` errors with stable `TransactionTemplate.*` codes and field metadata. Missing templates return `TransactionTemplate.NotFound`.
+- Dictionary entries referenced by templates cannot be deleted. Deleting a template removes its tag links, keeping dictionary entries and transactions.
+- New databases receive both template tables with optional descriptions and categories from the initial migration. Existing databases need a manual schema update to make template descriptions and categories nullable. The content rules run in Application and do not rewrite or delete existing duplicate templates.
+
 ## Logging
 
 - The WPF shell uses `Microsoft.Extensions.Logging` with Serilog
@@ -93,7 +106,7 @@
 - The app chooses its default language from the current system culture at startup
 - Initial category names are culture-aware. The initial migration seeds the self party (`Ja`, ID 1) and links it to the default payer setting; renaming the party preserves that selection.
 - Number formatting in the WPF UI follows the currently selected culture
-- Transaction amount fields display two decimal places and grouping when unfocused, without a currency symbol; editing uses plain numeric input. Empty fields remain empty. Presentation formatting never changes the input stored in drafts or the decimal amount sent to Application. Currency selection is not implemented yet.
+- Transaction amount fields display two decimal places and grouping when unfocused, without a currency symbol; editing uses plain numeric input. Dot and comma keys, including the numeric keypad decimal key, insert the selected culture's decimal separator (comma in Polish, dot in English). A second separator or more than two fractional digits is rejected. Empty fields remain empty. Presentation formatting never changes the input stored in drafts or the decimal amount sent to Application. Currency selection is not implemented yet.
 - New user-facing text should be added through localization resources instead of hardcoded strings
 
 ## Appearance

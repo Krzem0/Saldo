@@ -146,4 +146,30 @@
   <data name="DefaultLocationLabel" xml:space="preserve"><value>Domyślne miejsce</value></data>
   <data name="DefaultLocationDescription" xml:space="preserve"><value>Miejsce automatycznie wybierane przy dodawaniu nowej transakcji.</value></data>
   <data name="ClearDefaultLocation" xml:space="preserve"><value>Wyczyść domyślne miejsce</value></data>
+  <data name="Templates" xml:space="preserve"><value>Szablony</value></data>
+  <data name="Template_AddTitle" xml:space="preserve"><value>Dodaj szablon</value></data>
+  <data name="Template_EditTitle" xml:space="preserve"><value>Edytuj szablon</value></data>
+  <data name="Template_DeleteTitle" xml:space="preserve"><value>Usuń szablon</value></data>
+  <data name="Template_OptionalAmount" xml:space="preserve"><value>Kwota (opcjonalna)</value></data>
+  <data name="Template_ClearReference" xml:space="preserve"><value>Wyczyść wybór</value></data>
+  <data name="Template_Empty" xml:space="preserve"><value>Brak szablonów. Dodaj pierwszy, aby rozpocząć.</value></data>
+  <data name="Template_UnsavedChanges" xml:space="preserve"><value>Szablon ma niezapisane zmiany. Czy chcesz zapisać je przed zamknięciem?</value></data>
+  <data name="Template_NameTooLong" xml:space="preserve"><value>Nazwa może mieć maksymalnie 100 znaków.</value></data>
+  <data name="Template_NameDuplicate" xml:space="preserve"><value>Szablon o tej nazwie już istnieje. Wybierz inną nazwę.</value></data>
+  <data name="Template_NotFound" xml:space="preserve"><value>Szablon nie został znaleziony. Odśwież listę.</value></data>
+  <data name="Template_InvalidReference" xml:space="preserve"><value>Wybrana pozycja słownika jest nieprawidłowa. Otwórz formularz ponownie i sprawdź wybór.</value></data>
+  <data name="Template_SaveFailed" xml:space="preserve"><value>Nie udało się zapisać szablonu. Spróbuj ponownie.</value></data>
+  <data name="Template_LoadFailed" xml:space="preserve"><value>Nie udało się wczytać szablonów. Otwórz stronę ponownie.</value></data>
+  <data name="Template_DeleteFailed" xml:space="preserve"><value>Nie udało się usunąć szablonu. Spróbuj ponownie.</value></data>
+  <data name="TemplatePicker_Title" xml:space="preserve"><value>Wybierz szablon transakcji</value></data>
+  <data name="TemplatePicker_Search" xml:space="preserve"><value>Szukaj szablonu po nazwie</value></data>
+  <data name="TemplatePicker_Loading" xml:space="preserve"><value>Wczytywanie szablonów…</value></data>
+  <data name="TemplatePicker_Empty" xml:space="preserve"><value>Brak szablonów. Dodaj pierwszy na stronie Szablony.</value></data>
+  <data name="TemplatePicker_NoMatches" xml:space="preserve"><value>Brak pasujących szablonów.</value></data>
+  <data name="TemplatePicker_LoadFailed" xml:space="preserve"><value>Nie udało się wczytać szablonu. Zamknij listę i spróbuj ponownie.</value></data>
+  <data name="Transaction_SaveAsTemplate" xml:space="preserve"><value>Zapisz jako szablon</value></data>
+  <data name="Transaction_TemplateSaved" xml:space="preserve"><value>Szablon zapisany. Możesz dalej uzupełniać transakcję.</value></data>
+  <data name="Template_ContentRequired" xml:space="preserve"><value>Uzupełnij przynajmniej jedno pole szablonu poza nazwą i typem.</value></data>
+  <data name="Template_ContentDuplicate" xml:space="preserve"><value>Szablon z takimi samymi polami już istnieje.</value></data>
+  <data name="Template_CategoryInvalid" xml:space="preserve"><value>Wybrana kategoria jest nieprawidłowa. Wybierz ją ponownie.</value></data>
 </root>
