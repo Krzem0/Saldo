@@ -12,6 +12,34 @@
         <localization:TransactionTypeToTextConverter x:Key="TransactionTypeToTextConverter"/>
         <localization:LocalizedNumberConverter x:Key="LocalizedNumberConverter"/>
         <localization:CategoryColorBrushConverter x:Key="CategoryColorBrushConverter"/>
+        <Style x:Key="SummaryFilterButtonStyle" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                            </DataTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="TransactionTextStyle" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
@@ -318,7 +346,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Background="{DynamicResource SuccessBackgroundBrush}" CornerRadius="4" Padding="12,6" Margin="0,0,4,0">
+                <Button Grid.Column="0" Background="{DynamicResource SuccessBackgroundBrush}" Style="{StaticResource SummaryFilterButtonStyle}" Command="{Binding ShowIncomeCommand}" Tag="{Binding IsIncomeFilterActive}" Margin="0,0,4,0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Income]}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,6,0"/>
                         <TextBlock Foreground="{DynamicResource SuccessTextBrush}" FontWeight="Bold">
@@ -330,9 +358,9 @@
                             </TextBlock.Text>
                         </TextBlock>
                     </StackPanel>
-                </Border>
+                </Button>
 
-                <Border Grid.Column="1" Background="{DynamicResource ExpenseBackgroundBrush}" CornerRadius="4" Padding="12,6" Margin="0,0,4,0">
+                <Button Grid.Column="1" Background="{DynamicResource ExpenseBackgroundBrush}" Style="{StaticResource SummaryFilterButtonStyle}" Command="{Binding ShowExpensesCommand}" Tag="{Binding IsExpenseFilterActive}" Margin="0,0,4,0">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Expense]}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,6,0"/>
                         <TextBlock Foreground="{DynamicResource ExpenseTextBrush}" FontWeight="Bold">
@@ -344,9 +372,9 @@
                             </TextBlock.Text>
                         </TextBlock>
                     </StackPanel>
-                </Border>
+                </Button>
 
-                <Border Grid.Column="2" Background="{DynamicResource SummaryBalanceBrush}" CornerRadius="4" Padding="12,6">
+                <Button Grid.Column="2" Background="{DynamicResource SummaryBalanceBrush}" Style="{StaticResource SummaryFilterButtonStyle}" Command="{Binding ShowAllCommand}" Tag="{Binding IsAllFilterActive}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Balance]}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,6,0"/>
                         <TextBlock Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="Bold">
@@ -358,7 +386,7 @@
                             </TextBlock.Text>
                         </TextBlock>
                     </StackPanel>
-                </Border>
+                </Button>
             </Grid>
         </Border>
 
@@ -466,7 +494,7 @@
                         <Style TargetType="TextBlock">
                             <Setter Property="Visibility" Value="Collapsed"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding Transactions.Count}" Value="0">
+                                <DataTrigger Binding="{Binding Items.Count, ElementName=TransactionGrid}" Value="0">
                                     <Setter Property="Visibility" Value="Visible"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -490,7 +518,12 @@
             </StackPanel>
             <TextBlock Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,16,0" FontSize="12"
                        Foreground="{DynamicResource MutedTextBrush}">
-                <Run Text="{Binding Source={StaticResource Localization}, Path=[TransactionList_RowCount], Mode=OneWay}"/><Run Text=" "/><Run Text="{Binding Transactions.Count, Mode=OneWay}"/>
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0} {1}" Mode="OneWay">
+                        <Binding Source="{StaticResource Localization}" Path="[TransactionList_RowCount]"/>
+                        <Binding ElementName="TransactionGrid" Path="Items.Count"/>
+                    </MultiBinding>
+                </TextBlock.Text>
             </TextBlock>
         </Grid>
     </Grid>

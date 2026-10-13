@@ -171,7 +171,7 @@
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <Grid>
-                    <TextBox x:Name="DescriptionBox" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0" Padding="4,0,32,0" MinHeight="30" VerticalContentAlignment="Center"/>
+                    <TextBox x:Name="DescriptionBox" controls:InitialCapitalBehavior.IsEnabled="True" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Margin="0" Padding="4,0,32,0" MinHeight="30" VerticalContentAlignment="Center"/>
                     <Button Command="{Binding ClearDescriptionCommand}" Click="ClearDescription_Click" Margin="0,0,4,0"
                             ToolTip="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
                             AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[ClearText]}"

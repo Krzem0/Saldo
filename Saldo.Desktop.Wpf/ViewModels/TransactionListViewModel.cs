@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Data;
+using Saldo.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Saldo.Application.DTOs;
 using Saldo.Application.Interfaces;
@@ -27,6 +29,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     private MonthlySummaryDto? _summary;
     private TransactionDto? _selectedTransaction;
     private bool _isLoading;
+    private TransactionType? _typeFilter;
     private TransactionDraft? _newTransactionDraft;
     private DateOnly _lastNewTransactionDate = DateOnly.FromDateTime(DateTime.Today);
     public TransactionTemplatePickerViewModel TemplatePicker { get; }
@@ -180,6 +183,30 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
 
     public bool IsLoading { get => _isLoading; private set => SetField(ref _isLoading, value); }
 
+    public bool IsIncomeFilterActive => _typeFilter == TransactionType.Income;
+    public bool IsExpenseFilterActive => _typeFilter == TransactionType.Expense;
+    public bool IsAllFilterActive => _typeFilter is null;
+    public ICommand ShowIncomeCommand { get; }
+    public ICommand ShowExpensesCommand { get; }
+    public ICommand ShowAllCommand { get; }
+
+    private void SetTypeFilter(TransactionType? type)
+    {
+        _typeFilter = type;
+        ApplyTypeFilter();
+        OnPropertyChanged(nameof(IsIncomeFilterActive));
+        OnPropertyChanged(nameof(IsExpenseFilterActive));
+        OnPropertyChanged(nameof(IsAllFilterActive));
+    }
+
+    private void ApplyTypeFilter()
+    {
+        var view = CollectionViewSource.GetDefaultView(Transactions);
+        view.Filter = _typeFilter is null ? null : item => item is TransactionDto transaction && transaction.Type == _typeFilter;
+        if (SelectedTransaction is not null && !view.Contains(SelectedTransaction))
+            SelectedTransaction = null;
+    }
+
     public ICommand LoadCommand              { get; }
     public ICommand PreviousMonthCommand     { get; }
     public ICommand NextMonthCommand         { get; }
@@ -200,6 +227,10 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         _year       = DateTime.Today.Year;
         _month      = DateTime.Today.Month;
         _pickerYear = _year;
+
+        ShowIncomeCommand = new RelayCommand(() => SetTypeFilter(TransactionType.Income));
+        ShowExpensesCommand = new RelayCommand(() => SetTypeFilter(TransactionType.Expense));
+        ShowAllCommand = new RelayCommand(() => SetTypeFilter(null));
 
         PickerMonths = Enumerable.Range(1, 12)
             .Select(m => new MonthItem(m, localization))
@@ -249,6 +280,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             var summary = await scope.ServiceProvider.GetRequiredService<GetSummary>().ExecuteAsync(query);
 
             Transactions = new ObservableCollection<TransactionDto>(transactions);
+            ApplyTypeFilter();
             Summary = summary;
         }
         catch (Exception ex)
