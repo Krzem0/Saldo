@@ -216,6 +216,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     public ICommand NextPickerYearCommand    { get; }
     public ICommand SelectMonthCommand       { get; }
     public ICommand AddCommand               { get; }
+    public ICommand AddSimilarCommand        { get; }
     public ICommand EditCommand              { get; }
     public ICommand DeleteCommand            { get; }
 
@@ -245,6 +246,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         NextPickerYearCommand     = new RelayCommand(() => PickerYear++);
         SelectMonthCommand        = new RelayCommand<int>(SelectMonth);
         AddCommand                = new AsyncRelayCommand(AddAsync);
+        AddSimilarCommand         = new AsyncRelayCommand<TransactionDto>(AddSimilarAsync);
         TemplatePicker = new TransactionTemplatePickerViewModel(scopeFactory, localization, AddFromTemplateAsync);
         EditCommand               = new AsyncRelayCommand(EditAsync,   () => SelectedTransaction is not null);
         DeleteCommand             = new AsyncRelayCommand(DeleteAsync, () => SelectedTransaction is not null);
@@ -355,6 +357,33 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         else
         {
             _newTransactionDraft = dialogVm.HasDraftContent ? dialogVm.CreateDraft() : null;
+        }
+    }
+
+    private async Task AddSimilarAsync(TransactionDto source)
+    {
+        try
+        {
+            IsTemplatePickerOpen = false;
+            var (categories, parties, locations, tags, defaults) = await LoadNewTransactionDataAsync();
+            defaults = defaults with { Date = _lastNewTransactionDate };
+            var form = new AddEditTransactionViewModel(
+                _scopeFactory, _dialogService, Localization, categories, parties, locations, tags, defaults,
+                copyFrom: source);
+
+            if (_dialogService.ShowAddEditTransaction(form) == true)
+            {
+                _lastNewTransactionDate = DateOnly.FromDateTime(form.Date);
+                await LoadAsync();
+            }
+            else if (_newTransactionDraft is null && form.HasDraftContent)
+            {
+                _newTransactionDraft = form.CreateDraft();
+            }
+        }
+        catch (Exception ex)
+        {
+            _dialogService.ShowMessage(T("ErrorTitle"), ex.Message);
         }
     }
 

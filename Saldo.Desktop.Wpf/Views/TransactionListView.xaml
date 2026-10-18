@@ -8,6 +8,7 @@
         <ResourceDictionary>
         <ResourceDictionary.MergedDictionaries>
             <ResourceDictionary Source="../Themes/TagLabelTemplates.xaml"/>
+            <ResourceDictionary Source="../Themes/ContextMenuStyles.xaml"/>
         </ResourceDictionary.MergedDictionaries>
         <localization:TransactionTypeToTextConverter x:Key="TransactionTypeToTextConverter"/>
         <localization:LocalizedNumberConverter x:Key="LocalizedNumberConverter"/>
@@ -133,6 +134,24 @@
         <Style x:Key="TransactionGridRowStyle" TargetType="DataGridRow">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
             <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+            <Setter Property="ContextMenu">
+                <Setter.Value>
+                    <ContextMenu Style="{StaticResource ActionContextMenuStyle}"
+                                 DataContext="{Binding PlacementTarget, RelativeSource={RelativeSource Self}}">
+                        <MenuItem Header="{Binding Source={StaticResource Localization}, Path=[Transaction_AddSimilar]}"
+                                  Command="{Binding Tag.AddSimilarCommand}"
+                                  CommandParameter="{Binding DataContext}">
+                            <MenuItem.Icon>
+                                <Path Width="14" Height="14" Stretch="Uniform"
+                                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=MenuItem}}"
+                                      StrokeThickness="1.4" StrokeLineJoin="Round"
+                                      Data="M 5,1 L 13,1 L 13,10 M 1,4 L 10,4 L 10,14 L 1,14 Z"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </Setter.Value>
+            </Setter>
         </Style>
         </ResourceDictionary>
     </UserControl.Resources>

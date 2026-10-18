@@ -42,7 +42,8 @@ public sealed class TransactionListViewTests
                     element.Name = XName.Get(element.Name.LocalName, element.Name.NamespaceName + ";assembly=Saldo.Desktop.Wpf");
                 foreach (var attribute in root.Descendants().Attributes("TargetUpdated").ToArray()) attribute.Remove();
                 var resources = root.Element(presentation + "UserControl.Resources")!.Element(presentation + "ResourceDictionary")!;
-                resources.Add(new XElement(localization + "LocalizationService", new XAttribute(x + "Key", "Localization")));
+                resources.Element(presentation + "ResourceDictionary.MergedDictionaries")!.AddAfterSelf(
+                    new XElement(localization + "LocalizationService", new XAttribute(x + "Key", "Localization")));
                 foreach (var key in new[] { "MonthNavigationButtonStyle", "SecondaryActionButtonStyle", "DangerActionButtonStyle" })
                     resources.Add(new XElement(presentation + "Style", new XAttribute(x + "Key", key), new XAttribute("TargetType", "Button")));
                 var view = (UserControl)XamlReader.Parse(source.ToString(SaveOptions.DisableFormatting), new ParserContext
@@ -87,6 +88,16 @@ public sealed class TransactionListViewTests
                 }
 
                 var expense = vm.Transactions.Single(transaction => transaction.Type == TransactionType.Expense);
+                view.UpdateLayout();
+                var expenseRow = (DataGridRow)grid.ItemContainerGenerator.ContainerFromItem(expense);
+                var menu = expenseRow.ContextMenu;
+                Assert.NotNull(menu);
+                menu.PlacementTarget = expenseRow;
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                var addSimilar = Assert.IsType<MenuItem>(Assert.Single(menu.Items.Cast<object>()));
+                Assert.Same(vm.AddSimilarCommand, addSimilar.Command);
+                Assert.Same(expense, addSimilar.CommandParameter);
+                Assert.Equal(((LocalizationService)view.Resources["Localization"])["Transaction_AddSimilar"], addSimilar.Header);
                 vm.SelectedTransaction = expense;
                 Click(vm.ShowIncomeCommand);
                 Assert.Equal(TransactionType.Income, Assert.IsType<Saldo.Application.DTOs.TransactionDto>(Assert.Single(grid.Items.Cast<object>())).Type);

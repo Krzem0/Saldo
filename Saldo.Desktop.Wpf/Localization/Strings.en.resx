@@ -176,4 +176,5 @@
   <data name="ReferenceList_NoMatches" xml:space="preserve"><value>No matching entries.</value></data>
   <data name="ClearText" xml:space="preserve"><value>Clear field</value></data>
   <data name="Transaction_TemplateTitleSuffix" xml:space="preserve"><value> — template: “{0}”</value></data>
+  <data name="Transaction_AddSimilar" xml:space="preserve"><value>Add similar transaction…</value></data>
 </root>

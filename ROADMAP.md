@@ -21,6 +21,7 @@ This document tracks planned work. Implemented behavior and architectural decisi
 - [x] Save the new-transaction form as a named template without saving the transaction.
 - [x] Load a template into an already open new-transaction form through a searchable picker beside Description, preserving the date.
 - [ ] Consider creating templates from existing saved transactions.
+- [x] Duplicate a transaction through the row context menu into a new-transaction form with its fields prefilled, except for an empty amount that must be entered, and the usual new-form date, allowing changes before saving a separate transaction without creating a template or modifying the original.
 - [ ] Replace the full transaction tag cloud with a dropdown for choosing tags; display only selected tags below it using the current chip appearance (the current form still displays all available tags as selectable chips)
 - [ ] Further WPF visual polish and accessibility review
 - [ ] Recurring transactions

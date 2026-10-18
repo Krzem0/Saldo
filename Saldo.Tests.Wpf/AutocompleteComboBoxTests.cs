@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Input;
+using System.Windows.Interop;
 using Saldo.Desktop.Wpf.Controls;
 
 namespace Saldo.Tests.Wpf;
@@ -45,6 +46,7 @@ public sealed class AutocompleteComboBoxTests
             control.Text = "miesz";
             Assert.Same(category, Assert.Single(control.FilteredItemsSource!.Cast<object>()));
             list.SelectedItem = category;
+            Assert.True(PressKey(textBox: (TextBox)control.Template.FindName("PART_EditableTextBox", control), Key.Enter).Handled);
             Assert.Same(category, control.SelectedItem);
             Assert.Equal(category.Name, control.Text);
             control.Measure(new Size(300, 40));
@@ -74,6 +76,93 @@ public sealed class AutocompleteComboBoxTests
         }
         finally { control.IsDropDownOpen = false; }
     });
+
+    [Fact]
+    public void ArrowNavigation_PreviewsWithoutCommittingAndEnterAcceptsHighlightedSuggestion() => OnSta(() =>
+    {
+        var control = CreateKeyboardControl();
+        var textBox = (TextBox)control.Template.FindName("PART_EditableTextBox", control);
+        var list = (ListBox)control.Template.FindName("PART_ItemsList", control);
+        try
+        {
+            textBox.Text = "m";
+            Assert.True(PressKey(textBox, Key.Down).Handled);
+            Assert.Equal("Mieszkanie", list.SelectedItem);
+            Assert.Null(control.SelectedItem);
+            Assert.Equal("m", control.Text);
+            Assert.True(PressKey(textBox, Key.Down).Handled);
+            Assert.Equal("Media", list.SelectedItem);
+            Assert.True(PressKey(textBox, Key.Enter).Handled);
+            Assert.Equal("Media", control.SelectedItem);
+            Assert.Equal("Media", textBox.Text);
+            Assert.False(control.IsDropDownOpen);
+            Assert.False(PressKey(textBox, Key.Enter).Handled);
+        }
+        finally { control.IsDropDownOpen = false; }
+    });
+
+    [Theory]
+    [InlineData("miesz", "Mieszkanie", false)]
+    [InlineData("unknown", null, true)]
+    [InlineData("m", null, true)]
+    public void Enter_ConsumesOpenListAndAcceptsOnlyUnambiguousOrHighlightedMatch(string query, string? expected, bool staysOpen) => OnSta(() =>
+    {
+        var control = CreateKeyboardControl();
+        var textBox = (TextBox)control.Template.FindName("PART_EditableTextBox", control);
+        try
+        {
+            textBox.Text = query;
+            Assert.True(PressKey(textBox, Key.Enter).Handled);
+            Assert.Equal(expected, control.SelectedItem);
+            Assert.Equal(expected ?? query, textBox.Text);
+            Assert.Equal(staysOpen, control.IsDropDownOpen);
+        }
+        finally { control.IsDropDownOpen = false; }
+    });
+
+    [Fact]
+    public void ListFocus_EnterCommitsAndEscapeDismissesWithoutCommitting() => OnSta(() =>
+    {
+        var control = CreateKeyboardControl();
+        var textBox = (TextBox)control.Template.FindName("PART_EditableTextBox", control);
+        var list = (ListBox)control.Template.FindName("PART_ItemsList", control);
+        try
+        {
+            control.IsDropDownOpen = true;
+            Assert.True(PressKey(list, Key.Up).Handled);
+            Assert.Equal("Transport", list.SelectedItem);
+            Assert.True(PressKey(list, Key.Escape).Handled);
+            Assert.False(control.IsDropDownOpen);
+            Assert.Null(control.SelectedItem);
+            textBox.Text = "m";
+            Assert.Equal(-1, list.SelectedIndex);
+            Assert.True(PressKey(list, Key.Down).Handled);
+            Assert.True(PressKey(list, Key.Enter).Handled);
+            Assert.Equal("Mieszkanie", control.SelectedItem);
+            Assert.False(control.IsDropDownOpen);
+        }
+        finally { control.IsDropDownOpen = false; }
+    });
+
+    private static AutocompleteComboBox CreateKeyboardControl()
+    {
+        var control = new AutocompleteComboBox { ItemsSource = new[] { "Mieszkanie", "Media", "Transport" } };
+        var resources = new ResourceDictionary
+            { Source = new Uri("/Saldo.Desktop.Wpf;component/Themes/Generic.xaml", UriKind.Relative) };
+        control.Style = (Style)resources[typeof(AutocompleteComboBox)];
+        control.ApplyTemplate();
+        return control;
+    }
+
+    private static KeyEventArgs PressKey(UIElement textBox, Key key)
+    {
+        using var source = new HwndSource(new HwndSourceParameters("Autocomplete keyboard verification")
+            { Width = 1, Height = 1, WindowStyle = 0 });
+        var input = new KeyEventArgs(Keyboard.PrimaryDevice, source, Environment.TickCount, key)
+            { RoutedEvent = Keyboard.PreviewKeyDownEvent };
+        textBox.RaiseEvent(input);
+        return input;
+    }
 
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
     {

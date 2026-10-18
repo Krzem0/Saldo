@@ -176,4 +176,5 @@
   <data name="ReferenceList_NoMatches" xml:space="preserve"><value>Brak pasujących pozycji.</value></data>
   <data name="ClearText" xml:space="preserve"><value>Wyczyść pole</value></data>
   <data name="Transaction_TemplateTitleSuffix" xml:space="preserve"><value> — szablon: „{0}”</value></data>
+  <data name="Transaction_AddSimilar" xml:space="preserve"><value>Dodaj podobną transakcję…</value></data>
 </root>

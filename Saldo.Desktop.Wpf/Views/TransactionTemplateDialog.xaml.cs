@@ -34,7 +34,7 @@ public partial class TransactionTemplateDialog : Window
     {
         if (!_allowClose && _viewModel?.CanClose() == false) e.Cancel = true;
     }
-    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key != System.Windows.Input.Key.Escape) return;
         e.Handled = true;

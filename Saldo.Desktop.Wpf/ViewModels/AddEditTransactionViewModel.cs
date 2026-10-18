@@ -270,7 +270,8 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
         NewTransactionDefaultsDto? defaults = null,
         TransactionDto? existing = null,
         TransactionDraft? draft = null,
-        TransactionTemplateDto? template = null)
+        TransactionTemplateDto? template = null,
+        TransactionDto? copyFrom = null)
         : base(localization)
     {
         _scopeFactory = scopeFactory;
@@ -293,6 +294,15 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
 
         _emptyDraft = CreateDraft();
         TemplatePicker = new TransactionTemplatePickerViewModel(scopeFactory, localization, LoadTemplateAsync);
+
+        if (copyFrom is not null)
+        {
+            var newDate = _date;
+            PopulateFrom(copyFrom);
+            TransactionId = null;
+            _date = newDate;
+            _amountText = string.Empty;
+        }
 
         if (template is not null)
         {

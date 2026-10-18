@@ -11,6 +11,99 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class TransactionDateSessionTests
 {
+    [Theory]
+    [InlineData(Saldo.Domain.Enums.TransactionType.Expense)]
+    [InlineData(Saldo.Domain.Enums.TransactionType.Income)]
+    public async Task AddSimilar_CreatesSeparateTransactionWithNewFormDateAndPreservesExistingDraft(
+        Saldo.Domain.Enums.TransactionType type)
+    {
+        var transactions = new FakeTransactionRepository();
+        var source = new Transaction
+        {
+            Date = new DateOnly(2018, 4, 5), Type = type, Amount = 25.5m,
+            CategoryId = 1, Description = "Original description"
+        };
+        await transactions.AddAsync(source);
+        using var provider = CreateProvider(transactions);
+        var dialogs = new Dialogs();
+        var vm = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), dialogs, new LocalizationService());
+        Assert.False(vm.AddSimilarCommand.CanExecute(null));
+        vm.SelectedTransaction = new Saldo.Application.DTOs.TransactionDto(99, source.Date,
+            type, 999m, 1, "Food", null, null, null, null, null, null, null, "Wrong row", [], []);
+        var row = vm.SelectedTransaction with { Id = source.Id, Amount = source.Amount, Description = source.Description };
+
+        // Keep a separate unfinished Add form while creating a similar transaction.
+        dialogs.Show = form => { form.Description = "Unfinished add form"; return false; };
+        vm.AddCommand.Execute(null);
+        dialogs.Show = form =>
+        {
+            Assert.True(form.IsNewTransaction);
+            Assert.Null(form.TransactionId);
+            Assert.False(form.IsRestoredDraft);
+            Assert.Equal(DateTime.Today, form.Date);
+            Assert.Equal(type, form.SelectedType.Value);
+            Assert.Empty(form.AmountText);
+            Assert.Equal(1, form.SelectedCategory!.Id);
+            Assert.Null(form.SelectedPayer);
+            Assert.Null(form.SelectedCounterparty);
+            Assert.Null(form.SelectedLocation);
+            Assert.Equal("Original description", form.Description);
+            form.Description = "New description";
+            form.Date = DateTime.Today.AddDays(-2);
+            bool? result = null;
+            form.RequestClose += closed => result = closed;
+            form.SaveCommand.Execute(null);
+            Assert.Null(result);
+            Assert.True(form.HasAmountError);
+            form.AmountText = "40";
+            form.SaveCommand.Execute(null);
+            Assert.True(result);
+            return result;
+        };
+        vm.AddSimilarCommand.Execute(row);
+        var added = (await transactions.GetByIdAsync(2))!;
+        Assert.Equal("New description", added.Description);
+        Assert.Equal(DateOnly.FromDateTime(DateTime.Today.AddDays(-2)), added.Date);
+        Assert.Equal(type, added.Type);
+        Assert.Equal(40m, added.Amount);
+        Assert.Equal(25.5m, source.Amount);
+        Assert.Equal("Original description", (await transactions.GetByIdAsync(source.Id))!.Description);
+        Assert.Equal(new DateOnly(2018, 4, 5), source.Date);
+
+        dialogs.Show = form => { Assert.Equal("Unfinished add form", form.Description); return false; };
+        vm.AddCommand.Execute(null);
+        vm.OpenMonthPickerCommand.Execute(null);
+        vm.PickerYearText = "2019";
+        vm.SelectMonthCommand.Execute(9);
+        dialogs.Show = form => { Assert.Equal(new DateTime(2019, 9, 1), form.Date); return false; };
+        vm.AddSimilarCommand.Execute(row);
+        Assert.Null(await transactions.GetByIdAsync(3));
+    }
+
+    [Fact]
+    public void CopyFrom_PrefillsReferencesAndTagsWithoutCopyingIdentityOrDate()
+    {
+        using var provider = CreateProvider();
+        var row = new Saldo.Application.DTOs.TransactionDto(7, new DateOnly(2018, 1, 2),
+            Saldo.Domain.Enums.TransactionType.Expense, 42m, 1, "Food", null, 2, "Payer", 3, "Shop", 4, "Location",
+            "Description", ["Tag"], [5]);
+        var date = new DateOnly(2020, 6, 3);
+        var form = new AddEditTransactionViewModel(provider.GetRequiredService<IServiceScopeFactory>(), new Dialogs(),
+            new LocalizationService(), [new Category { Id = 1, Name = "Food" }],
+            [new Party { Id = 2, Name = "Payer" }, new Party { Id = 3, Name = "Shop" }],
+            [new Location { Id = 4, Name = "Location" }], [new Tag { Id = 5, Name = "Tag" }],
+            new Saldo.Application.DTOs.NewTransactionDefaultsDto(date, Saldo.Domain.Enums.TransactionType.Expense, null), copyFrom: row);
+        var draft = form.CreateDraft();
+        Assert.Null(draft.TransactionId);
+        Assert.Empty(draft.AmountText);
+        Assert.Equal(date.ToDateTime(TimeOnly.MinValue), draft.Date);
+        Assert.Equal(2, draft.PayerId);
+        Assert.Equal(3, draft.CounterpartyId);
+        Assert.Equal(4, draft.LocationId);
+        Assert.Equal(new[] { 5 }, draft.TagIds);
+        Assert.Null(draft.SourceTemplateName);
+    }
+
     [Fact]
     public async Task NewForms_KeepSuccessfulDateWhileCancellationFailedSaveAndEditDoNotChangeIt()
     {

@@ -3,6 +3,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -16,6 +17,52 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class TransactionTemplatesViewTests
 {
+    [Fact]
+    public void TemplateForm_EscapeDismissesSuggestionsBeforeRequestingFormCancellation() => OnSta(() =>
+    {
+        using var harness = new TransactionTemplatesTests.Harness("pl-PL");
+        var window = (Window)Load("TransactionTemplateDialog.xaml", "LightTheme");
+        window.DataContext = harness.Form();
+        var surface = (FrameworkElement)window.Content;
+        Layout(surface, 520, 900);
+        var selector = Descendants(surface).OfType<AutocompleteComboBox>().First();
+        var textBox = (TextBox)selector.Template.FindName("PART_EditableTextBox", selector);
+        // Use the window's declared event so this catches a regression to preview-phase cancellation.
+        var xaml = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Views", "TransactionTemplateDialog.xaml"));
+        var eventName = xaml.Root!.Attributes().Single(a => a.Name.LocalName is "KeyDown" or "PreviewKeyDown").Name.LocalName;
+        var cancelEvent = EventManager.GetRoutedEventsForOwner(typeof(UIElement)).Single(e => e.Name == eventName);
+        var cancellationRequests = 0;
+        window.AddHandler(cancelEvent, new KeyEventHandler((_, e) =>
+        {
+            if (e.Key != Key.Escape) return;
+            cancellationRequests++;
+            e.Handled = true;
+        }));
+        using var source = new HwndSource(new HwndSourceParameters("Template Escape verification")
+            { Width = 1, Height = 1, WindowStyle = 0 });
+        void Escape()
+        {
+            var input = new KeyEventArgs(Keyboard.PrimaryDevice, source, Environment.TickCount, Key.Escape)
+                { RoutedEvent = Keyboard.PreviewKeyDownEvent };
+            textBox.RaiseEvent(input);
+            input.RoutedEvent = Keyboard.KeyDownEvent;
+            textBox.RaiseEvent(input);
+            Assert.True(input.Handled);
+        }
+        try
+        {
+            textBox.Text = "Jedzenie";
+            Assert.True(selector.IsDropDownOpen);
+            Escape();
+            Assert.False(selector.IsDropDownOpen);
+            Assert.Equal(0, cancellationRequests);
+            Assert.Equal("Jedzenie", textBox.Text);
+            Escape();
+            Assert.Equal(1, cancellationRequests);
+        }
+        finally { selector.IsDropDownOpen = false; window.Close(); }
+    });
+
     [Theory]
     [InlineData("LightTheme")]
     [InlineData("DarkTheme")]
@@ -262,7 +309,9 @@ public sealed class TransactionTemplatesViewTests
         foreach (var picker in root.Descendants().Where(e => e.Name.LocalName == "AddTransactionButton").ToArray())
         {
             var definition = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Views", "AddTransactionButton.xaml")).Root!;
-            var inline = new XElement(p + "UserControl", definition.Elements().Select(e => new XElement(e)));
+            var inline = new XElement(p + "UserControl",
+                definition.Attributes().Where(a => a.IsNamespaceDeclaration).Select(a => new XAttribute(a)),
+                definition.Elements().Select(e => new XElement(e)));
             foreach (var attribute in picker.Attributes().Where(a => a.Name.LocalName != "IsTemplateOnly"))
                 inline.SetAttributeValue(attribute.Name, attribute.Value);
             inline.AddFirst(new XElement(p + "UserControl.Tag",
@@ -272,7 +321,7 @@ public sealed class TransactionTemplatesViewTests
             picker.ReplaceWith(inline);
         }
         root.Attribute(x + "Class")!.Remove();
-        foreach (var attribute in root.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName is "Closing" or "PreviewKeyDown" or "Click" or "Opened" or "PreviewMouseLeftButtonUp").ToArray()) attribute.Remove();
+        foreach (var attribute in root.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName is "Closing" or "PreviewKeyDown" or "KeyDown" or "Click" or "Opened" or "PreviewMouseLeftButtonUp").ToArray()) attribute.Remove();
         var controls = "clr-namespace:Saldo.Desktop.Wpf.Controls";
         foreach (var element in root.Descendants().Where(e => e.Name.NamespaceName == controls).ToArray())
             element.Name = XName.Get(element.Name.LocalName, controls + ";assembly=Saldo.Desktop.Wpf");

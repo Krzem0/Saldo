@@ -174,6 +174,7 @@ public class AutocompleteComboBox : Control
         if (_itemsList is not null)
         {
             _itemsList.PreviewMouseLeftButtonUp -= ItemsList_PreviewMouseLeftButtonUp;
+            _itemsList.PreviewKeyDown -= Suggestions_PreviewKeyDown;
         }
 
         if (_popup is not null)
@@ -211,6 +212,7 @@ public class AutocompleteComboBox : Control
         if (_itemsList is not null)
         {
             _itemsList.PreviewMouseLeftButtonUp += ItemsList_PreviewMouseLeftButtonUp;
+            _itemsList.PreviewKeyDown += Suggestions_PreviewKeyDown;
         }
 
         if (_popup is not null)
@@ -383,7 +385,46 @@ public class AutocompleteComboBox : Control
     }
 
     private void EditableTextBox_PreviewMouseDown(object sender, MouseButtonEventArgs e) => IsTextEditing = true;
-    private void EditableTextBox_PreviewKeyDown(object sender, KeyEventArgs e) => IsTextEditing = true;
+    private void EditableTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        IsTextEditing = true;
+        Suggestions_PreviewKeyDown(sender, e);
+    }
+
+    private void Suggestions_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Handled || Keyboard.Modifiers != ModifierKeys.None || _itemsList is null) return;
+
+        if (e.Key is Key.Down or Key.Up)
+        {
+            IsDropDownOpen = true;
+            if (_itemsList.Items.Count > 0)
+            {
+                var index = _itemsList.SelectedIndex;
+                index = index < 0
+                    ? (e.Key == Key.Down ? 0 : _itemsList.Items.Count - 1)
+                    : Math.Clamp(index + (e.Key == Key.Down ? 1 : -1), 0, _itemsList.Items.Count - 1);
+                _itemsList.SelectedIndex = index;
+                _itemsList.ScrollIntoView(_itemsList.SelectedItem);
+            }
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Enter && IsDropDownOpen)
+        {
+            // An open suggestion list owns Enter, including when there are no matches.
+            // Do not let the dialog's default Save button handle this key.
+            e.Handled = true;
+            var item = _itemsList.SelectedItem;
+            if (item is null && _itemsList.Items.Count == 1) item = _itemsList.Items[0];
+            if (item is not null) ApplySelection(item);
+        }
+        else if (e.Key == Key.Escape && IsDropDownOpen)
+        {
+            e.Handled = true;
+            IsDropDownOpen = false;
+            FocusEditableTextBox();
+        }
+    }
 
     private void ClearButton_Click(object sender, RoutedEventArgs e)
     {
@@ -548,6 +589,7 @@ public class AutocompleteComboBox : Control
         var text = Text ?? string.Empty;
         _filteredView.Filter = item => MatchesFilter(item, text);
         _filteredView.Refresh();
+        if (_itemsList is not null) _itemsList.SelectedIndex = -1;
     }
 
     private static ICollectionView CreateView(IEnumerable source)

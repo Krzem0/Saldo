@@ -173,7 +173,7 @@
                                     SnapsToDevicePixels="True">
                                 <ListBox x:Name="PART_ItemsList"
                                          ItemsSource="{Binding FilteredItemsSource, RelativeSource={RelativeSource TemplatedParent}}"
-                                         SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                         SelectedItem="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                                          IsSynchronizedWithCurrentItem="False"
                                          ItemTemplate="{TemplateBinding ItemTemplate}"
                                          Background="Transparent"
