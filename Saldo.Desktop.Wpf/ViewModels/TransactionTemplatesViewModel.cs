@@ -18,6 +18,14 @@ public sealed class TransactionTemplatesViewModel : LocalizedViewModelBase
     private TemplateRow? _selected;
     private bool _busy;
     private string _errorKey = "";
+    private IReadOnlyList<TemplateRow> _allItems = [];
+    private string _searchText = string.Empty;
+    public string SearchText
+    {
+        get => _searchText;
+        set { if (SetField(ref _searchText, value)) FilterItems(SelectedItem?.Template.Id); }
+    }
+    public string EmptyMessage => T(_allItems.Count == 0 ? "Template_Empty" : "TemplatePicker_NoMatches");
     public string Title => T("Templates");
     public string ErrorMessage => _errorKey.Length == 0 ? "" : T(_errorKey);
     public ObservableCollection<TemplateRow> Items { get; } = [];
@@ -27,11 +35,13 @@ public sealed class TransactionTemplatesViewModel : LocalizedViewModelBase
     public ICommand AddCommand { get; }
     public ICommand EditCommand { get; }
     public ICommand DeleteCommand { get; }
+    public ICommand ClearSearchCommand { get; }
 
     public TransactionTemplatesViewModel(IServiceScopeFactory scopes, IDialogService dialogs, ILocalizationService localization) : base(localization)
     {
         _scopes = scopes; _dialogs = dialogs;
         LoadCommand = new AsyncRelayCommand(() => LoadAsync(), () => !IsBusy);
+        ClearSearchCommand = new RelayCommand(() => SearchText = string.Empty, () => SearchText.Length > 0);
         AddCommand = new AsyncRelayCommand(() => OpenAsync(null), () => !IsBusy);
         EditCommand = new AsyncRelayCommand(() => OpenAsync(SelectedItem?.Template.Id), () => !IsBusy && SelectedItem is not null);
         DeleteCommand = new AsyncRelayCommand(DeleteAsync, () => !IsBusy && SelectedItem is not null);
@@ -46,11 +56,9 @@ public sealed class TransactionTemplatesViewModel : LocalizedViewModelBase
             var templates = await scope.ServiceProvider.GetRequiredService<ListTransactionTemplates>().ExecuteAsync();
             var categories = await scope.ServiceProvider.GetRequiredService<ICategoryRepository>().GetAllAsync();
             selectedId ??= SelectedItem?.Template.Id;
-            SelectedItem = null;
-            Items.Clear();
-            foreach (var template in templates)
-                Items.Add(new TemplateRow(template, categories.FirstOrDefault(c => c.Id == template.CategoryId)?.Name ?? "" , Localization));
-            SelectedItem = Items.FirstOrDefault(i => i.Template.Id == selectedId) ?? Items.FirstOrDefault();
+            _allItems = templates.Select(template => new TemplateRow(template,
+                categories.FirstOrDefault(c => c.Id == template.CategoryId)?.Name ?? "", Localization)).ToArray();
+            FilterItems(selectedId);
         }
         catch (Exception) { SetError("Template_LoadFailed"); }
         finally { IsBusy = false; }
@@ -102,10 +110,21 @@ public sealed class TransactionTemplatesViewModel : LocalizedViewModelBase
         if (deleted) await LoadAsync();
     }
     private void SetError(string key) { _errorKey = key; OnPropertyChanged(nameof(ErrorMessage)); }
+    private void FilterItems(int? selectedId)
+    {
+        var query = SearchText.Trim();
+        SelectedItem = null;
+        Items.Clear();
+        foreach (var row in _allItems.Where(row => row.Name.Contains(query, StringComparison.OrdinalIgnoreCase)))
+            Items.Add(row);
+        SelectedItem = Items.FirstOrDefault(row => row.Template.Id == selectedId) ?? Items.FirstOrDefault();
+        OnPropertyChanged(nameof(EmptyMessage));
+    }
     protected override void OnCultureChanged()
     {
         OnPropertyChanged(nameof(Title)); OnPropertyChanged(nameof(ErrorMessage));
-        foreach (var row in Items) row.Refresh();
+        OnPropertyChanged(nameof(EmptyMessage));
+        foreach (var row in _allItems) row.Refresh();
     }
 
     public sealed class TemplateRow(TransactionTemplateDto template, string categoryName, ILocalizationService localization) : ViewModelBase

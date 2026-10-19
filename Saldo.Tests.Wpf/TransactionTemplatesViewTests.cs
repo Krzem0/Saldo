@@ -88,6 +88,31 @@ public sealed class TransactionTemplatesViewTests
         Assert.Contains(Descendants(page).OfType<TextBlock>(), block => block.Text == "Jedzenie do pracy — Społem");
         SavePreview(page, theme + "-templates", 900, 560);
 
+        var search = Descendants(page).OfType<TextBox>().Single();
+        var selectedId = pageModel.SelectedItem!.Template.Id;
+        search.Text = "  PRACY  ";
+        Layout(page, 900, 560);
+        Assert.Single(list.Items);
+        Assert.Equal(selectedId, pageModel.SelectedItem!.Template.Id);
+        search.Text = "brak";
+        Layout(page, 900, 560);
+        Assert.Empty(list.Items);
+        Assert.Null(pageModel.SelectedItem);
+        Assert.False(pageModel.EditCommand.CanExecute(null));
+        Assert.False(pageModel.DeleteCommand.CanExecute(null));
+        Assert.Contains(Descendants(page).OfType<TextBlock>(), block => block.Text == "Brak pasujących szablonów." && block.Visibility == Visibility.Visible);
+        pageModel.LoadAsync().GetAwaiter().GetResult();
+        Layout(page, 900, 560);
+        Assert.Empty(list.Items);
+        var clearSearch = Descendants(page).OfType<Button>().Single(b => ReferenceEquals(b.Command, pageModel.ClearSearchCommand));
+        Assert.True(clearSearch.Command.CanExecute(null));
+        clearSearch.Command.Execute(null);
+        Layout(page, 900, 560);
+        Assert.Empty(search.Text);
+        Assert.False(clearSearch.Command.CanExecute(null));
+        Assert.Single(list.Items);
+        Assert.Same(pageModel.SelectedItem, list.SelectedItem);
+
         var dialog = (Window)Load("TransactionTemplateDialog.xaml", theme);
         var edit = harness.Form(pageModel.SelectedItem!.Template);
         dialog.DataContext = edit;

@@ -3,7 +3,8 @@
              xmlns:controls="clr-namespace:Saldo.Desktop.Wpf.Controls"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:localization="clr-namespace:Saldo.Desktop.Wpf.Localization"
-             xmlns:domainEnums="clr-namespace:Saldo.Domain.Enums;assembly=Saldo.Domain">
+             xmlns:domainEnums="clr-namespace:Saldo.Domain.Enums;assembly=Saldo.Domain"
+             xmlns:icons="clr-namespace:MahApps.Metro.IconPacks;assembly=MahApps.Metro.IconPacks.Material">
     <UserControl.Resources>
         <ResourceDictionary>
         <ResourceDictionary.MergedDictionaries>
@@ -139,7 +140,7 @@
                 <Setter.Value>
                     <ContextMenu Style="{StaticResource ActionContextMenuStyle}"
                                  DataContext="{Binding PlacementTarget, RelativeSource={RelativeSource Self}}">
-                        <MenuItem Header="{Binding Source={StaticResource Localization}, Path=[Transaction_AddSimilar]}"
+                        <MenuItem Header="{Binding Source={StaticResource Localization}, Path=[Transaction_Copy]}"
                                   Command="{Binding Tag.AddSimilarCommand}"
                                   CommandParameter="{Binding DataContext}">
                             <MenuItem.Icon>
@@ -358,7 +359,13 @@
 
         <!-- Summary bar -->
         <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" Padding="6" Margin="8,0,8,6" CornerRadius="6">
-            <Grid HorizontalAlignment="Center">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="1" x:Name="SummaryButtons">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
@@ -406,6 +413,29 @@
                         </TextBlock>
                     </StackPanel>
                 </Button>
+                </Grid>
+                <Grid Grid.Column="2" Margin="16,0,0,0">
+                <Border Width="260" MaxWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}}"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Padding="9,5" CornerRadius="4"
+                        Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <Grid Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                            <Ellipse Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                     Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1.5"/>
+                            <Line X1="9" Y1="9" X2="15" Y2="15" Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1.5"/>
+                        </Grid>
+                        <TextBox x:Name="TransactionSearchBox" Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 BorderThickness="0" Background="Transparent" Padding="0,2,30,2"
+                                 ToolTip="{Binding Source={StaticResource Localization}, Path=[TransactionList_Search]}"
+                                 AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[TransactionList_Search]}"/>
+                        <Button Grid.Column="1" Command="{Binding ClearSearchCommand}" Click="ClearSearch_Click"
+                                ToolTip="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                                AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                                Style="{StaticResource ClearTextButtonStyle}"/>
+                    </Grid>
+                </Border>
+                </Grid>
             </Grid>
         </Border>
 
@@ -498,6 +528,22 @@
                              <ItemsControl ItemsSource="{Binding TagDetails}" ItemTemplate="{StaticResource TagLabelTemplate}" VerticalAlignment="Center">
                                  <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                              </ItemsControl>
+                         </DataTemplate>
+                     </DataGridTemplateColumn.CellTemplate>
+                 </DataGridTemplateColumn>
+                 <DataGridTemplateColumn Header="{Binding Source={StaticResource Localization}, Path=[Actions]}" Width="70" CanUserSort="False" CanUserResize="False">
+                     <DataGridTemplateColumn.CellTemplate>
+                         <DataTemplate>
+                             <Button Command="{Binding DataContext.AddSimilarCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                     CommandParameter="{Binding}" Width="30" Height="28" Padding="6"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                                     Style="{StaticResource SecondaryActionButtonStyle}"
+                                     ToolTip="{Binding Source={StaticResource Localization}, Path=[Transaction_Copy]}"
+                                     ToolTipService.InitialShowDelay="250"
+                                     AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[Transaction_Copy]}">
+                                 <icons:PackIconMaterial Kind="FileDocumentMultipleOutline" Width="16" Height="16"
+                                                         Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                             </Button>
                          </DataTemplate>
                      </DataGridTemplateColumn.CellTemplate>
                  </DataGridTemplateColumn>

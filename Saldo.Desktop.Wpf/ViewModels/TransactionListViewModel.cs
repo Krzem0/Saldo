@@ -30,6 +30,20 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     private TransactionDto? _selectedTransaction;
     private bool _isLoading;
     private TransactionType? _typeFilter;
+    private string _searchText = string.Empty;
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            if (SetField(ref _searchText, value))
+            {
+                ApplyFilters();
+                CommandManager.InvalidateRequerySuggested();
+            }
+        }
+    }
+    public ICommand ClearSearchCommand { get; }
     private TransactionDraft? _newTransactionDraft;
     private DateOnly _lastNewTransactionDate = DateOnly.FromDateTime(DateTime.Today);
     public TransactionTemplatePickerViewModel TemplatePicker { get; }
@@ -193,19 +207,28 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     private void SetTypeFilter(TransactionType? type)
     {
         _typeFilter = type;
-        ApplyTypeFilter();
+        ApplyFilters();
         OnPropertyChanged(nameof(IsIncomeFilterActive));
         OnPropertyChanged(nameof(IsExpenseFilterActive));
         OnPropertyChanged(nameof(IsAllFilterActive));
     }
 
-    private void ApplyTypeFilter()
+    private void ApplyFilters()
     {
+        var query = SearchText.Trim();
         var view = CollectionViewSource.GetDefaultView(Transactions);
-        view.Filter = _typeFilter is null ? null : item => item is TransactionDto transaction && transaction.Type == _typeFilter;
+        view.Filter = item => item is TransactionDto transaction
+            && (_typeFilter is null || transaction.Type == _typeFilter)
+            && (query.Length == 0 || MatchesSearch(transaction, query));
         if (SelectedTransaction is not null && !view.Contains(SelectedTransaction))
             SelectedTransaction = null;
     }
+
+    private static bool MatchesSearch(TransactionDto transaction, string query) =>
+        new[] { transaction.Description, transaction.CategoryName, transaction.CounterpartyName,
+            transaction.PayerName, transaction.Location }
+            .Any(text => text?.Contains(query, StringComparison.OrdinalIgnoreCase) == true)
+        || transaction.Tags.Any(tag => tag.Contains(query, StringComparison.OrdinalIgnoreCase));
 
     public ICommand LoadCommand              { get; }
     public ICommand PreviousMonthCommand     { get; }
@@ -232,6 +255,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         ShowIncomeCommand = new RelayCommand(() => SetTypeFilter(TransactionType.Income));
         ShowExpensesCommand = new RelayCommand(() => SetTypeFilter(TransactionType.Expense));
         ShowAllCommand = new RelayCommand(() => SetTypeFilter(null));
+        ClearSearchCommand = new RelayCommand(() => SearchText = string.Empty, () => SearchText.Length > 0);
 
         PickerMonths = Enumerable.Range(1, 12)
             .Select(m => new MonthItem(m, localization))
@@ -282,7 +306,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             var summary = await scope.ServiceProvider.GetRequiredService<GetSummary>().ExecuteAsync(query);
 
             Transactions = new ObservableCollection<TransactionDto>(transactions);
-            ApplyTypeFilter();
+            ApplyFilters();
             Summary = summary;
         }
         catch (Exception ex)

@@ -176,5 +176,7 @@
   <data name="ReferenceList_NoMatches" xml:space="preserve"><value>Brak pasujących pozycji.</value></data>
   <data name="ClearText" xml:space="preserve"><value>Wyczyść pole</value></data>
   <data name="Transaction_TemplateTitleSuffix" xml:space="preserve"><value> — szablon: „{0}”</value></data>
-  <data name="Transaction_AddSimilar" xml:space="preserve"><value>Dodaj podobną transakcję…</value></data>
+  <data name="Transaction_Copy" xml:space="preserve"><value>Kopiuj transakcję</value></data>
+  <data name="Actions" xml:space="preserve"><value>Akcje</value></data>
+  <data name="TransactionList_Search" xml:space="preserve"><value>Szukaj w wybranym miesiącu: opis, kategoria, kontrahent, płatnik, lokalizacja lub tag</value></data>
 </root>

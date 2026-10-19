@@ -8,6 +8,7 @@ namespace Saldo.Desktop.Wpf.Views;
 
 public partial class TransactionListView : UserControl
 {
+    private void ClearSearch_Click(object sender, RoutedEventArgs e) => TransactionSearchBox.Focus();
     public TransactionListView()
     {
         InitializeComponent();

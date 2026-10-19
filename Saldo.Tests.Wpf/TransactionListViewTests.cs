@@ -20,8 +20,10 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class TransactionListViewTests
 {
-    [Fact]
-    public void View_SummaryButtonsFilterRowsAndKeepMonthlyTotalsAcrossReloads()
+    [Theory]
+    [InlineData("LightTheme")]
+    [InlineData("DarkTheme")]
+    public void View_SummaryButtonsFilterRowsAndKeepMonthlyTotalsAcrossReloads(string theme)
     {
         Exception? failure = null;
         var thread = new Thread(() =>
@@ -41,15 +43,18 @@ public sealed class TransactionListViewTests
                              element.Name.NamespaceName is "clr-namespace:Saldo.Desktop.Wpf.Localization" or "clr-namespace:Saldo.Desktop.Wpf.Controls"))
                     element.Name = XName.Get(element.Name.LocalName, element.Name.NamespaceName + ";assembly=Saldo.Desktop.Wpf");
                 foreach (var attribute in root.Descendants().Attributes("TargetUpdated").ToArray()) attribute.Remove();
+                foreach (var attribute in root.Descendants().Attributes("Click").ToArray()) attribute.Remove();
                 var resources = root.Element(presentation + "UserControl.Resources")!.Element(presentation + "ResourceDictionary")!;
                 resources.Element(presentation + "ResourceDictionary.MergedDictionaries")!.AddAfterSelf(
                     new XElement(localization + "LocalizationService", new XAttribute(x + "Key", "Localization")));
-                foreach (var key in new[] { "MonthNavigationButtonStyle", "SecondaryActionButtonStyle", "DangerActionButtonStyle" })
+                foreach (var key in new[] { "MonthNavigationButtonStyle", "SecondaryActionButtonStyle", "DangerActionButtonStyle", "ClearTextButtonStyle" })
                     resources.Add(new XElement(presentation + "Style", new XAttribute(x + "Key", key), new XAttribute("TargetType", "Button")));
                 var view = (UserControl)XamlReader.Parse(source.ToString(SaveOptions.DisableFormatting), new ParserContext
                 {
                     BaseUri = new Uri("pack://application:,,,/Saldo.Desktop.Wpf;component/Views/TransactionListView.xaml")
                 });
+                view.Resources.MergedDictionaries.Add((ResourceDictionary)System.Windows.Application.LoadComponent(
+                    new Uri($"/Saldo.Desktop.Wpf;component/Themes/{theme}.xaml", UriKind.Relative)));
                 var transactions = new ObservableCollection<object>();
                 view.DataContext = new { Transactions = transactions };
                 view.Measure(new Size(1200, 800));
@@ -64,8 +69,12 @@ public sealed class TransactionListViewTests
 
                 var repository = new FakeTransactionRepository();
                 var today = DateOnly.FromDateTime(DateTime.Today);
-                repository.AddAsync(new Transaction { Date = today, Type = TransactionType.Income, Amount = 100m }).GetAwaiter().GetResult();
-                repository.AddAsync(new Transaction { Date = today, Type = TransactionType.Expense, Amount = 30m }).GetAwaiter().GetResult();
+                repository.AddAsync(new Transaction { Date = today, Type = TransactionType.Income, Amount = 100m, Description = "Pensja" }).GetAwaiter().GetResult();
+                repository.AddAsync(new Transaction { Date = today, Type = TransactionType.Expense, Amount = 30m, Description = "Zakupy",
+                    Category = new Category { Name = "Jedzenie" }, Payer = new Party { Name = "Marcin" },
+                    Counterparty = new Party { Name = "Społem" }, Location = new Location { Name = "Olsztyn" },
+                    Tags = [new TransactionTag { TagId = 1, Tag = new Tag { Name = "Praca" } }] }).GetAwaiter().GetResult();
+                repository.AddAsync(new Transaction { Date = today.AddMonths(-1), Type = TransactionType.Expense, Amount = 999m, Description = "Zakupy" }).GetAwaiter().GetResult();
                 using var provider = new ServiceCollection()
                     .AddSingleton<ITransactionRepository>(repository)
                     .AddScoped<ListTransactions>().AddScoped<GetSummary>()
@@ -79,6 +88,55 @@ public sealed class TransactionListViewTests
                 Assert.Equal(2, grid.Items.Count);
                 Assert.True(vm.IsAllFilterActive);
                 var buttons = Descendants(view).OfType<Button>().ToList();
+                view.UpdateLayout();
+                var summaryButtons = (Grid)view.FindName("SummaryButtons");
+                var searchBorder = (Border)((Grid)((TextBox)view.FindName("TransactionSearchBox")).Parent).Parent;
+                var summaryCenter = summaryButtons.TranslatePoint(new Point(summaryButtons.ActualWidth / 2, 0), view).X;
+                Assert.Equal(view.ActualWidth / 2, summaryCenter, 1);
+                Assert.True(summaryButtons.TranslatePoint(new Point(summaryButtons.ActualWidth, 0), view).X
+                    <= searchBorder.TranslatePoint(new Point(), view).X);
+                var search = (TextBox)view.FindName("TransactionSearchBox");
+                void Search(string text)
+                {
+                    search.Text = text;
+                    Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                }
+                vm.SelectedTransaction = vm.Transactions.Single(t => t.Type == TransactionType.Income);
+                foreach (var query in new[] { "  ZAKUPY  ", "jedzenie", "marcin", "społem", "olsztyn", "praca" })
+                {
+                    Search(query);
+                    Assert.Equal(30m, Assert.IsType<Saldo.Application.DTOs.TransactionDto>(Assert.Single(grid.Items.Cast<object>())).Amount);
+                }
+                Assert.Null(vm.SelectedTransaction);
+                Assert.False(vm.EditCommand.CanExecute(null));
+                Assert.Equal(100m, vm.Summary!.TotalIncome);
+                Assert.Equal(30m, vm.Summary.TotalExpense);
+                Click(vm.ShowIncomeCommand);
+                Assert.Empty(grid.Items.Cast<object>());
+                Click(vm.ShowExpensesCommand);
+                Assert.Single(grid.Items.Cast<object>());
+                Search("zakupy");
+                vm.LoadCommand.Execute(null);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                Assert.Single(grid.Items.Cast<object>());
+                vm.PreviousMonthCommand.Execute(null);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                Assert.Equal("zakupy", search.Text);
+                Assert.Equal(999m, Assert.IsType<Saldo.Application.DTOs.TransactionDto>(Assert.Single(grid.Items.Cast<object>())).Amount);
+                vm.NextMonthCommand.Execute(null);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                Assert.Equal(30m, Assert.IsType<Saldo.Application.DTOs.TransactionDto>(Assert.Single(grid.Items.Cast<object>())).Amount);
+                Search("brak");
+                Assert.Empty(grid.Items.Cast<object>());
+                Assert.Equal(label + " 0", counter.Text);
+                Assert.True(vm.ClearSearchCommand.CanExecute(null));
+                Click(vm.ClearSearchCommand);
+                Assert.Empty(search.Text);
+                Assert.False(vm.ClearSearchCommand.CanExecute(null));
+                Assert.Single(grid.Items.Cast<object>());
+                Click(vm.ShowAllCommand);
+                Assert.Equal(2, grid.Items.Count);
+                summary = vm.Summary;
 
                 void Click(System.Windows.Input.ICommand command)
                 {
@@ -97,7 +155,17 @@ public sealed class TransactionListViewTests
                 var addSimilar = Assert.IsType<MenuItem>(Assert.Single(menu.Items.Cast<object>()));
                 Assert.Same(vm.AddSimilarCommand, addSimilar.Command);
                 Assert.Same(expense, addSimilar.CommandParameter);
-                Assert.Equal(((LocalizationService)view.Resources["Localization"])["Transaction_AddSimilar"], addSimilar.Header);
+                Assert.Equal(((LocalizationService)view.Resources["Localization"])["Transaction_Copy"], addSimilar.Header);
+                var actionsColumn = Assert.IsType<DataGridTemplateColumn>(grid.Columns.Last());
+                Assert.Equal(((LocalizationService)view.Resources["Localization"])["Actions"], actionsColumn.Header);
+                Assert.False(actionsColumn.CanUserSort);
+                grid.ScrollIntoView(expense, actionsColumn);
+                view.UpdateLayout();
+                var copyButton = Assert.Single(Descendants(actionsColumn.GetCellContent(expense)).OfType<Button>());
+                Assert.Same(vm.AddSimilarCommand, copyButton.Command);
+                Assert.Same(expense, copyButton.CommandParameter);
+                Assert.Equal(addSimilar.Header, copyButton.ToolTip);
+                Assert.Equal(addSimilar.Header, System.Windows.Automation.AutomationProperties.GetName(copyButton));
                 vm.SelectedTransaction = expense;
                 Click(vm.ShowIncomeCommand);
                 Assert.Equal(TransactionType.Income, Assert.IsType<Saldo.Application.DTOs.TransactionDto>(Assert.Single(grid.Items.Cast<object>())).Type);

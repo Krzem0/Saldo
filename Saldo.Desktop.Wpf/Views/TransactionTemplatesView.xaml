@@ -3,7 +3,29 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{DynamicResource SurfaceBrush}">
     <Grid Margin="28">
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
-        <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,0,0,18"/>
+        <Grid Margin="0,0,0,18">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center"/>
+            <Border Grid.Column="1" Width="260" Margin="16,0,0,0" Padding="9,5" CornerRadius="4"
+                    Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Grid Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" IsHitTestVisible="False">
+                        <Ellipse Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Top"
+                                 Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1.5"/>
+                        <Line X1="9" Y1="9" X2="15" Y2="15" Stroke="{DynamicResource SecondaryTextBrush}" StrokeThickness="1.5"/>
+                    </Grid>
+                    <TextBox x:Name="TemplateSearchBox" Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             BorderThickness="0" Background="Transparent" Padding="0,2,30,2"
+                             ToolTip="{Binding Source={StaticResource Localization}, Path=[TemplatePicker_Search]}"
+                             AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[TemplatePicker_Search]}"/>
+                    <Button Grid.Column="1" Command="{Binding ClearSearchCommand}" Click="ClearSearch_Click"
+                            ToolTip="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                            AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[ClearText]}"
+                            Style="{StaticResource ClearTextButtonStyle}"/>
+                </Grid>
+            </Border>
+        </Grid>
         <TextBlock Grid.Row="1" Text="{Binding ErrorMessage}" Foreground="{DynamicResource ValidationTextBrush}" TextWrapping="Wrap"/>
         <Border Grid.Row="2" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1" CornerRadius="6">
             <Grid>
@@ -46,7 +68,7 @@
                         </Grid>
                     </DataTemplate></ListBox.ItemTemplate>
                 </ListBox>
-                <TextBlock Grid.Row="1" Text="{Binding Source={StaticResource Localization}, Path=[Template_Empty], Mode=OneWay}"
+                <TextBlock Grid.Row="1" Text="{Binding EmptyMessage}"
                            Foreground="{DynamicResource MutedTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
                     <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/>
                         <Style.Triggers><DataTrigger Binding="{Binding Items.Count}" Value="0"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>
