@@ -112,13 +112,27 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
     public TypeItem SelectedType
     {
         get => _selectedType;
-        set
+        set => SetSelectedType(value, swapParties: true);
+    }
+
+    private void SetSelectedType(TypeItem value, bool swapParties)
+    {
+        var previousType = _selectedType.Value;
+        if (SetField(ref _selectedType, value, nameof(SelectedType)))
         {
-            if (SetField(ref _selectedType, value))
+            if (swapParties && previousType != value.Value)
             {
-                OnPropertyChanged(nameof(IsExpense));
-                OnPropertyChanged(nameof(IsIncome));
+                var payer = SelectedPayer;
+                var payerText = PayerText;
+                var counterparty = SelectedCounterparty;
+                var counterpartyText = CounterpartyText;
+                SelectedPayer = counterparty;
+                PayerText = counterpartyText;
+                SelectedCounterparty = payer;
+                CounterpartyText = payerText;
             }
+            OnPropertyChanged(nameof(IsExpense));
+            OnPropertyChanged(nameof(IsIncome));
         }
     }
 
@@ -358,7 +372,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
         _sourceTemplateName = template.Name;
         _lastTemplateName = template.Name;
         OnPropertyChanged(nameof(Title));
-        SelectedType = Types.First(type => type.Value == template.TransactionType);
+        SetSelectedType(Types.First(type => type.Value == template.TransactionType), swapParties: false);
         if (template.Amount.HasValue) AmountText = template.Amount.Value.ToString("0.##", CultureInfo.CurrentCulture);
         if (!string.IsNullOrWhiteSpace(template.Description)) Description = template.Description;
         if (template.CategoryId.HasValue)
@@ -452,7 +466,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
         _sourceTemplateName = null;
         _lastTemplateName = null;
 
-        SelectedType = Types.First(type => type.Value == _emptyDraft.Type);
+        SetSelectedType(Types.First(type => type.Value == _emptyDraft.Type), swapParties: false);
         AmountText = string.Empty;
         SelectedCategory = null;
         CategoryText = string.Empty;

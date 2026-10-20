@@ -18,8 +18,14 @@ public sealed class TransactionTemplatePickerTests
         await vm.OpenTemplatePickerAsync();
         Assert.True(vm.IsTemplatePickerOpen);
         Assert.Equal(2, vm.FilteredTemplates.Count);
+        Assert.Null(vm.SelectedTemplate);
+        Assert.False(vm.UseTemplateCommand.CanExecute(null));
+        vm.SelectedTemplate = vm.FilteredTemplates[0];
+        Assert.True(vm.UseTemplateCommand.CanExecute(null));
         vm.TemplateSearch = "  ZYWNOSC  ";
         Assert.Equal(id, Assert.Single(vm.FilteredTemplates).Id);
+        Assert.Null(vm.SelectedTemplate);
+        Assert.False(vm.UseTemplateCommand.CanExecute(null));
         vm.TemplateSearch = "nie ma";
         Assert.Empty(vm.FilteredTemplates);
         Assert.Null(vm.SelectedTemplate);
@@ -30,6 +36,7 @@ public sealed class TransactionTemplatePickerTests
         await vm.OpenTemplatePickerAsync();
         Assert.Empty(vm.TemplateSearch);
         Assert.Equal("Rata kredytu", Assert.Single(vm.FilteredTemplates).Name);
+        Assert.Null(vm.SelectedTemplate);
     }
 
     [Theory]

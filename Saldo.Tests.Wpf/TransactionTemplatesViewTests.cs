@@ -17,6 +17,50 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class TransactionTemplatesViewTests
 {
+    [Theory]
+    [InlineData("LightTheme", false)]
+    [InlineData("LightTheme", true)]
+    [InlineData("DarkTheme", false)]
+    [InlineData("DarkTheme", true)]
+    public void TransactionForm_TypeSwitchSwapsBoundPartyFields(string theme, bool hasCounterparty) => OnSta(() =>
+    {
+        using var h = new TransactionTemplatesTests.Harness("pl-PL");
+        var recipient = new Saldo.Domain.Entities.Party { Id = h.Party.Id + 1, Name = "Odbiorca" };
+        var vm = new AddEditTransactionViewModel(h.Scopes, h.Dialogs, h.Localization,
+            [h.Category], [h.Party, recipient], [h.Location], [h.Tag],
+            new Saldo.Application.DTOs.NewTransactionDefaultsDto(DateOnly.FromDateTime(DateTime.Today),
+                Saldo.Domain.Enums.TransactionType.Expense, h.Party.Id));
+        if (hasCounterparty)
+        {
+            vm.SelectedCounterparty = recipient;
+            vm.CounterpartyText = recipient.Name;
+        }
+        var window = (Window)Load("AddEditTransactionDialog.xaml", theme);
+        window.DataContext = vm;
+        var surface = (FrameworkElement)window.Content;
+        Layout(surface, 520, 900);
+        var selectors = Descendants(surface).OfType<AutocompleteComboBox>()
+            .Where(c => ReferenceEquals(c.ItemsSource, vm.Parties)).ToArray();
+        var payer = selectors.Single(c => ReferenceEquals(c.SelectedItem, h.Party));
+        var counterparty = selectors.Single(c => !ReferenceEquals(c, payer));
+        var switches = Descendants(surface).OfType<RadioButton>().ToArray();
+        switches[1].IsChecked = true;
+        Layout(surface, 520, 900);
+        Assert.Same(hasCounterparty ? recipient : null, vm.SelectedPayer);
+        Assert.Same(vm.SelectedPayer, payer.SelectedItem);
+        Assert.Equal(hasCounterparty ? recipient.Name : string.Empty, payer.Text);
+        Assert.Same(h.Party, vm.SelectedCounterparty);
+        Assert.Same(h.Party, counterparty.SelectedItem);
+        Assert.Equal(h.Party.Name, counterparty.Text);
+        switches[0].IsChecked = true;
+        Layout(surface, 520, 900);
+        Assert.Same(h.Party, payer.SelectedItem);
+        Assert.Equal(h.Party.Name, payer.Text);
+        Assert.Same(hasCounterparty ? recipient : null, counterparty.SelectedItem);
+        Assert.Equal(hasCounterparty ? recipient.Name : string.Empty, counterparty.Text);
+        window.Close();
+    });
+
     [Fact]
     public void TemplateForm_EscapeDismissesSuggestionsBeforeRequestingFormCancellation() => OnSta(() =>
     {
@@ -188,6 +232,8 @@ public sealed class TransactionTemplatesViewTests
         var list = Descendants(surface).OfType<ListBox>().Single();
         Assert.Equal(280, list.MaxHeight);
         Assert.Equal("Zakupy — Społem", Assert.Single(list.Items.Cast<Saldo.Application.DTOs.TransactionTemplateDto>()).Name);
+        Assert.Null(list.SelectedItem);
+        Assert.False(vm.UseTemplateCommand.CanExecute(null));
         SavePreview(surface, theme + "-template-picker", 320, 180);
         var search = Descendants(surface).OfType<TextBox>().Single();
         search.Text = "brak";
@@ -202,6 +248,7 @@ public sealed class TransactionTemplatesViewTests
         Assert.Empty(search.Text);
         Assert.Single(list.Items);
         Assert.False(clearSearch.Command.CanExecute(null));
+        Assert.Null(list.SelectedItem);
     });
 
     [Theory]

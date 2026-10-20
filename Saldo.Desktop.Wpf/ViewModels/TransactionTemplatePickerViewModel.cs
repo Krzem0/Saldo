@@ -64,12 +64,12 @@ public sealed class TransactionTemplatePickerViewModel : LocalizedViewModelBase
 
     private void FilterTemplates()
     {
+        SelectedTemplate = null;
         FilteredTemplates.Clear();
         var query = SearchText(TemplateSearch.Trim());
         foreach (var template in _templates.Where(t => SearchText(t.Name).Contains(query, StringComparison.OrdinalIgnoreCase))
                      .OrderBy(t => t.Name, StringComparer.CurrentCultureIgnoreCase))
             FilteredTemplates.Add(template);
-        SelectedTemplate = FilteredTemplates.FirstOrDefault();
         OnPropertyChanged(nameof(TemplatePickerStatus));
     }
 

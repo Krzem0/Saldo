@@ -25,6 +25,10 @@ This document tracks planned work. Implemented behavior and architectural decisi
 - [ ] Replace the full transaction tag cloud with a dropdown for choosing tags; display only selected tags below it using the current chip appearance (the current form still displays all available tags as selectable chips)
 - [ ] Further WPF visual polish and accessibility review
 - [ ] Recurring transactions
+- [ ] [Medium priority] Configurable accounting periods: keep calendar months as the default, and allow weekly, biweekly (every two weeks), and monthly periods with a configurable start weekday or anchor date/day of month. Let users match their own pay cycle rather than infer it from their country. Persist the setting and use consistent period boundaries in transaction lists, summaries, and period navigation. Define how this interacts with the planned month closing/reopening feature before implementation.
+- [ ] Month closing and reopening: persist an open/closed status for each month, display it clearly, and prevent adding, editing, or deleting transactions in a closed month until it is explicitly reopened. Also prevent moving transactions into or out of a closed month by changing their date; enforce the protection in application use cases as well as the UI.
+- [ ] [Low priority] Budget planning: explore setting a planned spending limit for an accounting period and comparing actual expenses against it, including the remaining budget. Priority is below configurable accounting periods and above transaction line items. The workflow and how it fits the current Saldo implementation are still undecided; discuss the scope and UI before implementation, including how it relates to configurable periods and the existing income-minus-expenses balance.
+- [ ] [Very low priority] Optional transaction line items: allow a single transaction to be split into multiple amounts with their own categories and tags, while retaining one transaction total. Revisit only if a concrete need emerges: years of personal expense tracking since the original Walter idea have shown little need for this level of detail.
 - [ ] CSV import and export
 - [ ] Add tag filtering and summaries (tag management, transaction selection, display, and draft preservation are implemented)
 - [ ] Charts and trends
@@ -42,5 +46,6 @@ These are open questions retained from the early project notes, not commitments 
 ## Second UI
 
 - [ ] Create a second frontend reusing Application and Infrastructure through DI
+- [ ] Add an optional console interface (CLI) alongside the Windows WPF interface, reusing Application use cases, validation, defaults, and SQLite Infrastructure through DI. Both interfaces should operate on the same selected database, letting users choose windows or console commands without migrating data. Start by defining commands for adding income/expenses, listing transactions, and viewing period summaries; support use from scripts and define clear output and exit codes. The CLI can be used independently without opening the GUI.
 - [ ] Reuse stable validation codes and property metadata
 - [ ] Recreate documented presentation conventions, including drafts, amount/type rendering, and category colors/icons
