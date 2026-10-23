@@ -25,7 +25,6 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     private bool _isMonthPickerOpen;
     private int _pickerYear;
     private string _pickerYearText = string.Empty;
-    private ObservableCollection<TransactionDto> _transactions = [];
     private MonthlySummaryDto? _summary;
     private TransactionDto? _selectedTransaction;
     private bool _isLoading;
@@ -173,11 +172,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
 
     public IReadOnlyList<MonthItem> PickerMonths { get; }
 
-    public ObservableCollection<TransactionDto> Transactions
-    {
-        get => _transactions;
-        private set => SetField(ref _transactions, value);
-    }
+    public ObservableCollection<TransactionDto> Transactions { get; } = [];
 
     public MonthlySummaryDto? Summary
     {
@@ -305,7 +300,9 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             var transactions = await scope.ServiceProvider.GetRequiredService<ListTransactions>().ExecuteAsync(query);
             var summary = await scope.ServiceProvider.GetRequiredService<GetSummary>().ExecuteAsync(query);
 
-            Transactions = new ObservableCollection<TransactionDto>(transactions);
+            // Keep the collection view so refreshing data preserves the user's sorting.
+            Transactions.Clear();
+            foreach (var transaction in transactions) Transactions.Add(transaction);
             ApplyFilters();
             Summary = summary;
         }

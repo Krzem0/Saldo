@@ -33,6 +33,8 @@
                 <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
                         <Setter Property="Width" Value="96"/><Setter Property="Height" Value="84"/>
                         <Setter Property="Margin" Value="3"/><Setter Property="Cursor" Value="Hand"/>
                         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>

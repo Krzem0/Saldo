@@ -53,9 +53,10 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style TargetType="ListBoxItem">
+        <Style x:Key="TemplateListItemStyle" TargetType="ListBoxItem">
             <Setter Property="Padding" Value="10,9"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -80,11 +81,13 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <Button Content="{Binding Source={StaticResource Localization}, Path=[Transaction_AddTitle]}"
-                Command="{Binding DataContext.AddCommand, RelativeSource={RelativeSource AncestorType=UserControl}}">
+        <Button Content="{Binding Source={StaticResource Localization}, Path=[Transaction_AddTitle]}">
             <Button.Style>
                 <Style TargetType="Button" BasedOn="{StaticResource SplitButton}">
                     <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsTemplateOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="False">
+                            <Setter Property="Command" Value="{Binding DataContext.AddCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                        </DataTrigger>
                         <DataTrigger Binding="{Binding IsTemplateOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
                             <Setter Property="Visibility" Value="Collapsed"/>
                         </DataTrigger>
@@ -135,6 +138,7 @@
                     <TextBlock Text="{Binding TemplatePickerStatus}" TextWrapping="Wrap" Margin="4,0"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
                     <ListBox x:Name="TemplateList" ItemsSource="{Binding FilteredTemplates}"
+                             ItemContainerStyle="{StaticResource TemplateListItemStyle}"
                              SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}"
                              MaxHeight="280" BorderThickness="0" Background="Transparent"
                              Foreground="{DynamicResource PrimaryTextBrush}"

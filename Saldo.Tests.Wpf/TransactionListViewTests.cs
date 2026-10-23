@@ -30,6 +30,7 @@ public sealed class TransactionListViewTests
         {
             try
             {
+                using var bindings = new BindingErrorScope();
                 _ = new FrameworkElement();
                 XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
                 XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
@@ -196,6 +197,41 @@ public sealed class TransactionListViewTests
                 Assert.Equal(2, grid.Items.Count);
                 Assert.Equal(label + " 2", counter.Text);
                 Assert.True(vm.IsAllFilterActive);
+
+                Click(vm.ShowExpensesCommand);
+                var collection = vm.Transactions;
+                var sortedView = System.Windows.Data.CollectionViewSource.GetDefaultView(grid.ItemsSource);
+                var amountColumn = grid.Columns.Single(column => column.SortMemberPath == "Amount");
+                sortedView.SortDescriptions.Clear();
+                sortedView.SortDescriptions.Add(new System.ComponentModel.SortDescription("Amount", System.ComponentModel.ListSortDirection.Ascending));
+                amountColumn.SortDirection = System.ComponentModel.ListSortDirection.Ascending;
+                var anotherExpense = new Transaction { Date = new DateOnly(today.Year, today.Month, 1),
+                    Type = TransactionType.Expense, Amount = 10m, Description = "Inny wydatek" };
+                repository.AddAsync(anotherExpense).GetAwaiter().GetResult();
+                vm.LoadCommand.Execute(null);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                Assert.Same(collection, vm.Transactions);
+                Assert.Same(sortedView, System.Windows.Data.CollectionViewSource.GetDefaultView(grid.ItemsSource));
+                Assert.Equal(new[] { 10m, 30m }, grid.Items.Cast<Saldo.Application.DTOs.TransactionDto>().Select(t => t.Amount));
+                Assert.Equal(System.ComponentModel.ListSortDirection.Ascending, amountColumn.SortDirection);
+
+                anotherExpense.Amount = 40m;
+                repository.UpdateAsync(anotherExpense).GetAwaiter().GetResult();
+                vm.LoadCommand.Execute(null);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                Assert.Equal(new[] { 30m, 40m }, grid.Items.Cast<Saldo.Application.DTOs.TransactionDto>().Select(t => t.Amount));
+                Assert.True(vm.IsExpenseFilterActive);
+                sortedView.SortDescriptions.Clear();
+                sortedView.SortDescriptions.Add(new System.ComponentModel.SortDescription("Date", System.ComponentModel.ListSortDirection.Ascending));
+                vm.NextMonthCommand.Execute(null);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                vm.PreviousMonthCommand.Execute(null);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                Assert.Equal(System.ComponentModel.ListSortDirection.Ascending, Assert.Single(sortedView.SortDescriptions).Direction);
+                Assert.Equal("Date", Assert.Single(sortedView.SortDescriptions).PropertyName);
+                var dates = grid.Items.Cast<Saldo.Application.DTOs.TransactionDto>().Select(t => t.Date).ToArray();
+                Assert.Equal(dates.OrderBy(date => date), dates);
+                Assert.DoesNotContain(bindings.Errors, error => error.Contains("AncestorType='System.Windows.Controls.MenuItem'"));
             }
             catch (Exception ex) { failure = ex; }
             finally { Dispatcher.CurrentDispatcher.InvokeShutdown(); }

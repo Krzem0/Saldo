@@ -18,6 +18,122 @@ namespace Saldo.Tests.Wpf;
 public sealed class TransactionTemplatesViewTests
 {
     [Theory]
+    [InlineData("LightTheme")]
+    [InlineData("DarkTheme")]
+    public void ChoosingTemplate_ClosesPopupAndOpensFormWithoutAlignmentBindingErrors(string theme) => OnSta(() =>
+    {
+        using var h = new TransactionTemplatesTests.Harness("pl-PL");
+        for (var i = 0; i < 3; i++)
+        {
+            var template = h.Form();
+            template.Name = "Szablon " + i;
+            template.Description = "Opis " + i;
+            template.SelectedCategory = h.Category;
+            template.SaveAsync().GetAwaiter().GetResult();
+        }
+        using var bindings = new BindingErrorScope();
+        var vm = new TransactionListViewModel(h.Scopes, h.Dialogs, h.Localization);
+        var control = (UserControl)Load("AddTransactionButton.xaml", theme);
+        control.DataContext = vm;
+        var owner = new Window { Content = control, Width = 350, Height = 100,
+            Left = -10000, Top = -10000, ShowInTaskbar = false };
+        var formsOpened = 0;
+        h.Dialogs.TransactionCallback = form =>
+        {
+            var dialog = (Window)Load("AddEditTransactionDialog.xaml", theme);
+            dialog.DataContext = form;
+            dialog.Left = -10000;
+            dialog.Top = -10000;
+            dialog.ShowInTaskbar = false;
+            dialog.Show();
+            Layout((FrameworkElement)dialog.Content, 520, 900);
+            formsOpened++;
+            dialog.Close();
+            return false;
+        };
+        try
+        {
+            owner.Show();
+            for (var attempt = 0; attempt < 2; attempt++)
+            {
+                vm.OpenTemplatePickerAsync().GetAwaiter().GetResult();
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                var popup = (System.Windows.Controls.Primitives.Popup)control.FindName("TemplatePopup");
+                Assert.True(popup.IsOpen);
+                var list = Descendants((FrameworkElement)popup.Child).OfType<ListBox>().Single();
+                Assert.Equal(3, list.Items.Count);
+                Assert.NotNull(list.ItemContainerStyle);
+                var rows = Descendants(list).OfType<ListBoxItem>().ToArray();
+                Assert.Equal(3, rows.Length);
+                Assert.All(rows, row => Assert.Same(list.ItemContainerStyle, row.Style));
+                list.SelectedIndex = attempt;
+                vm.UseTemplateCommand.Execute(null);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                Assert.Equal(attempt + 1, formsOpened);
+                Assert.False(popup.IsOpen);
+                Assert.All(rows, row =>
+                {
+                    Assert.Same(list.ItemContainerStyle, row.Style);
+                    Assert.Null(System.Windows.Data.BindingOperations.GetBindingExpression(row, Control.HorizontalContentAlignmentProperty));
+                    Assert.Null(System.Windows.Data.BindingOperations.GetBindingExpression(row, Control.VerticalContentAlignmentProperty));
+                });
+            }
+            Assert.DoesNotContain(bindings.Errors, error => error.Contains("HorizontalContentAlignment")
+                || error.Contains("VerticalContentAlignment"));
+        }
+        finally { vm.IsTemplatePickerOpen = false; owner.Close(); }
+    });
+
+    [Theory]
+    [InlineData("LightTheme")]
+    [InlineData("DarkTheme")]
+    public void IconPicker_FilteringAndPagingDoNotProduceAlignmentBindingErrors(string theme) => OnSta(() =>
+    {
+        using var bindings = new BindingErrorScope();
+        var vm = new CategoryIconPickerViewModel(new LocalizationService());
+        var window = (Window)Load("CategoryIconPickerDialog.xaml", theme);
+        var surface = (FrameworkElement)window.Content;
+        window.Content = null;
+        var host = new Border { Child = surface, Resources = window.Resources, DataContext = vm };
+        Layout(host, 710, 620);
+        var list = Descendants(host).OfType<ListBox>().Single();
+        Assert.NotEmpty(Descendants(list).OfType<ListBoxItem>());
+        vm.NextCommand.Execute(null);
+        Layout(host, 710, 620);
+        vm.SearchText = "home";
+        vm.SearchCommand.Execute(null);
+        Layout(host, 710, 620);
+        vm.ClearSearchCommand.Execute(null);
+        Layout(host, 710, 620);
+        Assert.All(Descendants(list).OfType<ListBoxItem>(), item =>
+            Assert.Equal(HorizontalAlignment.Stretch, item.HorizontalContentAlignment));
+        host.Child = null;
+        Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+        Assert.DoesNotContain(bindings.Errors, error => error.Contains("HorizontalContentAlignment")
+            || error.Contains("VerticalContentAlignment"));
+        window.Close();
+    });
+
+    [Theory]
+    [InlineData("LightTheme")]
+    [InlineData("DarkTheme")]
+    public void InFormTemplatePicker_DoesNotBindHiddenAddButtonToFormCommand(string theme) => OnSta(() =>
+    {
+        using var h = new TransactionTemplatesTests.Harness("pl-PL");
+        using var bindings = new BindingErrorScope();
+        var form = new AddEditTransactionViewModel(h.Scopes, h.Dialogs, h.Localization,
+            [h.Category], [h.Party], [h.Location], [h.Tag]);
+        var window = (Window)Load("AddEditTransactionDialog.xaml", theme);
+        window.DataContext = form;
+        Layout((FrameworkElement)window.Content, 520, 900);
+        var picker = Descendants((FrameworkElement)window.Content).OfType<UserControl>().Single();
+        var hiddenAdd = Descendants(picker).OfType<Button>().Single(b => b.Visibility == Visibility.Collapsed);
+        Assert.Null(hiddenAdd.Command);
+        Assert.DoesNotContain(bindings.Errors, error => error.Contains("AddCommand"));
+        window.Close();
+    });
+
+    [Theory]
     [InlineData("LightTheme", false)]
     [InlineData("LightTheme", true)]
     [InlineData("DarkTheme", false)]
@@ -377,6 +493,15 @@ public sealed class TransactionTemplatesViewTests
         XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
         var source = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Views", file));
         var root = source.Root!;
+        // App resources are inlined below; window attributes are parsed before those resources.
+        if (file == "CategoryIconPickerDialog.xaml") root.Attribute("Title")?.Remove();
+        if (file == "AddTransactionButton.xaml")
+        {
+            root.AddFirst(new XElement(p + "UserControl.Tag",
+                new XElement(XName.Get("Boolean", "clr-namespace:System;assembly=mscorlib"), "False")));
+            foreach (var attribute in root.Descendants().Attributes().Where(a => a.Value.Contains("{Binding IsTemplateOnly,")))
+                attribute.Value = attribute.Value.Replace("{Binding IsTemplateOnly,", "{Binding Tag,");
+        }
         // Inline the reusable control for loose-XAML tests; the compiled control normally resolves app-level resources.
         foreach (var picker in root.Descendants().Where(e => e.Name.LocalName == "AddTransactionButton").ToArray())
         {
@@ -393,7 +518,7 @@ public sealed class TransactionTemplatesViewTests
             picker.ReplaceWith(inline);
         }
         root.Attribute(x + "Class")!.Remove();
-        foreach (var attribute in root.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName is "Closing" or "PreviewKeyDown" or "KeyDown" or "Click" or "Opened" or "PreviewMouseLeftButtonUp").ToArray()) attribute.Remove();
+        foreach (var attribute in root.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName is "Closing" or "PreviewKeyDown" or "KeyDown" or "Click" or "Opened" or "PreviewMouseLeftButtonUp" or "TargetUpdated" or "MouseDoubleClick" or "LostKeyboardFocus").ToArray()) attribute.Remove();
         var controls = "clr-namespace:Saldo.Desktop.Wpf.Controls";
         foreach (var element in root.Descendants().Where(e => e.Name.NamespaceName == controls).ToArray())
             element.Name = XName.Get(element.Name.LocalName, controls + ";assembly=Saldo.Desktop.Wpf");

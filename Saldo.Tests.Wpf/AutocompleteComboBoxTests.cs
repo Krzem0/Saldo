@@ -14,6 +14,35 @@ namespace Saldo.Tests.Wpf;
 public sealed class AutocompleteComboBoxTests
 {
     [Fact]
+    public void SuggestionItems_DoNotUseAncestorBindingsWhenFilteredOrDetached() => OnSta(() =>
+    {
+        using var bindings = new BindingErrorScope();
+        var control = CreateKeyboardControl();
+        var surface = new Border { Child = control };
+        var list = (ListBox)control.Template.FindName("PART_ItemsList", control);
+        try
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                control.Text = i == 1 ? "m" : string.Empty;
+                list.Measure(new Size(300, 200));
+                list.Arrange(new Rect(0, 0, 300, 200));
+                list.UpdateLayout();
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                Assert.All(Descendants(list).OfType<ListBoxItem>(), item =>
+                    Assert.Equal(HorizontalAlignment.Stretch, item.HorizontalContentAlignment));
+                surface.Child = null;
+                surface.Child = control;
+            }
+            control.IsDropDownOpen = false;
+            surface.Child = null;
+            Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+            Assert.Empty(bindings.Errors);
+        }
+        finally { control.IsDropDownOpen = false; }
+    });
+
+    [Fact]
     public void CategoryTemplate_ShowsAppearanceAndStillFiltersAndSelectsByName() => OnSta(() =>
     {
         var category = new Saldo.Domain.Entities.Category
@@ -153,6 +182,91 @@ public sealed class AutocompleteComboBoxTests
         control.ApplyTemplate();
         return control;
     }
+
+    [Theory]
+    [InlineData("m", true)]
+    [InlineData("unknown", true)]
+    [InlineData("", false)]
+    [InlineData("   ", false)]
+    public void ClickingAfterDismissal_ReopensSuggestionsForExistingText(string query, bool shouldOpen) => OnSta(() =>
+    {
+        var control = CreateKeyboardControl();
+        var textBox = (TextBox)control.Template.FindName("PART_EditableTextBox", control);
+        var list = (ListBox)control.Template.FindName("PART_ItemsList", control);
+        var window = new Window { Content = control, Width = 300, Height = 80,
+            Left = -10000, Top = -10000, ShowInTaskbar = false };
+        try
+        {
+            window.Show();
+            textBox.Focus();
+            textBox.Text = query;
+            control.IsDropDownOpen = false;
+            var matches = control.FilteredItemsSource!.Cast<string>().ToArray();
+            textBox.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                { RoutedEvent = Mouse.PreviewMouseDownEvent });
+            Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+            Assert.Equal(shouldOpen, control.IsDropDownOpen);
+            Assert.Equal(query, textBox.Text);
+            Assert.Null(control.SelectedItem);
+            Assert.Equal(matches, control.FilteredItemsSource!.Cast<string>());
+            Assert.Equal(-1, list.SelectedIndex);
+            if (shouldOpen)
+            {
+                Assert.True(PressKey(textBox, Key.Escape).Handled);
+                Assert.False(control.IsDropDownOpen);
+                textBox.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                    { RoutedEvent = Mouse.PreviewMouseDownEvent });
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                Assert.True(control.IsDropDownOpen);
+            }
+        }
+        finally { control.IsDropDownOpen = false; window.Close(); }
+    });
+
+    [Fact]
+    public void ClickingSelectedBadge_OpensAfterFocusAndAllowsEditing() => OnSta(() =>
+    {
+        var control = CreateKeyboardControl();
+        control.ItemTemplate = (DataTemplate)XamlReader.Parse("""
+            <DataTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+                <TextBlock Text="{Binding}"/>
+            </DataTemplate>
+            """);
+        control.SelectedItem = "Mieszkanie";
+        var textBox = (TextBox)control.Template.FindName("PART_EditableTextBox", control);
+        var outside = new TextBox();
+        var panel = new StackPanel();
+        panel.Children.Add(control);
+        panel.Children.Add(outside);
+        var window = new Window { Content = panel, Width = 300, Height = 120,
+            Left = -10000, Top = -10000, ShowInTaskbar = false };
+        try
+        {
+            window.Show();
+            outside.Focus();
+            Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+            Assert.False(control.IsTextEditing);
+            textBox.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                { RoutedEvent = Mouse.PreviewMouseDownEvent });
+            // The preview event must allow TextBox to finish focusing before opening the popup.
+            Assert.False(control.IsDropDownOpen);
+            textBox.Focus();
+            Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+            Assert.True(textBox.IsKeyboardFocused);
+            Assert.True(control.IsTextEditing);
+            Assert.Equal(1, textBox.Opacity);
+            Assert.True(control.IsDropDownOpen);
+            Assert.Equal("Mieszkanie", textBox.Text);
+            textBox.Text = "medi";
+            Assert.Null(control.SelectedItem);
+            Assert.Equal(new[] { "Media" }, control.FilteredItemsSource!.Cast<string>());
+            Assert.True(PressKey(textBox, Key.Enter).Handled);
+            Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+            Assert.Equal("Media", control.SelectedItem);
+            Assert.False(control.IsDropDownOpen);
+        }
+        finally { control.IsDropDownOpen = false; window.Close(); }
+    });
 
     private static KeyEventArgs PressKey(UIElement textBox, Key key)
     {

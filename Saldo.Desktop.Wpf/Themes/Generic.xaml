@@ -192,6 +192,12 @@
                                             </Style.Triggers>
                                         </Style>
                                     </ListBox.Style>
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
                                 </ListBox>
                             </Border>
                         </Popup>

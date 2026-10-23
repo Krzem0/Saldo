@@ -384,7 +384,21 @@ public class AutocompleteComboBox : Control
         MoveCaretToEnd();
     }
 
-    private void EditableTextBox_PreviewMouseDown(object sender, MouseButtonEventArgs e) => IsTextEditing = true;
+    private void EditableTextBox_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        IsTextEditing = true;
+        if (e.ChangedButton == MouseButton.Left && !IsDropDownOpen && !string.IsNullOrWhiteSpace(Text))
+        {
+            // Let TextBox finish handling the click and acquire focus before Popup captures the mouse.
+            Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
+            {
+                if (_editableTextBox?.IsKeyboardFocusWithin != true || !IsTextEditing
+                    || IsDropDownOpen || string.IsNullOrWhiteSpace(Text)) return;
+                RefreshFilter();
+                IsDropDownOpen = true;
+            }));
+        }
+    }
     private void EditableTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         IsTextEditing = true;
