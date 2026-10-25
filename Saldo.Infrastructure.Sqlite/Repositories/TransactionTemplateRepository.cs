@@ -41,6 +41,7 @@ public sealed class TransactionTemplateRepository(SaldoDbContext context) : ITra
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        context.EnsureCanWrite();
         await context.TransactionTemplates.Where(x => x.Id == id).ExecuteDeleteAsync(ct);
         // ExecuteDelete bypasses tracking; detach stale entries for subsequent operations in this scope.
         foreach (var entry in context.ChangeTracker.Entries<TransactionTemplateTag>()

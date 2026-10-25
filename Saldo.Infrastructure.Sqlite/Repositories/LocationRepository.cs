@@ -44,6 +44,7 @@ public sealed class LocationRepository : ILocationRepository
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        _context.EnsureCanWrite();
         try
         {
             await _context.Locations

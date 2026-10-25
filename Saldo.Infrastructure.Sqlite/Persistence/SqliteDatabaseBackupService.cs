@@ -1,15 +1,22 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Saldo.Application.Interfaces;
+using System.Collections.Concurrent;
 
 namespace Saldo.Infrastructure.Sqlite.Persistence;
 
-public sealed class SqliteDatabaseBackupService(SaldoDbContext context) : IDatabaseBackupService
+public sealed class SqliteDatabaseBackupService : IDatabaseBackupService
 {
-    public Task CreateAsync(string destinationPath, CancellationToken ct = default)
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> SourceLocks = new(StringComparer.OrdinalIgnoreCase);
+    private readonly string _connectionString;
+
+    public SqliteDatabaseBackupService(SaldoDbContext context) : this(context.Database.GetConnectionString()!) { }
+    internal SqliteDatabaseBackupService(string connectionString) => _connectionString = connectionString;
+
+    public async Task CreateAsync(string destinationPath, CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
-        var source = new SqliteConnectionStringBuilder(context.Database.GetConnectionString());
+        var source = new SqliteConnectionStringBuilder(_connectionString);
         var sourcePath = Path.GetFullPath(source.DataSource);
         var targetPath = Path.GetFullPath(destinationPath);
 
@@ -27,7 +34,10 @@ public sealed class SqliteDatabaseBackupService(SaldoDbContext context) : IDatab
         var sourceConnectionString = source.ToString();
 
         // BackupDatabase is synchronous; use dedicated connections off the UI thread.
-        return Task.Run(() => CreateBackup(sourceConnectionString, targetPath, ct), ct);
+        var sourceLock = SourceLocks.GetOrAdd(sourcePath, _ => new SemaphoreSlim(1, 1));
+        await sourceLock.WaitAsync(ct);
+        try { await Task.Run(() => CreateBackup(sourceConnectionString, targetPath, ct), ct); }
+        finally { sourceLock.Release(); }
     }
 
     private static void CreateBackup(string sourceConnectionString, string targetPath, CancellationToken ct)
@@ -53,6 +63,10 @@ public sealed class SqliteDatabaseBackupService(SaldoDbContext context) : IDatab
                 using var journalMode = target.CreateCommand();
                 journalMode.CommandText = "PRAGMA journal_mode=DELETE;";
                 journalMode.ExecuteNonQuery();
+                using var check = target.CreateCommand();
+                check.CommandText = "PRAGMA quick_check;";
+                if (!string.Equals(check.ExecuteScalar() as string, "ok", StringComparison.Ordinal))
+                    throw new InvalidDataException("The backup failed SQLite integrity validation.");
             }
 
             ct.ThrowIfCancellationRequested();

@@ -76,8 +76,11 @@ public sealed class AccountingPeriodVerificationTests
         periods.Transactions.Add(transaction);
         var dialogs = new Messages { ConfirmChange = true };
         var localization = new LocalizationService { CurrentCulture = CultureInfo.GetCultureInfo(culture) };
+        var backupService = new AutomaticBackupTests.Backups();
+        var automaticBackups = new AutomaticBackupViewModel(backupService, localization);
+        await automaticBackups.InitializeAsync();
         using var provider = Provider(transactions, periods);
-        var viewModel = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), dialogs, localization);
+        var viewModel = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), dialogs, localization, automaticBackups);
         Assert.Null(viewModel.IsPeriodClosed);
         Assert.False(viewModel.ChangePeriodCommand.CanExecute(null));
         viewModel.LoadCommand.Execute(null);
@@ -99,6 +102,7 @@ public sealed class AccountingPeriodVerificationTests
         Assert.True(viewModel.AddSimilarCommand.CanExecute(viewModel.Transactions[0]));
         Assert.True(viewModel.OpenTemplatePickerCommand.CanExecute(null));
         var snapshot = (await periods.GetByMonthAsync(today.Year, today.Month))!.ClosedDataHash;
+        Assert.Equal((today.Year, today.Month), Assert.Single(backupService.ClosedMonths));
 
         viewModel.ChangePeriodCommand.Execute(null);
         await WaitForIdleAsync(viewModel);
@@ -112,8 +116,32 @@ public sealed class AccountingPeriodVerificationTests
         Assert.True(viewModel.DeleteCommand.CanExecute(null));
         Assert.Equal(snapshot, (await periods.GetByMonthAsync(today.Year, today.Month))!.ClosedDataHash);
         Assert.Equal(2, dialogs.Confirmations.Count);
+        Assert.Single(backupService.ClosedMonths); // Reopening does not request another backup.
         Assert.All(dialogs.Confirmations, confirmation => Assert.Contains(viewModel.MonthLabel, confirmation.Message));
         Assert.Empty(dialogs.Items);
+    });
+
+    [Fact]
+    public void FailedAfterClosingBackup_DoesNotUndoClosedState() => Run(async () =>
+    {
+        var periods = new FakeAccountingPeriodRepository();
+        var service = new AutomaticBackupTests.Backups { FailAfterClose = true };
+        var localization = new LocalizationService();
+        var automaticBackups = new AutomaticBackupViewModel(service, localization);
+        await automaticBackups.InitializeAsync();
+        var dialogs = new Messages { ConfirmChange = true };
+        using var provider = Provider(new FakeTransactionRepository(), periods);
+        var viewModel = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), dialogs, localization, automaticBackups);
+        viewModel.LoadCommand.Execute(null);
+        await WaitForLoadAsync(viewModel);
+        viewModel.ChangePeriodCommand.Execute(null);
+        await WaitForIdleAsync(viewModel);
+        Assert.True(viewModel.IsPeriodClosed);
+        Assert.True((await periods.GetByMonthAsync(viewModel.Year, viewModel.Month))!.IsClosed);
+        Assert.True(automaticBackups.HasError);
+        Assert.True(automaticBackups.CanWrite);
+        Assert.Empty(dialogs.Items);
+        Assert.Single(service.ClosedMonths);
     });
 
     [Fact]
@@ -318,7 +346,7 @@ public sealed class AccountingPeriodVerificationTests
         while (viewModel.IsLoading) await Task.Delay(5, timeout.Token);
     }
 
-    private static void Run(Func<Task> test)
+    internal static void Run(Func<Task> test)
     {
         Exception? failure = null;
         var thread = new Thread(() =>

@@ -3,11 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:Saldo.Desktop.Wpf.Views"
         xmlns:viewModels="clr-namespace:Saldo.Desktop.Wpf.ViewModels"
+        xmlns:backup="clr-namespace:Saldo.Desktop.Wpf.Services"
         Title="{Binding Source={StaticResource Localization}, Path=[AppTitle]}"
         Height="680" Width="1120"
         Background="{DynamicResource AppBackgroundBrush}"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="AutoBackupVisibility"/>
         <DataTemplate DataType="{x:Type viewModels:TransactionTemplatesViewModel}">
             <views:TransactionTemplatesView/>
         </DataTemplate>
@@ -67,6 +69,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="76"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -84,13 +87,23 @@
                            VerticalAlignment="Center"/>
 
                 <views:AddTransactionButton Grid.Column="2"
+                        backup:DatabaseWriteGuard.IsWriteAction="True"
                         DataContext="{Binding TransactionList}"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"/>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="1">
+        <Border Grid.Row="1" Padding="24,6" Background="{DynamicResource SurfaceBrush}" DataContext="{StaticResource AutomaticBackup}">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Content="{Binding Source={StaticResource Localization}, Path=[AutoBackup_Retry]}"
+                        Command="{Binding RetryCommand}" Margin="12,0,0,0" Style="{StaticResource SecondaryActionButtonStyle}"
+                        Visibility="{Binding HasError, Converter={StaticResource AutoBackupVisibility}}"/>
+                <TextBlock Text="{Binding StatusText}" ToolTip="{Binding BackupPath}" FontSize="12" TextWrapping="Wrap"
+                           VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
+            </DockPanel>
+        </Border>
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="196"/>
                 <ColumnDefinition Width="*"/>

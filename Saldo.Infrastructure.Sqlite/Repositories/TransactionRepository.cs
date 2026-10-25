@@ -49,6 +49,7 @@ public sealed class TransactionRepository : ITransactionRepository
 
     public async Task AddAsync(Transaction transaction, CancellationToken ct = default)
     {
+        _context.EnsureCanWrite();
         await using var databaseTransaction = await _context.Database.BeginTransactionAsync(ct);
         await EnsureOpenAsync(transaction.Date, ct);
         await EnsurePeriodAsync(transaction.Date, ct);
@@ -60,6 +61,7 @@ public sealed class TransactionRepository : ITransactionRepository
 
     public async Task UpdateAsync(Transaction transaction, CancellationToken ct = default)
     {
+        _context.EnsureCanWrite();
         await using var databaseTransaction = await _context.Database.BeginTransactionAsync(ct);
         // Read the persisted source date, not a potentially edited/tracked entity.
         var sourceDate = await _context.Transactions.AsNoTracking()
@@ -140,6 +142,7 @@ public sealed class TransactionRepository : ITransactionRepository
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        _context.EnsureCanWrite();
         await using var databaseTransaction = await _context.Database.BeginTransactionAsync(ct);
         var date = await _context.Transactions.AsNoTracking()
             .Where(t => t.Id == id).Select(t => (DateOnly?)t.Date).SingleOrDefaultAsync(ct);

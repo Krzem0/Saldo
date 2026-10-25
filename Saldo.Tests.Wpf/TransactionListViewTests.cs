@@ -50,7 +50,7 @@ public sealed class TransactionListViewTests
                     new XElement(localization + "LocalizationService", new XAttribute(x + "Key", "Localization")));
                 foreach (var key in new[] { "MonthNavigationButtonStyle", "SecondaryActionButtonStyle", "DangerActionButtonStyle", "ClearTextButtonStyle" })
                     resources.Add(new XElement(presentation + "Style", new XAttribute(x + "Key", key), new XAttribute("TargetType", "Button")));
-                var view = (UserControl)XamlReader.Parse(source.ToString(SaveOptions.DisableFormatting), new ParserContext
+                var view = (UserControl)XamlReader.Parse(source.ToString(SaveOptions.DisableFormatting).Replace("clr-namespace:Saldo.Desktop.Wpf.Services\"", "clr-namespace:Saldo.Desktop.Wpf.Services;assembly=Saldo.Desktop.Wpf\""), new ParserContext
                 {
                     BaseUri = new Uri("pack://application:,,,/Saldo.Desktop.Wpf;component/Views/TransactionListView.xaml")
                 });

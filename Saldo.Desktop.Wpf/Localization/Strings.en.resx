@@ -208,4 +208,11 @@
   <data name="AccountingPeriod_CloseConfirm" xml:space="preserve"><value>Close the month “{0}”? A summary and data hash will be saved. Adding, editing, and deleting transactions in this month will be blocked until it is reopened.</value></data>
   <data name="AccountingPeriod_ReopenConfirm" xml:space="preserve"><value>Reopen the month “{0}”? Transaction changes will be allowed again. The previous summary and hash will be retained until the next closing. If a mismatch was detected, review the data before closing again.</value></data>
   <data name="AccountingPeriod_ChangeFailed" xml:space="preserve"><value>The period state change could not be completed. Refresh the data to check its current state.</value></data>
+  <data name="AutoBackup_Running" xml:space="preserve"><value>Creating an automatic backup in the background…</value></data>
+  <data name="AutoBackup_Waiting" xml:space="preserve"><value>Preparing the startup backup. Data changes are temporarily unavailable.</value></data>
+  <data name="AutoBackup_Ready" xml:space="preserve"><value>Automatic backup ready: {0:yyyy-MM-dd}.</value></data>
+  <data name="AutoBackup_StartupFailed" xml:space="preserve"><value>The startup backup failed. You can browse data; changes remain blocked. Retry the backup.</value></data>
+  <data name="AutoBackup_AfterCloseFailed" xml:space="preserve"><value>The month closing was saved, but its automatic backup was not updated. The previous copy has been retained. Retry the backup.</value></data>
+  <data name="AutoBackup_RetentionFailed" xml:space="preserve"><value>The backup is ready, but some older automatic copies could not be removed. Retry cleanup.</value></data>
+  <data name="AutoBackup_Retry" xml:space="preserve"><value>Retry</value></data>
 </root>

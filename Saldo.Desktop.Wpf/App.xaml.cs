@@ -52,14 +52,19 @@ public partial class App : System.Windows.Application
 
             using (var scope = _serviceProvider.CreateScope())
             {
-                var context = scope.ServiceProvider.GetRequiredService<SaldoDbContext>();
+                // No UI exists yet. Bootstrap migrations/seeding precede the
+                // startup backup and deliberately use a context without the write gate.
+                using var context = new SaldoDbContext(scope.ServiceProvider.GetRequiredService<DbContextOptions<SaldoDbContext>>());
                 logger.LogInformation("Applying database migrations.");
                 await context.Database.MigrateAsync();
                 await SeedInitialDataAsync(context, logger, _localization.CurrentCulture);
             }
 
             logger.LogInformation("Opening main window.");
+            var automaticBackups = _serviceProvider.GetRequiredService<AutomaticBackupViewModel>();
+            Resources["AutomaticBackup"] = automaticBackups;
             _serviceProvider.GetRequiredService<MainWindow>().Show();
+            await automaticBackups.InitializeAsync();
         }
         catch (Exception ex)
         {
@@ -86,6 +91,11 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IDatabaseFolderService>(new WindowsDatabaseFolderService(dataDir));
 
         services.AddDbContext<SaldoDbContext>(o => o.UseSqlite($"Data Source={dbPath}"));
+        services.AddSingleton<IAutomaticDatabaseBackupService>(provider => new AutomaticDatabaseBackupService(
+            new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder { DataSource = dbPath }.ToString(),
+            logger: provider.GetRequiredService<ILogger<AutomaticDatabaseBackupService>>()));
+        services.AddSingleton<AutomaticBackupViewModel>();
+        services.AddSingleton<IDatabaseWriteAccess>(provider => provider.GetRequiredService<AutomaticBackupViewModel>());
 
         services.AddScoped<ITransactionSettingsRepository, TransactionSettingsRepository>();
         services.AddScoped<GetTransactionSettings>();

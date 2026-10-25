@@ -208,4 +208,11 @@
   <data name="AccountingPeriod_CloseConfirm" xml:space="preserve"><value>Czy zamknąć miesiąc „{0}”? Zostanie zapisane podsumowanie i odcisk danych. Dodawanie, edycja i usuwanie transakcji w tym miesiącu będą zablokowane do jego ponownego otwarcia.</value></data>
   <data name="AccountingPeriod_ReopenConfirm" xml:space="preserve"><value>Czy ponownie otworzyć miesiąc „{0}”? Zmiany transakcji będą znów dozwolone. Dotychczasowe podsumowanie i odcisk pozostaną zachowane do następnego zamknięcia. Jeśli wykryto niezgodność, sprawdź dane przed ponownym zamknięciem.</value></data>
   <data name="AccountingPeriod_ChangeFailed" xml:space="preserve"><value>Nie udało się zakończyć zmiany stanu okresu. Odśwież dane, aby sprawdzić jego aktualny stan.</value></data>
+  <data name="AutoBackup_Running" xml:space="preserve"><value>Tworzenie automatycznej kopii zapasowej w tle…</value></data>
+  <data name="AutoBackup_Waiting" xml:space="preserve"><value>Przygotowanie kopii zapasowej. Zapis danych jest chwilowo niedostępny.</value></data>
+  <data name="AutoBackup_Ready" xml:space="preserve"><value>Automatyczna kopia zapasowa gotowa: {0:dd.MM.yyyy}.</value></data>
+  <data name="AutoBackup_StartupFailed" xml:space="preserve"><value>Nie udało się utworzyć początkowej kopii zapasowej. Możesz przeglądać dane; zapis pozostaje zablokowany. Ponów próbę.</value></data>
+  <data name="AutoBackup_AfterCloseFailed" xml:space="preserve"><value>Zamknięcie miesiąca zostało zapisane, ale automatyczna kopia zapasowa nie została zaktualizowana. Dotychczasowa kopia została zachowana. Ponów próbę.</value></data>
+  <data name="AutoBackup_RetentionFailed" xml:space="preserve"><value>Kopia zapasowa jest gotowa, ale nie udało się usunąć wszystkich starszych kopii automatycznych. Ponów próbę sprzątania.</value></data>
+  <data name="AutoBackup_Retry" xml:space="preserve"><value>Ponów próbę</value></data>
 </root>

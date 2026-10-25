@@ -129,7 +129,7 @@ For accounting-period persistence and protection, see [Accounting periods](docs/
 
 `IAccountingPeriodRepository` exposes no-tracking month reads, serialized state changes, and consistent verification reads. Application `CloseAccountingPeriod` and `ReopenAccountingPeriod` expose idempotent state transitions, including closing empty months. Add/edit/delete use cases precheck the affected periods and return stable validation errors. SQLite repeats the source/destination checks inside non-deferred write transactions before changing transaction data or tags, preventing races with closing. A persistence rejection is translated to `AccountingPeriod.Closed` at the use-case boundary.
 
-`AccountingPeriodSnapshot` in Domain calculates exact decimal totals, transaction count, and a deterministic versioned SHA-256 hash of persisted transaction fields and tag IDs. Closing reads and persists the snapshot inside the same non-deferred write transaction as the state change, without flushing unrelated tracked entities. A repeated close never replaces the reference; reopening preserves it until the next open-to-closed transition. `VerifyAccountingPeriod` performs a quick open-state check, then runs closed-period reads and hashing off the UI thread. SQLite uses a deferred read transaction to return a consistent period/transaction/tag snapshot. Application maps comparison results to explicit statuses and differences; failures return a separate stable error. The monthly view invokes verification on load and ignores stale navigation results. Automatic backups remain future work.
+`AccountingPeriodSnapshot` in Domain calculates exact decimal totals, transaction count, and a deterministic versioned SHA-256 hash of persisted transaction fields and tag IDs. Closing reads and persists the snapshot inside the same non-deferred write transaction as the state change, without flushing unrelated tracked entities. A repeated close never replaces the reference; reopening preserves it until the next open-to-closed transition. `VerifyAccountingPeriod` performs a quick open-state check, then runs closed-period reads and hashing off the UI thread. SQLite uses a deferred read transaction to return a consistent period/transaction/tag snapshot. Application maps comparison results to explicit statuses and differences; failures return a separate stable error. The monthly view invokes verification on load and ignores stale navigation results. Successful closing requests a background daily-backup replacement, with another integrity check before writing.
 
 `TransactionListViewModel` derives a nullable closed state and persistent integrity text from verification results. Its state-change command requests `IDialogService.ConfirmAccountingPeriodChange`, invokes the scoped close/reopen use case, and reloads. Edit/Delete are disabled for closed/unknown/busy periods. Add/copy/template commands are gated while busy but allow choosing another open date when viewing a closed period. `TransactionTemplatePickerViewModel` supports an optional host availability predicate; form-local pickers retain their existing behavior. Navigation loads bypass a busy LoadCommand and use version checks to prevent stale updates. The dedicated confirmation window uses theme resources, a wrapped message, explicit action text, and Cancel as the default action.
 
@@ -142,6 +142,8 @@ For accounting-period persistence and protection, see [Accounting periods](docs/
 - Only a completed snapshot replaces the selected destination. Failed or cancelled operations preserve previous backups and clean up the temporary file
 - Destination validation prevents replacing the active database or its WAL, SHM, and journal files
 - Backup success and failure are logged and shown through localized messages. Restore is deferred
+- `AutomaticDatabaseBackupService` manages adjacent daily files, a five-backup-day retention policy, startup reuse, and verified post-closing replacement. Both automatic requests and low-level manual/automatic snapshot creation are serialized per database within the process. SQLite quick checks run before final replacement; cleanup failure is separate from copy failure. See [Automatic backups](docs/features/automatic-backups.md)
+- `AutomaticBackupViewModel` implements Application's `IDatabaseWriteAccess`: production DbContexts and bulk-write repositories block writes until the startup copy succeeds, while attached WPF guards disable only write controls. Startup migrations/seeding use an explicit bootstrap context before the window opens. A persistent localized banner owns retry; a failed post-closing copy does not roll back closing or disable writes. Automatic work uses independent worker connections, not a scoped UI DbContext
 
 ## Conceptual Data Model
 
@@ -302,7 +304,7 @@ The initial migration, designer, and model snapshot include `TransactionTemplate
 - CSV import/export
 - Recurring transactions
 - Tag filtering and summaries
-- Restore and automatic backups (manual single-file backup creation is implemented)
+- Restore from a backup (manual and automatic single-file backup creation are implemented)
 - Additional frontends reusing the same core
 
 ### Category and tag icon presentation

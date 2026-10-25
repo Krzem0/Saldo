@@ -19,6 +19,7 @@ public sealed class AccountingPeriodRepository(SaldoDbContext context) : IAccoun
 
     public async Task SetClosedAsync(CalendarMonth month, bool isClosed, CancellationToken ct = default)
     {
+        context.EnsureCanWrite();
         // SQLite's non-deferred write transaction serializes this operation with
         // transaction repositories, including their final closed-period checks.
         await using var databaseTransaction = await context.Database.BeginTransactionAsync(ct);

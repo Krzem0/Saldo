@@ -139,7 +139,8 @@
 - Choosing an existing backup prompts before overwriting it. The active database and its SQLite sidecar files cannot be selected as backup destinations
 - A previous backup is replaced only after the new snapshot is complete
 - Backup success (including the saved path) and failure messages use an owned, theme-aware application dialog with the existing Close button style, instead of the system MessageBox. Long messages wrap and can scroll; Enter or Escape closes the dialog.
-- Restore, automatic backups, and a persisted preferred backup folder are not implemented yet
+- Automatic backups run in the background at startup and after successful month closing. They use an adjacent AutoBackups directory, one file per local day per database, and retain five successful backup days. Startup writes remain blocked until a valid daily copy is available; a persistent status supports retry. See [Automatic backups](docs/features/automatic-backups.md)
+- Restore and a persisted preferred backup folder are not implemented yet
 
 ## Development Database Changes
 
@@ -149,7 +150,7 @@
 
 ## Accounting Periods
 
-See [Accounting periods](docs/features/accounting-periods.md) for calendar-month persistence and write protection. Browsing does not create periods; transaction writes create only the needed month, and gaps are allowed. The monthly summary bar shows period state and integrity, with Close month/Reopen month and refresh controls. State changes require confirmation. Closing atomically captures income/expense totals, transaction count, and a versioned SHA-256 hash. Loading a closed month checks consistency in the background without replacing the reference. Edit/Delete are disabled for closed or unknown periods; Add/copy/templates still allow preparing a transaction for an open date, with save-time validation. Automatic backups remain planned.
+See [Accounting periods](docs/features/accounting-periods.md) for calendar-month persistence and write protection. Browsing does not create periods; transaction writes create only the needed month, and gaps are allowed. The monthly summary bar shows period state and integrity, with Close month/Reopen month and refresh controls. State changes require confirmation. Closing atomically captures income/expense totals, transaction count, and a versioned SHA-256 hash. Loading a closed month checks consistency in the background without replacing the reference. Edit/Delete are disabled for closed or unknown periods; Add/copy/templates still allow preparing a transaction for an open date, with save-time validation. Successful closing also requests replacement of today's automatic backup after another integrity check.
 
 ## Status
 

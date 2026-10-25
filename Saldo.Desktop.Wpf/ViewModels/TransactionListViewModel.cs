@@ -18,6 +18,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IDialogService _dialogService;
+    private readonly AutomaticBackupViewModel? _automaticBackups;
 
     private int _year;
     private int _month;
@@ -293,11 +294,12 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     public ICommand DeleteCommand            { get; }
     public ICommand ChangePeriodCommand      { get; }
 
-    public TransactionListViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService, ILocalizationService localization)
+    public TransactionListViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService, ILocalizationService localization, AutomaticBackupViewModel? automaticBackups = null)
         : base(localization)
     {
         _scopeFactory = scopeFactory;
         _dialogService = dialogService;
+        _automaticBackups = automaticBackups;
         _year       = DateTime.Today.Year;
         _month      = DateTime.Today.Month;
         _pickerYear = _year;
@@ -419,6 +421,10 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             if (result.IsFailed)
                 _dialogService.ShowMessage(title, string.Join(Environment.NewLine, result.Errors.Select(error => T(error.Message))), MessageDialogKind.Warning);
             await LoadAsync();
+            // The backup service verifies the closed month again before replacing
+            // today's file; failures are reported independently of the saved close.
+            if (!reopen && result.IsSuccess && _automaticBackups is not null)
+                _ = _automaticBackups.BackupAfterClosingAsync(year, month);
         }
         catch (Exception)
         {

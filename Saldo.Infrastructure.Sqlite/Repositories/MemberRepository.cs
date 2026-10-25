@@ -44,6 +44,7 @@ public sealed class PartyRepository : IPartyRepository
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        _context.EnsureCanWrite();
         try
         {
             await _context.Parties

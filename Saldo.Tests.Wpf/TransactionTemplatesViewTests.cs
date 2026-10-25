@@ -531,7 +531,7 @@ public sealed class TransactionTemplatesViewTests
         Layout(surface, 480, 200);
         Assert.Contains(Descendants(surface).OfType<TextBlock>(), text => text.Text == message && text.TextWrapping == TextWrapping.Wrap);
         var close = Assert.Single(Descendants(surface).OfType<Button>());
-        Assert.Equal("Zamknij", close.Content);
+        Assert.Equal(((LocalizationService)window.Resources["Localization"])["Close"], close.Content);
         Assert.True(close.IsDefault);
         Assert.True(close.IsCancel);
         Assert.Equal(Visibility.Collapsed, Descendants(surface).OfType<Border>().Single(b => b.Name == "MessageIconBackground").Visibility);
@@ -603,7 +603,7 @@ public sealed class TransactionTemplatesViewTests
         if (merged is null) { merged = new XElement(p + "ResourceDictionary.MergedDictionaries"); dictionary.AddFirst(merged); }
         merged.AddFirst(new XElement(application.Root!.Element(p + "Application.Resources")!.Element(p + "ResourceDictionary")!));
         merged.AddAfterSelf(new XElement(XName.Get("LocalizationService", localization), new XAttribute(x + "Key", "Localization")));
-        var parsed = XamlReader.Parse(source.ToString(SaveOptions.DisableFormatting), new ParserContext
+        var parsed = XamlReader.Parse(source.ToString(SaveOptions.DisableFormatting).Replace("clr-namespace:Saldo.Desktop.Wpf.Services\"", "clr-namespace:Saldo.Desktop.Wpf.Services;assembly=Saldo.Desktop.Wpf\""), new ParserContext
         {
             BaseUri = new Uri("pack://application:,,,/Saldo.Desktop.Wpf;component/Views/" + file)
         });

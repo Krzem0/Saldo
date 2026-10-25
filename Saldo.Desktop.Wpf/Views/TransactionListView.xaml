@@ -1,6 +1,7 @@
 <UserControl x:Class="Saldo.Desktop.Wpf.Views.TransactionListView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:controls="clr-namespace:Saldo.Desktop.Wpf.Controls"
+             xmlns:backup="clr-namespace:Saldo.Desktop.Wpf.Services"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:localization="clr-namespace:Saldo.Desktop.Wpf.Localization"
              xmlns:domainEnums="clr-namespace:Saldo.Domain.Enums;assembly=Saldo.Domain"
@@ -374,6 +375,7 @@
                                            Foreground="{DynamicResource PrimaryTextBrush}"/>
                             </Border>
                             <Button x:Name="PeriodActionButton" Content="{Binding PeriodActionText}" Command="{Binding ChangePeriodCommand}"
+                                    backup:DatabaseWriteGuard.IsWriteAction="True"
                                     Style="{StaticResource SecondaryActionButtonStyle}" Padding="8,4" Margin="0,0,6,2"/>
                             <Button Content="↻" Command="{Binding LoadCommand}" Style="{StaticResource SecondaryActionButtonStyle}"
                                     Padding="6,3" Margin="0,0,0,2" FontSize="16"
@@ -554,6 +556,7 @@
                      <DataGridTemplateColumn.CellTemplate>
                          <DataTemplate>
                              <Button Command="{Binding DataContext.AddSimilarCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                     backup:DatabaseWriteGuard.IsWriteAction="True"
                                      CommandParameter="{Binding}" Width="30" Height="28" Padding="6"
                                      HorizontalAlignment="Center" VerticalAlignment="Center"
                                      Style="{StaticResource SecondaryActionButtonStyle}"
@@ -594,7 +597,7 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" backup:DatabaseWriteGuard.IsWriteAction="True">
                 <Button Content="{Binding Source={StaticResource Localization}, Path=[Edit]}" Command="{Binding EditCommand}"
                         Style="{StaticResource SecondaryActionButtonStyle}" Margin="0,0,8,0"/>
                 <Button Content="{Binding Source={StaticResource Localization}, Path=[Delete]}" Command="{Binding DeleteCommand}"

@@ -2,7 +2,7 @@
 
 Status: persistence, close/reopen operations and GUI controls, closed-period write
 protection, atomic closing snapshots, and integrity verification implemented.
-Automatic backups are not implemented yet.
+Automatic backups are implemented; see [Automatic backups](automatic-backups.md).
 
 ## Current behavior
 
@@ -156,6 +156,4 @@ manual backup before first starting the upgraded app against an existing databas
 
 ## Next stages
 
-- Background automatic backups with one file per day and retention of five
-  successful backup days, replacing today's file after a successful close.
 - Other accounting cycles only when their transition rules have been designed.

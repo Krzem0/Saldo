@@ -44,6 +44,7 @@ public sealed class TagRepository : ITagRepository
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        _context.EnsureCanWrite();
         if (await _context.TransactionTags.AnyAsync(link => link.TagId == id, ct)
             || await _context.TransactionTemplateTags.AnyAsync(link => link.TagId == id, ct))
             throw new ReferenceEntityInUseException();
