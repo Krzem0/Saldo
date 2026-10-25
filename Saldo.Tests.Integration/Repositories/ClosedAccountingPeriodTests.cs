@@ -27,11 +27,11 @@ public sealed class ClosedAccountingPeriodTests
         Assert.NotNull(january);
         Assert.True(january.IsClosed);
         Assert.Equal(original!.Id, january.Id);
-        Assert.Null(january.ClosedIncomeTotal);
-        Assert.Null(january.ClosedExpenseTotal);
-        Assert.Null(january.ClosedTransactionCount);
-        Assert.Null(january.ClosedDataHash);
-        Assert.Null(january.HashVersion);
+        Assert.Equal(0m, january.ClosedIncomeTotal);
+        Assert.Equal(0m, january.ClosedExpenseTotal);
+        Assert.Equal(0, january.ClosedTransactionCount);
+        Assert.Equal(64, january.ClosedDataHash!.Length);
+        Assert.Equal(1, january.HashVersion);
         Assert.Null(await periods.GetByMonthAsync(2026, 2));
         Assert.Equal(2, await db.Context.AccountingPeriods.CountAsync());
     }
@@ -49,7 +49,7 @@ public sealed class ClosedAccountingPeriodTests
     }
 
     [Fact]
-    public async Task ReopenAndRepeatedClose_PreserveExistingSnapshot()
+    public async Task ReopenPreservesSnapshot_AndNextCloseCapturesFreshSnapshot()
     {
         using var db = new TestDatabase();
         var period = new AccountingPeriod
@@ -64,14 +64,15 @@ public sealed class ClosedAccountingPeriodTests
 
         await new ReopenAccountingPeriod(periods).ExecuteAsync(2026, 1);
         Assert.False((await periods.GetByMonthAsync(2026, 1))!.IsClosed);
+        Assert.Equal(new string('a', 64), (await periods.GetByMonthAsync(2026, 1))!.ClosedDataHash);
         await new CloseAccountingPeriod(periods).ExecuteAsync(2026, 1);
         var saved = await periods.GetByMonthAsync(2026, 1);
 
         Assert.True(saved!.IsClosed);
-        Assert.Equal(100m, saved.ClosedIncomeTotal);
-        Assert.Equal(25m, saved.ClosedExpenseTotal);
-        Assert.Equal(2, saved.ClosedTransactionCount);
-        Assert.Equal(new string('a', 64), saved.ClosedDataHash);
+        Assert.Equal(0m, saved.ClosedIncomeTotal);
+        Assert.Equal(0m, saved.ClosedExpenseTotal);
+        Assert.Equal(0, saved.ClosedTransactionCount);
+        Assert.NotEqual(new string('a', 64), saved.ClosedDataHash);
         Assert.Equal(1, saved.HashVersion);
     }
 

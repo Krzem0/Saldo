@@ -184,4 +184,13 @@
   <data name="Message_Error" xml:space="preserve"><value>Błąd</value></data>
   <data name="AccountingPeriod.Closed" xml:space="preserve"><value>Okres rozliczeniowy jest zamknięty. Otwórz go ponownie, aby zmienić transakcje. Przy zmianie daty oba okresy muszą być otwarte.</value></data>
   <data name="AccountingPeriod.InvalidMonth" xml:space="preserve"><value>Wybierz prawidłowy miesiąc rozliczeniowy.</value></data>
+  <data name="AccountingPeriod.VerificationFailed" xml:space="preserve"><value>Nie udało się sprawdzić spójności okresu. Dane nie zostały potwierdzone jako zgodne. Spróbuj ponownie.</value></data>
+  <data name="AccountingPeriod_VerificationTitle" xml:space="preserve"><value>Spójność okresu rozliczeniowego</value></data>
+  <data name="AccountingPeriod_VerificationMismatch" xml:space="preserve"><value>Dane zamkniętego okresu różnią się od podsumowania zapisanego przy zamknięciu. Nie zmieniono zapisanego wzorca. Niezgodne sprawdzenia:</value></data>
+  <data name="AccountingPeriod_VerificationMissing" xml:space="preserve"><value>Zamknięty okres nie ma kompletnego podsumowania do sprawdzenia spójności. Nie można potwierdzić zgodności danych. Sprawdź dane przed ewentualnym ponownym otwarciem i zamknięciem okresu.</value></data>
+  <data name="AccountingPeriod_VerificationUnsupported" xml:space="preserve"><value>Podsumowanie zamkniętego okresu używa nieobsługiwanej wersji odcisku. Nie można potwierdzić zgodności danych. Nie zmieniono zapisanego wzorca.</value></data>
+  <data name="AccountingPeriod_Difference_IncomeTotal" xml:space="preserve"><value>suma przychodów</value></data>
+  <data name="AccountingPeriod_Difference_ExpenseTotal" xml:space="preserve"><value>suma wydatków</value></data>
+  <data name="AccountingPeriod_Difference_TransactionCount" xml:space="preserve"><value>liczba transakcji</value></data>
+  <data name="AccountingPeriod_Difference_DataHash" xml:space="preserve"><value>odcisk danych</value></data>
 </root>

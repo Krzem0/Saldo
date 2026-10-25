@@ -27,6 +27,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     private MonthlySummaryDto? _summary;
     private TransactionDto? _selectedTransaction;
     private bool _isLoading;
+    private int _loadVersion;
     private TransactionType? _typeFilter;
     private string _searchText = string.Empty;
     public string SearchText
@@ -290,29 +291,62 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
 
     private async Task LoadAsync()
     {
+        var loadVersion = ++_loadVersion;
+        var year = Year;
+        var month = Month;
         IsLoading = true;
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
-            var query = new ListTransactionsQuery(Year, Month);
+            var query = new ListTransactionsQuery(year, month);
 
             var transactions = await scope.ServiceProvider.GetRequiredService<ListTransactions>().ExecuteAsync(query);
             var summary = await scope.ServiceProvider.GetRequiredService<GetSummary>().ExecuteAsync(query);
+            var verification = await scope.ServiceProvider.GetRequiredService<VerifyAccountingPeriod>()
+                .ExecuteAsync(year, month);
+            // A slower verification for a previous selection must not replace the
+            // current month or display a warning for a month the user has left.
+            if (loadVersion != _loadVersion || year != Year || month != Month) return;
 
             // Keep the collection view so refreshing data preserves the user's sorting.
             Transactions.Clear();
             foreach (var transaction in transactions) Transactions.Add(transaction);
             ApplyFilters();
             Summary = summary;
+            if (verification.IsFailed)
+            {
+                _dialogService.ShowMessage(T("AccountingPeriod_VerificationTitle"),
+                    T("AccountingPeriod.VerificationFailed"), MessageDialogKind.Error);
+            }
+            else
+            {
+                ShowVerificationWarning(verification.Value);
+            }
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage(T("TransactionsLoadError"), ex.Message, MessageDialogKind.Error);
+            if (loadVersion == _loadVersion)
+                _dialogService.ShowMessage(T("TransactionsLoadError"), ex.Message, MessageDialogKind.Error);
         }
         finally
         {
-            IsLoading = false;
+            if (loadVersion == _loadVersion) IsLoading = false;
         }
+    }
+
+    private void ShowVerificationWarning(AccountingPeriodVerificationDto verification)
+    {
+        var message = verification.Status switch
+        {
+            AccountingPeriodVerificationStatus.Mismatch => T("AccountingPeriod_VerificationMismatch")
+                + Environment.NewLine + string.Join(", ", verification.Differences.Select(
+                    difference => T($"AccountingPeriod_Difference_{difference}"))),
+            AccountingPeriodVerificationStatus.MissingSnapshot => T("AccountingPeriod_VerificationMissing"),
+            AccountingPeriodVerificationStatus.UnsupportedHashVersion => T("AccountingPeriod_VerificationUnsupported"),
+            _ => null
+        };
+        if (message is not null)
+            _dialogService.ShowMessage(T("AccountingPeriod_VerificationTitle"), message, MessageDialogKind.Warning);
     }
 
     private void PreviousMonth()

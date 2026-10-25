@@ -6,6 +6,7 @@ public static class ErrorCodes
     {
         public const string Closed = "AccountingPeriod.Closed";
         public const string InvalidMonth = "AccountingPeriod.InvalidMonth";
+        public const string VerificationFailed = "AccountingPeriod.VerificationFailed";
     }
 
     public static class Transaction

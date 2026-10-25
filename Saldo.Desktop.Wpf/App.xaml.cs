@@ -96,6 +96,7 @@ public partial class App : System.Windows.Application
         services.AddScoped<IAccountingPeriodRepository, AccountingPeriodRepository>();
         services.AddScoped<CloseAccountingPeriod>();
         services.AddScoped<ReopenAccountingPeriod>();
+        services.AddScoped<VerifyAccountingPeriod>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IPartyRepository, PartyRepository>();

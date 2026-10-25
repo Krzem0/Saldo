@@ -1,8 +1,9 @@
 # Accounting periods
 
-Status: persistence, Application close/reopen operations, and closed-period write
-protection implemented. Closing snapshots, integrity verification, and period
-controls in the GUI are not implemented yet.
+Status: persistence, close/reopen operations, closed-period write protection,
+atomic closing snapshots, and integrity verification implemented. The monthly
+view runs verification and displays problems. GUI close/reopen controls and
+automatic backups are not implemented yet.
 
 ## Current behavior
 
@@ -49,12 +50,51 @@ controls in the GUI are not implemented yet.
 - Period read queries are no-tracking, so they return current state even when
   the context contains an older tracked entity.
 
-These operations currently change only `IsClosed`. They do not calculate totals
-or hashes. Reopening retains any existing snapshot, and this stage's closing
-operation also leaves snapshot fields untouched. The next stage will capture
-a fresh snapshot atomically on a transition to closed. GUI close/reopen buttons
-will be introduced separately; registration of these use cases does not add
-new actions to the current monthly view.
+Closing an open (or absent) month captures totals, count, hash, and version in
+the same write transaction as `IsClosed`. Repeated closing does not overwrite
+the reference, even if it is incomplete or no longer matches the data.
+Reopening retains the old snapshot. Only the next explicit transition from open
+to closed captures a fresh snapshot. GUI close/reopen buttons will be introduced
+separately; these operations do not add new actions to the current monthly view.
+
+## Integrity verification
+
+- `VerifyAccountingPeriod.ExecuteAsync(year, month)` returns a typed result:
+  `Open`, `Valid`, `Mismatch`, `MissingSnapshot`, or `UnsupportedHashVersion`.
+- Open/absent months require only an indexed state lookup and no transaction scan.
+- A closed month is read with its transactions and tag assignments in one
+  deferred SQLite read transaction. Concurrent writes cannot mix different
+  database snapshots during comparison. All entity reads are no-tracking.
+- Full verification reads and hashing run in a worker task. Each operation must
+  have exclusive use of its scoped repository/DbContext until it completes.
+- Differences identify income total, expense total, transaction count, and data
+  hash independently. The balance is derived from totals.
+- Missing/partial snapshots and unknown hash versions are never reported as
+  valid. Older closed periods without a snapshot are left intact for review,
+  rather than silently given a new baseline.
+- Unexpected read/calculation failures are logged and returned as
+  `AccountingPeriod.VerificationFailed`; cancellation propagates to the caller.
+- The monthly GUI verifies on load/reload, including month navigation. It shows
+  localized warnings for mismatches, missing snapshots, or unsupported versions,
+  and an error for failed verification. It never repairs or overwrites a snapshot.
+- Navigation ignores stale load results and warnings from a previously selected
+  month. A valid/open result needs no popup.
+
+### Hash format, version 1
+
+SHA-256 covers a format marker, hash version, month start/end day numbers,
+transaction count, and transactions sorted by ID. Each transaction includes ID,
+date, type, amount, category/payer/counterparty/location IDs, exact description,
+tag count, and sorted tag IDs. Dictionary names, colors, and icons are excluded,
+so renaming a reference does not invalidate closed transactions.
+
+Integers use BinaryWriter's little-endian representation; strings use its
+length-prefixed UTF-8 encoding; nullable IDs have a presence marker. Dates are
+`DateOnly.DayNumber`, and decimals use invariant `G29`, so language and decimal
+scale do not alter the hash. The digest is lowercase hexadecimal. The payload is
+streamed into SHA-256 rather than assembled into a second in-memory copy.
+Changing this format requires a new hash version. Tests pin a version-1 fixture
+and cover all stored transaction fields, ordering, culture, and decimal scale.
 
 ## Stored data
 
@@ -62,10 +102,11 @@ new actions to the current monthly view.
 `ClosedIncomeTotal`, `ClosedExpenseTotal`, `ClosedTransactionCount`,
 `ClosedDataHash`, and `HashVersion`.
 
-The closing snapshot columns are nullable and remain empty when a period is
-created. No totals, counts, or hashes are maintained by transaction writes.
-The period balance will be calculated as income minus expenses rather than
-stored independently.
+The closing snapshot columns are nullable and remain empty when an open period
+is created by a transaction write. Closing populates all of them, including zero
+totals/count and a deterministic hash for an empty month. Transaction writes do
+not maintain these fields. The period balance is income minus expenses rather
+than an independent stored value.
 
 A SQLite check constraint requires exact calendar-month boundaries. A unique
 index on `StartDate` prevents duplicate months; together these rules prevent
@@ -85,8 +126,6 @@ manual backup before first starting the upgraded app against an existing databas
 
 ## Next stages
 
-- Atomic closing with stored totals, count, versioned deterministic SHA-256 hash;
-  integrity verification of closed periods.
 - GUI state and close/reopen actions.
 - Background automatic backups with one file per day and retention of five
   successful backup days, replacing today's file after a successful close.

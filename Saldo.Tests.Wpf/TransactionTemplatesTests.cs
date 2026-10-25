@@ -217,6 +217,7 @@ public sealed class TransactionTemplatesTests
             services.AddScoped<ITransactionSettingsRepository, TransactionSettingsRepository>();
             services.AddScoped<GetNewTransactionDefaults>();
             services.AddScoped<ListTransactions>(); services.AddScoped<GetSummary>();
+            services.AddScoped<VerifyAccountingPeriod>();
             services.AddScoped<AddTransaction>(); services.AddScoped<EditTransaction>();
             services.AddScoped<TransactionTemplateInput>(); services.AddScoped<AddTransactionTemplate>();
             services.AddScoped<EditTransactionTemplate>(); services.AddScoped<GetTransactionTemplate>();

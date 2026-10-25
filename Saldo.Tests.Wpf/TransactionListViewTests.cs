@@ -78,6 +78,7 @@ public sealed class TransactionListViewTests
                 repository.AddAsync(new Transaction { Date = today.AddMonths(-1), Type = TransactionType.Expense, Amount = 999m, Description = "Zakupy" }).GetAwaiter().GetResult();
                 using var provider = new ServiceCollection()
                     .AddSingleton<ITransactionRepository>(repository)
+                    .AddSingleton<IAccountingPeriodRepository, FakeAccountingPeriodRepository>().AddScoped<VerifyAccountingPeriod>()
                     .AddScoped<ListTransactions>().AddScoped<GetSummary>()
                     .BuildServiceProvider();
                 var vm = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), null!, new LocalizationService());

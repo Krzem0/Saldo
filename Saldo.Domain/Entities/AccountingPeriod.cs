@@ -7,7 +7,7 @@ public sealed class AccountingPeriod
     public DateOnly EndDateExclusive { get; set; }
     public bool IsClosed { get; set; }
 
-    // Populated by the future period-closing workflow, not by transaction writes.
+    // Captured atomically when closing an open period, never by transaction writes.
     public decimal? ClosedIncomeTotal { get; set; }
     public decimal? ClosedExpenseTotal { get; set; }
     public int? ClosedTransactionCount { get; set; }

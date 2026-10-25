@@ -1,4 +1,5 @@
 using Saldo.Domain.Entities;
+using Saldo.Application.DTOs;
 using Saldo.Domain.ValueObjects;
 
 namespace Saldo.Application.Interfaces;
@@ -9,4 +10,6 @@ public interface IAccountingPeriodRepository
     // State changes must serialize with transaction writes. Reopening an absent
     // period is a no-op; closing one creates it without filling gaps.
     Task SetClosedAsync(CalendarMonth month, bool isClosed, CancellationToken ct = default);
+    // One consistent read; open/absent periods need no transaction scan.
+    Task<AccountingPeriodVerificationData> ReadVerificationDataAsync(CalendarMonth month, CancellationToken ct = default);
 }

@@ -19,7 +19,8 @@ public sealed class CloseAccountingPeriod(IAccountingPeriodRepository periods)
             return Result.Fail(ErrorCodes.AccountingPeriod.InvalidMonth);
         }
 
-        await periods.SetClosedAsync(bounds, true, ct);
+        // Capturing a snapshot includes SQLite reads and CPU work.
+        await Task.Run(() => periods.SetClosedAsync(bounds, true, ct), ct);
         return Result.Ok();
     }
 }
