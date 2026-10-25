@@ -179,4 +179,7 @@
   <data name="Transaction_Copy" xml:space="preserve"><value>Copy transaction</value></data>
   <data name="Actions" xml:space="preserve"><value>Actions</value></data>
   <data name="TransactionList_Search" xml:space="preserve"><value>Search the selected month: description, category, counterparty, payer, location or tag</value></data>
+  <data name="Message_Information" xml:space="preserve"><value>Information</value></data>
+  <data name="Message_Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="Message_Error" xml:space="preserve"><value>Error</value></data>
 </root>

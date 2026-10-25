@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -92,7 +91,23 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
     public string TransactionSettingsMessage
     {
         get => _transactionSettingsMessage;
-        private set => SetField(ref _transactionSettingsMessage, value);
+        private set
+        {
+            SetField(ref _transactionSettingsMessage, value);
+            if (value.Length == 0) TransactionSettingsMessageKind = null;
+        }
+    }
+    private MessageDialogKind? _transactionSettingsMessageKind;
+    public MessageDialogKind? TransactionSettingsMessageKind
+    {
+        get => _transactionSettingsMessageKind;
+        private set => SetField(ref _transactionSettingsMessageKind, value);
+    }
+
+    private void SetTransactionSettingsMessage(string message, MessageDialogKind kind)
+    {
+        TransactionSettingsMessage = message;
+        TransactionSettingsMessageKind = kind;
     }
 
     public async Task LoadTransactionSettingsAsync()
@@ -119,7 +134,7 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load transaction settings.");
-            TransactionSettingsMessage = T("TransactionSettingsFailed");
+            SetTransactionSettingsMessage(T("TransactionSettingsFailed"), MessageDialogKind.Error);
         }
         finally { IsTransactionSettingsBusy = false; }
     }
@@ -142,7 +157,7 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
             await scope.ServiceProvider.GetRequiredService<SetTransactionDefaults>().ExecuteAsync(payerId, locationId);
             _savedPayerId = payerId;
             _savedLocationId = locationId;
-            TransactionSettingsMessage = T("TransactionSettingsSaved");
+            SetTransactionSettingsMessage(T("TransactionSettingsSaved"), MessageDialogKind.Information);
         }
         catch (Exception ex)
         {
@@ -154,7 +169,7 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
                 SelectedDefaultLocationOption = _defaultLocationOptions.FirstOrDefault(option => option.Id == _savedLocationId);
             }
             finally { _restoringTransactionSettings = false; }
-            TransactionSettingsMessage = T("TransactionSettingsFailed");
+            SetTransactionSettingsMessage(T("TransactionSettingsFailed"), MessageDialogKind.Error);
         }
         finally
         {
@@ -175,7 +190,7 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to open the database folder.");
-            MessageBox.Show(T("OpenDatabaseFolderFailed"), T("BackupTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.ShowMessage(T("BackupTitle"), T("OpenDatabaseFolderFailed"), MessageDialogKind.Error);
         }
     }
 
@@ -190,12 +205,12 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
             await using var scope = _scopeFactory.CreateAsyncScope();
             await scope.ServiceProvider.GetRequiredService<IDatabaseBackupService>().CreateAsync(path);
             _logger.LogInformation("Database backup created at {BackupPath}.", path);
-            _dialogService.ShowMessage(T("BackupTitle"), string.Format(CultureInfo.CurrentCulture, T("BackupSuccessMessage"), path));
+            _dialogService.ShowMessage(T("BackupTitle"), string.Format(CultureInfo.CurrentCulture, T("BackupSuccessMessage"), path), MessageDialogKind.Information);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Database backup failed.");
-            _dialogService.ShowMessage(T("BackupTitle"), T("BackupFailedMessage"));
+            _dialogService.ShowMessage(T("BackupTitle"), T("BackupFailedMessage"), MessageDialogKind.Error);
         }
     }
 

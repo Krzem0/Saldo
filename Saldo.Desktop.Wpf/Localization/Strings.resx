@@ -179,4 +179,7 @@
   <data name="Transaction_Copy" xml:space="preserve"><value>Kopiuj transakcję</value></data>
   <data name="Actions" xml:space="preserve"><value>Akcje</value></data>
   <data name="TransactionList_Search" xml:space="preserve"><value>Szukaj w wybranym miesiącu: opis, kategoria, kontrahent, płatnik, lokalizacja lub tag</value></data>
+  <data name="Message_Information" xml:space="preserve"><value>Informacja</value></data>
+  <data name="Message_Warning" xml:space="preserve"><value>Ostrzeżenie</value></data>
+  <data name="Message_Error" xml:space="preserve"><value>Błąd</value></data>
 </root>

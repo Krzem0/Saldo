@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
-using System.Windows;
 using System.Windows.Input;
 using System.Windows.Data;
 using Saldo.Domain.Enums;
@@ -308,7 +307,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, T("TransactionsLoadError"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.ShowMessage(T("TransactionsLoadError"), ex.Message, MessageDialogKind.Error);
         }
         finally
         {
@@ -404,7 +403,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage(T("ErrorTitle"), ex.Message);
+            _dialogService.ShowMessage(T("ErrorTitle"), ex.Message, MessageDialogKind.Error);
         }
     }
 
@@ -439,11 +438,9 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             var result = await scope.ServiceProvider.GetRequiredService<DeleteTransaction>().ExecuteAsync(SelectedTransaction.Id);
             if (result.IsFailed)
             {
-                MessageBox.Show(
-                    string.Join(Environment.NewLine, result.Errors.Select(e => T(e.Message))),
-                    T("ErrorTitle"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                _dialogService.ShowMessage(
+                    T("Message_Warning"),
+                    string.Join(Environment.NewLine, result.Errors.Select(e => T(e.Message))), MessageDialogKind.Warning);
                 return;
             }
 
@@ -451,7 +448,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, T("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+            _dialogService.ShowMessage(T("ErrorTitle"), ex.Message, MessageDialogKind.Error);
         }
     }
 

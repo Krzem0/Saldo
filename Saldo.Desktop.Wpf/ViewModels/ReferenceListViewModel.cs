@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Saldo.Desktop.Wpf.Localization;
@@ -129,7 +128,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         }
         catch (Exception ex)
         {
-          MessageBox.Show(ex.Message, string.Format(CultureInfo.CurrentCulture, T("LoadErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
+            DialogService.ShowMessage(string.Format(CultureInfo.CurrentCulture, T("LoadErrorTemplate"), EntityDisplayName), ex.Message, MessageDialogKind.Error);
         }
         finally
         {
@@ -154,7 +153,8 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
            var message = ex is DuplicateReferenceException duplicate
                ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
                : ex is InvalidTagNameException ? T("Validation_TagNameInvalid") : ex.Message;
-           MessageBox.Show(message, string.Format(CultureInfo.CurrentCulture, T("AddErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
+            DialogService.ShowMessage(string.Format(CultureInfo.CurrentCulture, T("AddErrorTemplate"), EntityDisplayName), message,
+                ex is DuplicateReferenceException or InvalidTagNameException ? MessageDialogKind.Warning : MessageDialogKind.Error);
         }
     }
 
@@ -175,7 +175,8 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
          var message = ex is DuplicateReferenceException duplicate
              ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
              : ex is InvalidTagNameException ? T("Validation_TagNameInvalid") : ex.Message;
-         MessageBox.Show(message, string.Format(CultureInfo.CurrentCulture, T("UpdateErrorTemplate"), EntityDisplayName), MessageBoxButton.OK, MessageBoxImage.Error);
+            DialogService.ShowMessage(string.Format(CultureInfo.CurrentCulture, T("UpdateErrorTemplate"), EntityDisplayName), message,
+                ex is DuplicateReferenceException or InvalidTagNameException ? MessageDialogKind.Warning : MessageDialogKind.Error);
         }
     }
 
@@ -195,19 +196,14 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         }
         catch (ReferenceEntityInUseException)
         {
-            MessageBox.Show(
-                string.Format(CultureInfo.CurrentCulture, T("DeleteInUseErrorTemplate"), GetName(SelectedItem)),
+            DialogService.ShowMessage(
                 string.Format(CultureInfo.CurrentCulture, T("DeleteEntityTitleTemplate"), EntityDisplayName),
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+                string.Format(CultureInfo.CurrentCulture, T("DeleteInUseErrorTemplate"), GetName(SelectedItem)), MessageDialogKind.Warning);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-         MessageBox.Show(
-             string.Format(CultureInfo.CurrentCulture, T("DeleteErrorTemplate"), EntityDisplayName),
-             T("ErrorTitle"),
-             MessageBoxButton.OK,
-             MessageBoxImage.Error);
+            DialogService.ShowMessage(T("ErrorTitle"),
+                string.Format(CultureInfo.CurrentCulture, T("DeleteErrorTemplate"), EntityDisplayName), MessageDialogKind.Error);
         }
     }
 }

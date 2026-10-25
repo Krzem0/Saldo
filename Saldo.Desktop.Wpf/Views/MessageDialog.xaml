@@ -1,6 +1,8 @@
 <Window x:Class="Saldo.Desktop.Wpf.Views.MessageDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:services="clr-namespace:Saldo.Desktop.Wpf.Services"
+        xmlns:icons="clr-namespace:MahApps.Metro.IconPacks;assembly=MahApps.Metro.IconPacks.Material"
         Width="480" SizeToContent="Height" ResizeMode="NoResize"
         MaxHeight="{Binding Source={x:Static SystemParameters.WorkArea}, Path=Height}"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
@@ -11,10 +13,81 @@
             <RowDefinition Height="20"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
-            <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="14"
-                       Foreground="{DynamicResource PrimaryTextBrush}"/>
-        </ScrollViewer>
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Border x:Name="MessageIconBackground" Width="44" Height="44" CornerRadius="22" Margin="0,0,16,0" VerticalAlignment="Top">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Kind}" Value="{x:Static services:MessageDialogKind.Information}">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Setter Property="Background" Value="{DynamicResource MessageInformationBackgroundBrush}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Kind}" Value="{x:Static services:MessageDialogKind.Warning}">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Setter Property="Background" Value="{DynamicResource MessageWarningBackgroundBrush}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Kind}" Value="{x:Static services:MessageDialogKind.Error}">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Setter Property="Background" Value="{DynamicResource ValidationBackgroundBrush}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <icons:PackIconMaterial x:Name="MessageIcon" Width="24" Height="24" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                        IsHitTestVisible="False">
+                    <icons:PackIconMaterial.Style>
+                        <Style TargetType="icons:PackIconMaterial">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Kind}" Value="{x:Static services:MessageDialogKind.Information}">
+                                    <Setter Property="Kind" Value="InformationOutline"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource MessageInformationTextBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Kind}" Value="{x:Static services:MessageDialogKind.Warning}">
+                                    <Setter Property="Kind" Value="AlertOutline"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource MessageWarningTextBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Kind}" Value="{x:Static services:MessageDialogKind.Error}">
+                                    <Setter Property="Kind" Value="CloseCircleOutline"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource ValidationTextBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </icons:PackIconMaterial.Style>
+                </icons:PackIconMaterial>
+            </Border>
+            <StackPanel Grid.Column="1">
+                <TextBlock x:Name="MessageTypeLabel" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,8">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Kind}" Value="{x:Static services:MessageDialogKind.Information}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Text" Value="{Binding Source={StaticResource Localization}, Path=[Message_Information]}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource MessageInformationTextBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Kind}" Value="{x:Static services:MessageDialogKind.Warning}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Text" Value="{Binding Source={StaticResource Localization}, Path=[Message_Warning]}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource MessageWarningTextBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Kind}" Value="{x:Static services:MessageDialogKind.Error}">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Text" Value="{Binding Source={StaticResource Localization}, Path=[Message_Error]}"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource ValidationTextBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="14"
+                               Foreground="{DynamicResource PrimaryTextBrush}"/>
+                </ScrollViewer>
+            </StackPanel>
+        </Grid>
         <Button Grid.Row="2" Content="{Binding Source={StaticResource Localization}, Path=[Close]}"
                 IsDefault="True" IsCancel="True" HorizontalAlignment="Right" MinWidth="80" Padding="16,6"
                 Style="{StaticResource PrimaryActionButtonStyle}"/>

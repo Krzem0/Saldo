@@ -23,6 +23,7 @@ public partial class App : System.Windows.Application
 {
     private ServiceProvider? _serviceProvider;
     private readonly LocalizationService _localization = new();
+    private bool _showingErrorMessage;
 
     public App()
     {
@@ -63,11 +64,7 @@ public partial class App : System.Windows.Application
         catch (Exception ex)
         {
             Log.Fatal(ex, "Application startup failed.");
-            MessageBox.Show(
-                _localization["StartupFailedMessage"],
-                _localization["AppTitle"],
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            ShowErrorMessage(_localization["StartupFailedMessage"]);
             Shutdown(-1);
         }
     }
@@ -240,12 +237,26 @@ public partial class App : System.Windows.Application
     private void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
     {
         Log.Error(e.Exception, "Unhandled UI exception.");
-        MessageBox.Show(
-            _localization["UnhandledUiErrorMessage"],
-            _localization["AppTitle"],
-            MessageBoxButton.OK,
-            MessageBoxImage.Error);
+        ShowErrorMessage(_localization["UnhandledUiErrorMessage"]);
         e.Handled = true;
+    }
+
+    private void ShowErrorMessage(string message)
+    {
+        // Avoid recursive dialogs if the error is in the themed window itself.
+        if (_showingErrorMessage) return;
+        _showingErrorMessage = true;
+        try
+        {
+            Resources["Localization"] = _localization;
+            new WpfDialogService().ShowMessage(_localization["AppTitle"], message, MessageDialogKind.Error);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to display the themed error dialog.");
+            MessageBox.Show(message, _localization["AppTitle"], MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally { _showingErrorMessage = false; }
     }
 
     private void OnCurrentDomainUnhandledException(object? sender, UnhandledExceptionEventArgs e)

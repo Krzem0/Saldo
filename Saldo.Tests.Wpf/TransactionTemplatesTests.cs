@@ -244,8 +244,9 @@ public sealed class TransactionTemplatesTests
         public UnsavedChangesChoice UnsavedChoice { get; set; } = UnsavedChangesChoice.Cancel;
         public Func<AddEditTransactionViewModel, bool?>? TransactionCallback { get; set; }
         public string? BackupPath { get; set; }
-        public List<(string Title, string Message)> Messages { get; } = [];
-        public void ShowMessage(string title, string message) => Messages.Add((title, message));
+        public List<(string Title, string Message, MessageDialogKind? Kind)> Messages { get; } = [];
+        public void ShowMessage(string title, string message) => Messages.Add((title, message, null));
+        public void ShowMessage(string title, string message, MessageDialogKind kind) => Messages.Add((title, message, kind));
         public bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel) => TransactionCallback?.Invoke(viewModel);
         public string? ShowNameDialog(string title, string? initialValue = null)
         {

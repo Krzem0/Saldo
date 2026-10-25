@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
-using System.Windows;
 using System.Windows.Input;
 using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
@@ -591,7 +590,9 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
         var message = exception is DuplicateReferenceException duplicate
             ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
             : exception is InvalidTagNameException ? T("Validation_TagNameInvalid") : exception.Message;
-        MessageBox.Show(message, T("ErrorTitle"), MessageBoxButton.OK, MessageBoxImage.Error);
+        var kind = exception is DuplicateReferenceException or InvalidTagNameException
+            ? MessageDialogKind.Warning : MessageDialogKind.Error;
+        _dialogService.ShowMessage(T(kind == MessageDialogKind.Warning ? "Message_Warning" : "ErrorTitle"), message, kind);
     }
 
     private void ApplyDefaults(NewTransactionDefaultsDto defaults)

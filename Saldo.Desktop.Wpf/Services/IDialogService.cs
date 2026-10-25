@@ -18,4 +18,5 @@ public interface IDialogService
 
     string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter);
     void ShowMessage(string title, string message) => throw new NotSupportedException();
+    void ShowMessage(string title, string message, MessageDialogKind kind) => throw new NotSupportedException();
 }

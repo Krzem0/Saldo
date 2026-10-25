@@ -68,9 +68,13 @@ public sealed class WpfDialogService : IDialogService
         return accepted == true ? dialog.FileName : null;
     }
 
-    public void ShowMessage(string title, string message)
+    public void ShowMessage(string title, string message) => ShowMessageCore(title, message, null);
+
+    public void ShowMessage(string title, string message, MessageDialogKind kind) => ShowMessageCore(title, message, kind);
+
+    private static void ShowMessageCore(string title, string message, MessageDialogKind? kind)
     {
-        var dialog = new MessageDialog(title, message);
+        var dialog = new MessageDialog(title, message, kind);
         SetOwner(dialog);
         dialog.ShowDialog();
     }
@@ -85,7 +89,7 @@ public sealed class WpfDialogService : IDialogService
     {
         var owner = GetActiveOwner();
 
-        if (owner is not null)
+        if (owner is not null && !ReferenceEquals(owner, dialog) && owner.IsVisible)
         {
             dialog.Owner = owner;
         }

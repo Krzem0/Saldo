@@ -45,6 +45,7 @@ public sealed class TransactionSettingsTests
                 vm.SelectedDefaultLocationOption = vm.DefaultLocationOptions[0];
                 vm.TransactionSettingsSaveTask.GetAwaiter().GetResult();
                 Assert.Equal(2, settings.LocationId);
+                Assert.Equal(Saldo.Desktop.Wpf.Services.MessageDialogKind.Information, vm.TransactionSettingsMessageKind);
                 Assert.Equal(2, vm.DefaultPayerOptions.Count);
                 Assert.True(vm.ClearDefaultPayerCommand.CanExecute(null));
                 if (selectedId is null)
@@ -80,6 +81,7 @@ public sealed class TransactionSettingsTests
                 Assert.Equal(selectedId, settings.LocationId);
                 Assert.False(vm.IsTransactionSettingsBusy);
                 Assert.Equal(new LocalizationService()["TransactionSettingsFailed"], vm.TransactionSettingsMessage);
+                Assert.Equal(Saldo.Desktop.Wpf.Services.MessageDialogKind.Error, vm.TransactionSettingsMessageKind);
             }
             catch (Exception ex) { failure = ex; }
             finally { Dispatcher.CurrentDispatcher.InvokeShutdown(); }

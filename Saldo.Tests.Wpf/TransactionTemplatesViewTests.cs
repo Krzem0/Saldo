@@ -12,11 +12,63 @@ using System.Xml.Linq;
 using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Controls;
 using Saldo.Desktop.Wpf.ViewModels;
+using Saldo.Desktop.Wpf.Services;
+using MahApps.Metro.IconPacks;
 
 namespace Saldo.Tests.Wpf;
 
 public sealed class TransactionTemplatesViewTests
 {
+    [Theory]
+    [InlineData("LightTheme", MessageDialogKind.Information, PackIconMaterialKind.InformationOutline, "Informacja", "Information", "MessageInformationTextBrush")]
+    [InlineData("DarkTheme", MessageDialogKind.Information, PackIconMaterialKind.InformationOutline, "Informacja", "Information", "MessageInformationTextBrush")]
+    [InlineData("LightTheme", MessageDialogKind.Warning, PackIconMaterialKind.AlertOutline, "Ostrzeżenie", "Warning", "MessageWarningTextBrush")]
+    [InlineData("DarkTheme", MessageDialogKind.Warning, PackIconMaterialKind.AlertOutline, "Ostrzeżenie", "Warning", "MessageWarningTextBrush")]
+    [InlineData("LightTheme", MessageDialogKind.Error, PackIconMaterialKind.CloseCircleOutline, "Błąd", "Error", "ValidationTextBrush")]
+    [InlineData("DarkTheme", MessageDialogKind.Error, PackIconMaterialKind.CloseCircleOutline, "Błąd", "Error", "ValidationTextBrush")]
+    public void MessageDialogVariants_RenderIconsLabelsAndThemeColors(string theme, MessageDialogKind kind,
+        PackIconMaterialKind iconKind, string polish, string english, string brushKey) => OnSta(() =>
+    {
+        using var bindings = new BindingErrorScope();
+        var window = (Window)Load("MessageDialog.xaml", theme);
+        var surface = (FrameworkElement)window.Content;
+        window.Content = null;
+        var message = kind switch
+        {
+            MessageDialogKind.Information => "Kopia zapasowa została utworzona.\nC:\\backups\\saldo.db",
+            MessageDialogKind.Warning => "Element o nazwie „apteka” już istnieje. Wybierz go z listy zamiast dodawać ponownie.",
+            _ => "Nie udało się zapisać zmian. Spróbuj ponownie."
+        };
+        var host = new Border { Child = surface, Resources = window.Resources,
+            Background = (Brush)window.Resources["SurfaceBrush"], DataContext = new { Message = message, Kind = kind } };
+        var localization = (LocalizationService)window.Resources["Localization"];
+        var previousCulture = localization.CurrentCulture;
+        try
+        {
+        localization.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("pl-PL");
+        Layout(host, 480, 210);
+        var icon = Descendants(host).OfType<PackIconMaterial>().Single();
+        var label = Descendants(host).OfType<TextBlock>().Single(t => t.Name == "MessageTypeLabel");
+        Assert.Equal(iconKind, icon.Kind);
+        Assert.Equal(Visibility.Visible, ((Border)icon.Parent).Visibility);
+        Assert.Equal(polish, label.Text);
+        Assert.Equal(Visibility.Visible, label.Visibility);
+        Assert.Same(host.Resources[brushKey], icon.Foreground);
+        Assert.Same(icon.Foreground, label.Foreground);
+        Assert.Contains(Descendants(host).OfType<TextBlock>(), t => t.Text == message && t.TextWrapping == TextWrapping.Wrap);
+        var close = Assert.Single(Descendants(host).OfType<Button>());
+        Assert.True(close.IsCancel);
+        Assert.True(close.IsDefault);
+        SavePreview(host, theme + "-message-" + kind, 480, 210);
+        localization.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-US");
+        Layout(host, 480, 210);
+        Assert.Equal(english, label.Text);
+        Assert.Equal("Close", close.Content);
+        Assert.Empty(bindings.Errors);
+        }
+        finally { localization.CurrentCulture = previousCulture; window.Close(); }
+    });
+
     [Theory]
     [InlineData("LightTheme")]
     [InlineData("DarkTheme")]
@@ -475,13 +527,14 @@ public sealed class TransactionTemplatesViewTests
         window.Content = null;
         var message = "Kopia zapasowa została utworzona.\nC:\\backups\\saldo.db";
         var surface = new Border { Child = content, Resources = window.Resources,
-            Background = (Brush)window.Resources["SurfaceBrush"], DataContext = new { Message = message } };
+            Background = (Brush)window.Resources["SurfaceBrush"], DataContext = new { Message = message, Kind = (MessageDialogKind?)null } };
         Layout(surface, 480, 200);
         Assert.Contains(Descendants(surface).OfType<TextBlock>(), text => text.Text == message && text.TextWrapping == TextWrapping.Wrap);
         var close = Assert.Single(Descendants(surface).OfType<Button>());
         Assert.Equal("Zamknij", close.Content);
         Assert.True(close.IsDefault);
         Assert.True(close.IsCancel);
+        Assert.Equal(Visibility.Collapsed, Descendants(surface).OfType<Border>().Single(b => b.Name == "MessageIconBackground").Visibility);
         SavePreview(surface, theme + "-backup-message", 480, 200);
         window.Close();
     });
@@ -532,6 +585,7 @@ public sealed class TransactionTemplatesViewTests
         foreach (var element in root.Descendants().Where(e => e.Name.NamespaceName == views).ToArray())
             element.Name = XName.Get(element.Name.LocalName, views + ";assembly=Saldo.Desktop.Wpf");
         root.SetAttributeValue(XNamespace.Xmlns + "views", views + ";assembly=Saldo.Desktop.Wpf");
+        root.SetAttributeValue(XNamespace.Xmlns + "services", "clr-namespace:Saldo.Desktop.Wpf.Services;assembly=Saldo.Desktop.Wpf");
         var localization = "clr-namespace:Saldo.Desktop.Wpf.Localization;assembly=Saldo.Desktop.Wpf";
         root.SetAttributeValue(XNamespace.Xmlns + "localization", localization);
         var resourceProperty = root.Element(p + (root.Name.LocalName + ".Resources"));

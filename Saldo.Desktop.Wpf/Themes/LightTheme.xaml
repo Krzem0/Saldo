@@ -24,4 +24,8 @@
     <SolidColorBrush x:Key="ValidationBackgroundBrush" Color="#FFF4F2"/>
     <SolidColorBrush x:Key="ValidationTextBrush" Color="#B3261E"/>
     <SolidColorBrush x:Key="GridLineBrush" Color="#E3EBE7"/>
+    <SolidColorBrush x:Key="MessageInformationBackgroundBrush" Color="#EAF2FD"/>
+    <SolidColorBrush x:Key="MessageInformationTextBrush" Color="#1D5FA7"/>
+    <SolidColorBrush x:Key="MessageWarningBackgroundBrush" Color="#FFF3D6"/>
+    <SolidColorBrush x:Key="MessageWarningTextBrush" Color="#875600"/>
 </ResourceDictionary>

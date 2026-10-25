@@ -122,6 +122,14 @@
 - `System` is the default and follows the Windows app theme while Saldo is running
 - The selected language and theme are currently session-only and reset when the app is closed
 
+### Application messages
+
+- Application messages use an owned, theme-aware dialog with wrapped, scrollable text and a Close button. Enter and Escape close the dialog.
+- Application messages use **Information** (blue information icon), **Warning** (amber triangle), or **Error** (red circle with a cross). Each includes a localized type label, so the meaning does not depend on color alone. Icons and colors adapt to the light and dark themes.
+- **Information:** backup completed successfully. **Warning:** duplicate dictionary entries, invalid tag names, deletion blocked because an entry is in use, or a transaction no longer available for deletion. **Error:** failed reads, writes, backups, folder opening, startup, or unexpected UI errors. All current message-window calls explicitly choose their severity; the neutral variant remains available for compatibility.
+- Field validation stays inline rather than opening additional dialogs. Saving a template keeps its inline success confirmation. Transaction-default settings display a blue information message after a successful save and a red error message after a failed load or save. Delete confirmations and unsaved-change prompts retain their dedicated decision dialogs.
+- Errors in dictionaries, transactions, settings, startup, and unhandled UI errors use the application dialog. A system message box is retained only as a fallback if the themed error dialog cannot be displayed.
+
 ## Backups
 
 - In Settings, use **Create backup** to choose where to save a timestamp-named `.db` file

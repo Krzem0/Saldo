@@ -1,6 +1,7 @@
 <UserControl x:Class="Saldo.Desktop.Wpf.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:services="clr-namespace:Saldo.Desktop.Wpf.Services"
              xmlns:localization="clr-namespace:Saldo.Desktop.Wpf.Localization">
     <UserControl.Resources>
         <Style x:Key="DefaultReferenceComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
@@ -201,8 +202,21 @@
                     </ComboBox.ItemTemplate>
 
                 </ComboBox>
-                <TextBlock Text="{Binding TransactionSettingsMessage}" Foreground="{DynamicResource SecondaryTextBrush}"
-                           Margin="0,8,0,0" TextWrapping="Wrap"/>
+                <TextBlock Text="{Binding TransactionSettingsMessage}" Margin="0,8,0,0" TextWrapping="Wrap">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding TransactionSettingsMessageKind}" Value="{x:Static services:MessageDialogKind.Information}">
+                                    <Setter Property="Foreground" Value="{DynamicResource MessageInformationTextBrush}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding TransactionSettingsMessageKind}" Value="{x:Static services:MessageDialogKind.Error}">
+                                    <Setter Property="Foreground" Value="{DynamicResource ValidationTextBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </StackPanel>
         </Border>
     </Grid>
