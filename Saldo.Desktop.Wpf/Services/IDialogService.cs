@@ -13,6 +13,7 @@ public interface IDialogService
     ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null);
 
     bool ConfirmDelete(string title, string message);
+    bool ConfirmAccountingPeriodChange(string title, string message, string actionLabel) => throw new NotSupportedException();
 
     UnsavedChangesChoice ConfirmUnsavedChanges(string title, string message);
 

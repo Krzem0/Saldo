@@ -87,6 +87,12 @@ public sealed class TransactionListViewTests
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
                 var grid = (DataGrid)view.FindName("TransactionGrid");
                 var summary = vm.Summary;
+                var periodState = (TextBlock)view.FindName("PeriodStateLabel");
+                var periodAction = (Button)view.FindName("PeriodActionButton");
+                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                Assert.Equal(((LocalizationService)view.Resources["Localization"])["AccountingPeriod_Open"], periodState.Text);
+                Assert.True(periodAction.IsEnabled);
                 Assert.Equal(2, grid.Items.Count);
                 Assert.True(vm.IsAllFilterActive);
                 var buttons = Descendants(view).OfType<Button>().ToList();
@@ -94,6 +100,8 @@ public sealed class TransactionListViewTests
                 var summaryButtons = (Grid)view.FindName("SummaryButtons");
                 var searchBorder = (Border)((Grid)((TextBox)view.FindName("TransactionSearchBox")).Parent).Parent;
                 var summaryCenter = summaryButtons.TranslatePoint(new Point(summaryButtons.ActualWidth / 2, 0), view).X;
+                Assert.True(periodAction.TranslatePoint(new Point(periodAction.ActualWidth, 0), view).X
+                    <= summaryButtons.TranslatePoint(new Point(), view).X);
                 Assert.Equal(view.ActualWidth / 2, summaryCenter, 1);
                 Assert.True(summaryButtons.TranslatePoint(new Point(summaryButtons.ActualWidth, 0), view).X
                     <= searchBorder.TranslatePoint(new Point(), view).X);

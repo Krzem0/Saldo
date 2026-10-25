@@ -365,7 +365,26 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Grid Grid.Column="1" x:Name="SummaryButtons">
+                <Grid Grid.Column="0" Margin="0,0,12,0">
+                    <StackPanel VerticalAlignment="Center">
+                        <WrapPanel>
+                            <Border Padding="7,4" Margin="0,0,6,2" CornerRadius="4"
+                                    Background="{DynamicResource ControlBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
+                                <TextBlock x:Name="PeriodStateLabel" Text="{Binding PeriodStateText}" FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            </Border>
+                            <Button x:Name="PeriodActionButton" Content="{Binding PeriodActionText}" Command="{Binding ChangePeriodCommand}"
+                                    Style="{StaticResource SecondaryActionButtonStyle}" Padding="8,4" Margin="0,0,6,2"/>
+                            <Button Content="↻" Command="{Binding LoadCommand}" Style="{StaticResource SecondaryActionButtonStyle}"
+                                    Padding="6,3" Margin="0,0,0,2" FontSize="16"
+                                    ToolTip="{Binding Source={StaticResource Localization}, Path=[AccountingPeriod_Refresh]}"
+                                    AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[AccountingPeriod_Refresh]}"/>
+                        </WrapPanel>
+                        <TextBlock x:Name="PeriodIntegrityLabel" Text="{Binding PeriodIntegrityText}" TextWrapping="Wrap" FontSize="11"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Grid.Column="1" x:Name="SummaryButtons" VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>

@@ -18,14 +18,16 @@ public interface ITransactionTemplatePickerHost
 public sealed class TransactionTemplatePickerViewModel : LocalizedViewModelBase
 {
     private readonly IServiceScopeFactory _scopeFactory;
-    public TransactionTemplatePickerViewModel(IServiceScopeFactory scopeFactory, ILocalizationService localization, Func<int, Task> useTemplate)
+    private readonly Func<bool>? _canUseTemplate;
+    public TransactionTemplatePickerViewModel(IServiceScopeFactory scopeFactory, ILocalizationService localization, Func<int, Task> useTemplate, Func<bool>? canUseTemplate = null)
         : base(localization)
     {
         _scopeFactory = scopeFactory;
-        OpenTemplatePickerCommand = new AsyncRelayCommand(OpenTemplatePickerAsync);
+        _canUseTemplate = canUseTemplate;
+        OpenTemplatePickerCommand = new AsyncRelayCommand(OpenTemplatePickerAsync, () => _canUseTemplate?.Invoke() != false);
         ClearSearchCommand = new RelayCommand(() => TemplateSearch = string.Empty, () => TemplateSearch.Length > 0);
         UseTemplateCommand = new AsyncRelayCommand(() => useTemplate(SelectedTemplate!.Id),
-            () => SelectedTemplate is not null && !IsLoadingTemplates);
+            () => SelectedTemplate is not null && !IsLoadingTemplates && _canUseTemplate?.Invoke() != false);
     }
     public void ReportError(string key)
     {
@@ -79,6 +81,7 @@ public sealed class TransactionTemplatePickerViewModel : LocalizedViewModelBase
 
     public async Task OpenTemplatePickerAsync()
     {
+        if (_canUseTemplate?.Invoke() == false) return;
         if (IsTemplatePickerOpen) { IsTemplatePickerOpen = false; return; }
         IsTemplatePickerOpen = true;
         TemplateSearch = string.Empty;

@@ -1,9 +1,8 @@
 # Accounting periods
 
-Status: persistence, close/reopen operations, closed-period write protection,
-atomic closing snapshots, and integrity verification implemented. The monthly
-view runs verification and displays problems. GUI close/reopen controls and
-automatic backups are not implemented yet.
+Status: persistence, close/reopen operations and GUI controls, closed-period write
+protection, atomic closing snapshots, and integrity verification implemented.
+Automatic backups are not implemented yet.
 
 ## Current behavior
 
@@ -54,8 +53,39 @@ Closing an open (or absent) month captures totals, count, hash, and version in
 the same write transaction as `IsClosed`. Repeated closing does not overwrite
 the reference, even if it is incomplete or no longer matches the data.
 Reopening retains the old snapshot. Only the next explicit transition from open
-to closed captures a fresh snapshot. GUI close/reopen buttons will be introduced
-separately; these operations do not add new actions to the current monthly view.
+to closed captures a fresh snapshot.
+
+## Monthly GUI
+
+- The summary bar shows the selected month's open/closed state, or a checking,
+  changing, or unknown-state message. A second line retains the integrity result
+  after any warning dialog is dismissed.
+- The action button switches between **Close month** and **Reopen month** based
+  on the loaded state. The refresh button reloads transactions and period status.
+- Closing and reopening require an owned, themed confirmation dialog naming the
+  month and explaining the effect. Cancel is the default Enter/Escape action;
+  cancellation writes nothing and does not create an absent period.
+- After a successful operation, the monthly data and integrity result reload.
+  There is no separate success popup; the visible state/action label changes.
+- Edit and Delete are disabled for a closed or unknown period, during loading,
+  and while changing state. Application/SQLite protections remain authoritative
+  for a period closed externally or after a form was opened.
+- Add, copy, and template actions remain available for a loaded closed month:
+  users can prepare a new transaction and choose an open destination date. A
+  save with a closed date returns the existing localized validation error.
+  Editing a transaction from a closed source cannot move it to an open month.
+- During loading or a state change, new transaction/template/copy actions are
+  disabled. During a state change, navigation, refresh, and repeat state changes
+  are also blocked. Closing/reopening preserves existing new-form drafts.
+- A failed state operation leaves the visible state unknown; the user can refresh
+  to read the actual database state before another change. A failed verification
+  also prevents editing/deleting and changing state until a successful reload.
+- Navigation starts a new load even if a previous load command is still busy.
+  Only the newest selection may update rows, state, and warning messages.
+- Switching language updates period and action labels without another database
+  read. All labels, confirmations, and errors support Polish and English.
+- Closing an edit form refreshes the view even when cancelled, so an external
+  period closure is reflected after a rejected save.
 
 ## Integrity verification
 
@@ -126,7 +156,6 @@ manual backup before first starting the upgraded app against an existing databas
 
 ## Next stages
 
-- GUI state and close/reopen actions.
 - Background automatic backups with one file per day and retention of five
   successful backup days, replacing today's file after a successful close.
 - Other accounting cycles only when their transition rules have been designed.

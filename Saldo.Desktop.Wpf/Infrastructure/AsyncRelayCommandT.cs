@@ -2,7 +2,7 @@ using System.Windows.Input;
 
 namespace Saldo.Desktop.Wpf.Infrastructure;
 
-public sealed class AsyncRelayCommand<T>(Func<T, Task> execute) : ICommand
+public sealed class AsyncRelayCommand<T>(Func<T, Task> execute, Func<T, bool>? canExecute = null) : ICommand
 {
     private bool _isExecuting;
 
@@ -12,7 +12,7 @@ public sealed class AsyncRelayCommand<T>(Func<T, Task> execute) : ICommand
         remove => CommandManager.RequerySuggested -= value;
     }
 
-    public bool CanExecute(object? parameter) => !_isExecuting && parameter is T;
+    public bool CanExecute(object? parameter) => !_isExecuting && parameter is T value && (canExecute?.Invoke(value) ?? true);
 
     public async void Execute(object? parameter)
     {

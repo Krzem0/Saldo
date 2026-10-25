@@ -193,4 +193,19 @@
   <data name="AccountingPeriod_Difference_ExpenseTotal" xml:space="preserve"><value>suma wydatków</value></data>
   <data name="AccountingPeriod_Difference_TransactionCount" xml:space="preserve"><value>liczba transakcji</value></data>
   <data name="AccountingPeriod_Difference_DataHash" xml:space="preserve"><value>odcisk danych</value></data>
+  <data name="AccountingPeriod_Open" xml:space="preserve"><value>Okres otwarty</value></data>
+  <data name="AccountingPeriod_Closed" xml:space="preserve"><value>Okres zamknięty</value></data>
+  <data name="AccountingPeriod_Unknown" xml:space="preserve"><value>Stan okresu nieznany</value></data>
+  <data name="AccountingPeriod_Loading" xml:space="preserve"><value>Sprawdzanie okresu…</value></data>
+  <data name="AccountingPeriod_Changing" xml:space="preserve"><value>Zmiana stanu okresu…</value></data>
+  <data name="AccountingPeriod_Close" xml:space="preserve"><value>Zamknij miesiąc</value></data>
+  <data name="AccountingPeriod_Reopen" xml:space="preserve"><value>Otwórz ponownie</value></data>
+  <data name="AccountingPeriod_Refresh" xml:space="preserve"><value>Odśwież dane i sprawdź stan okresu</value></data>
+  <data name="AccountingPeriod_IntegrityValid" xml:space="preserve"><value>Dane zgodne z podsumowaniem zamknięcia.</value></data>
+  <data name="AccountingPeriod_IntegrityMismatch" xml:space="preserve"><value>Niezgodność danych:</value></data>
+  <data name="AccountingPeriod_IntegrityMissing" xml:space="preserve"><value>Brak kompletnego podsumowania zamknięcia.</value></data>
+  <data name="AccountingPeriod_IntegrityUnsupported" xml:space="preserve"><value>Nieobsługiwana wersja odcisku danych.</value></data>
+  <data name="AccountingPeriod_CloseConfirm" xml:space="preserve"><value>Czy zamknąć miesiąc „{0}”? Zostanie zapisane podsumowanie i odcisk danych. Dodawanie, edycja i usuwanie transakcji w tym miesiącu będą zablokowane do jego ponownego otwarcia.</value></data>
+  <data name="AccountingPeriod_ReopenConfirm" xml:space="preserve"><value>Czy ponownie otworzyć miesiąc „{0}”? Zmiany transakcji będą znów dozwolone. Dotychczasowe podsumowanie i odcisk pozostaną zachowane do następnego zamknięcia. Jeśli wykryto niezgodność, sprawdź dane przed ponownym zamknięciem.</value></data>
+  <data name="AccountingPeriod_ChangeFailed" xml:space="preserve"><value>Nie udało się zakończyć zmiany stanu okresu. Odśwież dane, aby sprawdzić jego aktualny stan.</value></data>
 </root>

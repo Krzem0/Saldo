@@ -28,6 +28,10 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     private TransactionDto? _selectedTransaction;
     private bool _isLoading;
     private int _loadVersion;
+    private bool _isChangingPeriod;
+    private bool? _isPeriodClosed;
+    private bool _periodLoadFailed;
+    private AccountingPeriodVerificationDto? _periodVerification;
     private TransactionType? _typeFilter;
     private string _searchText = string.Empty;
     public string SearchText
@@ -58,6 +62,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     public Task OpenTemplatePickerAsync() => TemplatePicker.OpenTemplatePickerAsync();
     public async Task AddFromTemplateAsync(int id)
     {
+        if (!CanCreateTransaction) return;
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
@@ -190,7 +195,56 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         }
     }
 
-    public bool IsLoading { get => _isLoading; private set => SetField(ref _isLoading, value); }
+    public bool IsLoading
+    {
+        get => _isLoading;
+        private set { if (SetField(ref _isLoading, value)) NotifyPeriodStateChanged(); }
+    }
+    public bool IsChangingPeriod
+    {
+        get => _isChangingPeriod;
+        private set { if (SetField(ref _isChangingPeriod, value)) NotifyPeriodStateChanged(); }
+    }
+    public bool? IsPeriodClosed => _isPeriodClosed;
+    public bool CanCreateTransaction => !IsLoading && !IsChangingPeriod;
+    public string PeriodStateText => IsChangingPeriod ? T("AccountingPeriod_Changing")
+        : IsLoading ? T("AccountingPeriod_Loading")
+        : _isPeriodClosed switch
+        {
+            true => T("AccountingPeriod_Closed"),
+            false => T("AccountingPeriod_Open"),
+            null => T("AccountingPeriod_Unknown")
+        };
+    public string PeriodActionText => T(_isPeriodClosed == true ? "AccountingPeriod_Reopen" : "AccountingPeriod_Close");
+    public string PeriodIntegrityText => IsLoading || IsChangingPeriod ? string.Empty
+        : _periodLoadFailed ? T("AccountingPeriod.VerificationFailed")
+        : _periodVerification?.Status switch
+        {
+            AccountingPeriodVerificationStatus.Valid => T("AccountingPeriod_IntegrityValid"),
+            AccountingPeriodVerificationStatus.Mismatch => T("AccountingPeriod_IntegrityMismatch") + " "
+                + string.Join(", ", _periodVerification.Differences.Select(difference => T($"AccountingPeriod_Difference_{difference}"))),
+            AccountingPeriodVerificationStatus.MissingSnapshot => T("AccountingPeriod_IntegrityMissing"),
+            AccountingPeriodVerificationStatus.UnsupportedHashVersion => T("AccountingPeriod_IntegrityUnsupported"),
+            _ => string.Empty
+        };
+
+    private void SetPeriodVerification(AccountingPeriodVerificationDto? verification, bool failed = false)
+    {
+        _periodVerification = verification;
+        _periodLoadFailed = failed;
+        _isPeriodClosed = verification is null ? null : verification.Status != AccountingPeriodVerificationStatus.Open;
+        NotifyPeriodStateChanged();
+    }
+
+    private void NotifyPeriodStateChanged()
+    {
+        OnPropertyChanged(nameof(IsPeriodClosed));
+        OnPropertyChanged(nameof(CanCreateTransaction));
+        OnPropertyChanged(nameof(PeriodStateText));
+        OnPropertyChanged(nameof(PeriodActionText));
+        OnPropertyChanged(nameof(PeriodIntegrityText));
+        CommandManager.InvalidateRequerySuggested();
+    }
 
     public bool IsIncomeFilterActive => _typeFilter == TransactionType.Income;
     public bool IsExpenseFilterActive => _typeFilter == TransactionType.Expense;
@@ -237,6 +291,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     public ICommand AddSimilarCommand        { get; }
     public ICommand EditCommand              { get; }
     public ICommand DeleteCommand            { get; }
+    public ICommand ChangePeriodCommand      { get; }
 
     public TransactionListViewModel(IServiceScopeFactory scopeFactory, IDialogService dialogService, ILocalizationService localization)
         : base(localization)
@@ -256,19 +311,20 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             .Select(m => new MonthItem(m, localization))
             .ToList();
 
-        LoadCommand               = new AsyncRelayCommand(LoadAsync);
-        PreviousMonthCommand      = new RelayCommand(PreviousMonth);
-        NextMonthCommand          = new RelayCommand(NextMonth);
-        CurrentMonthCommand       = new RelayCommand(GoToCurrentMonth, () => !IsCurrentMonth);
-        OpenMonthPickerCommand    = new RelayCommand(OpenMonthPicker);
+        LoadCommand               = new AsyncRelayCommand(LoadAsync, () => !IsChangingPeriod);
+        PreviousMonthCommand      = new RelayCommand(PreviousMonth, () => !IsChangingPeriod);
+        NextMonthCommand          = new RelayCommand(NextMonth, () => !IsChangingPeriod);
+        CurrentMonthCommand       = new RelayCommand(GoToCurrentMonth, () => !IsCurrentMonth && !IsChangingPeriod);
+        OpenMonthPickerCommand    = new RelayCommand(OpenMonthPicker, () => !IsChangingPeriod);
         PreviousPickerYearCommand = new RelayCommand(() => PickerYear--);
         NextPickerYearCommand     = new RelayCommand(() => PickerYear++);
         SelectMonthCommand        = new RelayCommand<int>(SelectMonth);
-        AddCommand                = new AsyncRelayCommand(AddAsync);
-        AddSimilarCommand         = new AsyncRelayCommand<TransactionDto>(AddSimilarAsync);
-        TemplatePicker = new TransactionTemplatePickerViewModel(scopeFactory, localization, AddFromTemplateAsync);
-        EditCommand               = new AsyncRelayCommand(EditAsync,   () => SelectedTransaction is not null);
-        DeleteCommand             = new AsyncRelayCommand(DeleteAsync, () => SelectedTransaction is not null);
+        AddCommand                = new AsyncRelayCommand(AddAsync, () => CanCreateTransaction);
+        AddSimilarCommand         = new AsyncRelayCommand<TransactionDto>(AddSimilarAsync, _ => CanCreateTransaction);
+        TemplatePicker = new TransactionTemplatePickerViewModel(scopeFactory, localization, AddFromTemplateAsync, () => CanCreateTransaction);
+        EditCommand               = new AsyncRelayCommand(EditAsync, () => SelectedTransaction is not null && _isPeriodClosed == false && CanCreateTransaction);
+        DeleteCommand             = new AsyncRelayCommand(DeleteAsync, () => SelectedTransaction is not null && _isPeriodClosed == false && CanCreateTransaction);
+        ChangePeriodCommand       = new AsyncRelayCommand(ChangePeriodAsync, () => _isPeriodClosed.HasValue && CanCreateTransaction);
     }
 
     private void OpenMonthPicker()
@@ -295,6 +351,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         var year = Year;
         var month = Month;
         IsLoading = true;
+        SetPeriodVerification(null);
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
@@ -313,6 +370,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             foreach (var transaction in transactions) Transactions.Add(transaction);
             ApplyFilters();
             Summary = summary;
+            SetPeriodVerification(verification.IsSuccess ? verification.Value : null, verification.IsFailed);
             if (verification.IsFailed)
             {
                 _dialogService.ShowMessage(T("AccountingPeriod_VerificationTitle"),
@@ -326,12 +384,48 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         catch (Exception ex)
         {
             if (loadVersion == _loadVersion)
+            {
+                SetPeriodVerification(null, failed: true);
                 _dialogService.ShowMessage(T("TransactionsLoadError"), ex.Message, MessageDialogKind.Error);
+            }
         }
         finally
         {
             if (loadVersion == _loadVersion) IsLoading = false;
         }
+    }
+
+    private async Task ChangePeriodAsync()
+    {
+        if (!_isPeriodClosed.HasValue || !CanCreateTransaction) return;
+        var reopen = _isPeriodClosed.Value;
+        var year = Year;
+        var month = Month;
+        var title = T(reopen ? "AccountingPeriod_Reopen" : "AccountingPeriod_Close");
+        IsChangingPeriod = true;
+        IsMonthPickerOpen = false;
+        IsTemplatePickerOpen = false;
+        try
+        {
+            var message = string.Format(Localization.CurrentCulture,
+                T(reopen ? "AccountingPeriod_ReopenConfirm" : "AccountingPeriod_CloseConfirm"), MonthLabel);
+            if (!_dialogService.ConfirmAccountingPeriodChange(title, message, title)) return;
+
+            SetPeriodVerification(null);
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var result = reopen
+                ? await scope.ServiceProvider.GetRequiredService<ReopenAccountingPeriod>().ExecuteAsync(year, month)
+                : await scope.ServiceProvider.GetRequiredService<CloseAccountingPeriod>().ExecuteAsync(year, month);
+            if (result.IsFailed)
+                _dialogService.ShowMessage(title, string.Join(Environment.NewLine, result.Errors.Select(error => T(error.Message))), MessageDialogKind.Warning);
+            await LoadAsync();
+        }
+        catch (Exception)
+        {
+            SetPeriodVerification(null, failed: true);
+            _dialogService.ShowMessage(title, T("AccountingPeriod_ChangeFailed"), MessageDialogKind.Error);
+        }
+        finally { IsChangingPeriod = false; }
     }
 
     private void ShowVerificationWarning(AccountingPeriodVerificationDto verification)
@@ -351,12 +445,14 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
 
     private void PreviousMonth()
     {
+        if (IsChangingPeriod) return;
         var d = new DateOnly(Year, Month, 1).AddMonths(-1);
         SetSelectedMonth(d.Year, d.Month);
     }
 
     private void NextMonth()
     {
+        if (IsChangingPeriod) return;
         var d = new DateOnly(Year, Month, 1).AddMonths(1);
         SetSelectedMonth(d.Year, d.Month);
     }
@@ -369,6 +465,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
 
     private void SetSelectedMonth(int year, int month)
     {
+        if (IsChangingPeriod) return;
         if (Year == year && Month == month) return;
 
         Year = year;
@@ -390,7 +487,8 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         OnPropertyChanged(nameof(MonthLabel));
         OnPropertyChanged(nameof(IsCurrentMonth));
         CommandManager.InvalidateRequerySuggested();
-        LoadCommand.Execute(null);
+        // Navigation must start its own load even if a prior LoadCommand is busy.
+        _ = LoadAsync();
     }
 
     private async Task AddAsync()
@@ -450,10 +548,10 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             _scopeFactory, _dialogService, Localization, categories, parties, locations, tags,
             existing: SelectedTransaction);
 
-        if (_dialogService.ShowAddEditTransaction(dialogVm) == true)
-        {
-            await LoadAsync();
-        }
+        _dialogService.ShowAddEditTransaction(dialogVm);
+        // A form may have been rejected because another app instance closed its
+        // period. Refresh availability even when the user ultimately cancels.
+        await LoadAsync();
     }
 
     private async Task DeleteAsync()
@@ -475,6 +573,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
                 _dialogService.ShowMessage(
                     T("Message_Warning"),
                     string.Join(Environment.NewLine, result.Errors.Select(e => T(e.Message))), MessageDialogKind.Warning);
+                await LoadAsync();
                 return;
             }
 
@@ -508,6 +607,6 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     protected override void OnCultureChanged()
     {
         OnPropertyChanged(nameof(MonthLabel));
-        LoadCommand.Execute(null);
+        NotifyPeriodStateChanged();
     }
 }

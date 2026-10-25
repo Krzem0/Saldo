@@ -41,6 +41,13 @@ public sealed class WpfDialogService : IDialogService
         return dialog.ShowDialog() == true;
     }
 
+    public bool ConfirmAccountingPeriodChange(string title, string message, string actionLabel)
+    {
+        var dialog = new AccountingPeriodConfirmationDialog(title, message, actionLabel);
+        SetOwner(dialog);
+        return dialog.ShowDialog() == true;
+    }
+
     public UnsavedChangesChoice ConfirmUnsavedChanges(string title, string message)
     {
         var dialog = new UnsavedChangesDialog(title, message);
