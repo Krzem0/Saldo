@@ -20,6 +20,30 @@ namespace Saldo.Tests.Wpf;
 public sealed class TransactionTemplatesViewTests
 {
     [Theory]
+    [InlineData("LightTheme")]
+    [InlineData("DarkTheme")]
+    public void NotificationHistory_RendersTypesDetailsAndLongMessages(string theme) => OnSta(() =>
+    {
+        using var bindings = new BindingErrorScope();
+        var window = (Window)Load("NotificationHistoryDialog.xaml", theme);
+        var localization = (LocalizationService)window.Resources["Localization"];
+        var service = new Saldo.Application.Notifications.NotificationService();
+        service.Publish("backup", "Utworzono kopię zapasową.", Saldo.Application.Interfaces.NotificationSeverity.Success, @"C:\Saldo\Backups\saldo-2026-10-25.db");
+        service.Publish("warning", "Nie udało się usunąć starszych kopii. Dotychczasowe pliki pozostają dostępne.", Saldo.Application.Interfaces.NotificationSeverity.Warning);
+        service.Publish("error", "Nie udało się wykonać operacji. Spróbuj ponownie.", Saldo.Application.Interfaces.NotificationSeverity.Error);
+        using var vm = new NotificationsViewModel(service, localization);
+        var surface = (FrameworkElement)window.Content;
+        window.Content = null;
+        var host = new Border { Child = surface, Resources = window.Resources, Background = (Brush)window.Resources["SurfaceBrush"], DataContext = vm };
+        Layout(host, 680, 420);
+        var list = Assert.Single(Descendants(host).OfType<ListBox>());
+        Assert.Equal(3, list.Items.Count);
+        Assert.Contains(Descendants(host).OfType<TextBlock>(), text => text.Text == @"C:\Saldo\Backups\saldo-2026-10-25.db");
+        Assert.Empty(bindings.Errors);
+        SavePreview(host, theme + "-notifications", 680, 420);
+        window.Close();
+    });
+    [Theory]
     [InlineData("LightTheme", MessageDialogKind.Information, PackIconMaterialKind.InformationOutline, "Informacja", "Information", "MessageInformationTextBrush")]
     [InlineData("DarkTheme", MessageDialogKind.Information, PackIconMaterialKind.InformationOutline, "Informacja", "Information", "MessageInformationTextBrush")]
     [InlineData("LightTheme", MessageDialogKind.Warning, PackIconMaterialKind.AlertOutline, "Ostrzeżenie", "Warning", "MessageWarningTextBrush")]
@@ -571,6 +595,8 @@ public sealed class TransactionTemplatesViewTests
             picker.ReplaceWith(inline);
         }
         root.Attribute(x + "Class")!.Remove();
+        // Root attributes are parsed before local test resources; production gets Localization from App.
+        if (file == "NotificationHistoryDialog.xaml") root.Attribute("Title")?.Remove();
         foreach (var attribute in root.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName is "Closing" or "PreviewKeyDown" or "KeyDown" or "Click" or "Opened" or "PreviewMouseLeftButtonUp" or "TargetUpdated" or "MouseDoubleClick" or "LostKeyboardFocus").ToArray()) attribute.Remove();
         var controls = "clr-namespace:Saldo.Desktop.Wpf.Controls";
         foreach (var element in root.Descendants().Where(e => e.Name.NamespaceName == controls).ToArray())

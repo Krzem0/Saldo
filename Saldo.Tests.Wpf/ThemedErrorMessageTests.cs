@@ -25,6 +25,14 @@ public sealed class ThemedErrorMessageTests
         vm.CreateBackupCommand.Execute(null);
         await WaitFor(vm.CreateBackupCommand);
         Assert.Equal("test-backup.db", backup.Destination);
+        if (!fail)
+        {
+            Assert.Empty(h.Dialogs.Messages);
+            var notification = Assert.Single(h.Dialogs.Notifications);
+            Assert.Equal("Backup.Manual.Created", notification.Code);
+            Assert.Equal("test-backup.db", notification.Details);
+            return;
+        }
         var message = Assert.Single(h.Dialogs.Messages);
         Assert.Equal(expected, message.Kind);
         Assert.Equal(fail ? h.Localization["BackupFailedMessage"]

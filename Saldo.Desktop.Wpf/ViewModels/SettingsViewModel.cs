@@ -107,6 +107,7 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
     private void SetTransactionSettingsMessage(string message, MessageDialogKind kind)
     {
         TransactionSettingsMessage = message;
+        _dialogService?.Notify("Settings.Error", message, severity: NotificationSeverity.Error);
         TransactionSettingsMessageKind = kind;
     }
 
@@ -157,7 +158,7 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
             await scope.ServiceProvider.GetRequiredService<SetTransactionDefaults>().ExecuteAsync(payerId, locationId);
             _savedPayerId = payerId;
             _savedLocationId = locationId;
-            SetTransactionSettingsMessage(T("TransactionSettingsSaved"), MessageDialogKind.Information);
+            _dialogService?.Notify("Settings.Saved", T("TransactionSettingsSaved"));
         }
         catch (Exception ex)
         {
@@ -205,7 +206,7 @@ public sealed class SettingsViewModel : LocalizedViewModelBase
             await using var scope = _scopeFactory.CreateAsyncScope();
             await scope.ServiceProvider.GetRequiredService<IDatabaseBackupService>().CreateAsync(path);
             _logger.LogInformation("Database backup created at {BackupPath}.", path);
-            _dialogService.ShowMessage(T("BackupTitle"), string.Format(CultureInfo.CurrentCulture, T("BackupSuccessMessage"), path), MessageDialogKind.Information);
+            _dialogService.Notify("Backup.Manual.Created", T("Notifications_BackupCreated"), path);
         }
         catch (Exception ex)
         {

@@ -21,6 +21,7 @@ namespace Saldo.Desktop.Wpf
             SourceInitialized += OnSourceInitialized;
             Loaded += (_, _) => viewModel.TransactionList.LoadCommand.Execute(null);
             Closing += OnClosing;
+            Closed += (_, _) => (TryFindResource("Notifications") as NotificationsViewModel)?.Dispose();
         }
 
         private async void OnClosing(object? sender, CancelEventArgs args)

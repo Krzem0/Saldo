@@ -25,7 +25,14 @@ public sealed class BackupMessageTests
             dialogs, NullLogger<SettingsViewModel>.Instance, new Folder());
         vm.CreateBackupCommand.Execute(null);
         Assert.Equal(!cancelled, backup.Called);
-        if (cancelled) Assert.Empty(dialogs.Messages);
+        if (cancelled) { Assert.Empty(dialogs.Messages); Assert.Empty(dialogs.Notifications); }
+        else if (!fail)
+        {
+            Assert.Empty(dialogs.Messages);
+            var notification = Assert.Single(dialogs.Notifications);
+            Assert.Equal("Backup.Manual.Created", notification.Code);
+            Assert.Equal(dialogs.BackupPath, notification.Details);
+        }
         else
         {
             var message = Assert.Single(dialogs.Messages);

@@ -1,9 +1,12 @@
 using Saldo.Desktop.Wpf.ViewModels;
+using Saldo.Application.Interfaces;
 
 namespace Saldo.Desktop.Wpf.Services;
 
 public interface IDialogService
 {
+    void Notify(string code, string message, string? details = null,
+        NotificationSeverity severity = NotificationSeverity.Success) { }
     bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel);
     bool? ShowTransactionTemplate(TransactionTemplateFormViewModel viewModel) => throw new NotSupportedException();
 

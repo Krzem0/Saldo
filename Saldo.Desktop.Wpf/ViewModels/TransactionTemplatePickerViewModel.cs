@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Saldo.Application.DTOs;
+using Saldo.Application.Interfaces;
 using Saldo.Application.UseCases;
 using Saldo.Desktop.Wpf.Infrastructure;
 using Saldo.Desktop.Wpf.Localization;
@@ -32,6 +33,8 @@ public sealed class TransactionTemplatePickerViewModel : LocalizedViewModelBase
     public void ReportError(string key)
     {
         TemplatePickerError = T(key);
+        using var scope = _scopeFactory.CreateScope();
+        scope.ServiceProvider.GetService<INotificationService>()?.Publish(key, TemplatePickerError, NotificationSeverity.Error);
         OnPropertyChanged(nameof(TemplatePickerStatus));
     }
     protected override void OnCultureChanged() => FilterTemplates();
@@ -96,7 +99,7 @@ public sealed class TransactionTemplatePickerViewModel : LocalizedViewModelBase
         }
         catch (Exception)
         {
-            TemplatePickerError = T("TemplatePicker_LoadFailed");
+            ReportError("TemplatePicker_LoadFailed");
         }
         finally
         {

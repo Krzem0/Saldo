@@ -275,6 +275,10 @@ For accounting-period persistence and protection, see [Accounting periods](docs/
 
 ## Future Extensions
 
+### Session notifications
+
+Application exposes `INotificationService` and a thread-safe session history capped at 50 entries. WPF owns footer timing, pending-event grouping and the modeless history window. Backup failures retain an independent persistent warning and retry action. See [Session notifications](docs/features/notifications.md).
+
 Dictionary pages share `ReferenceListView` and `ReferenceListViewModel<T>`. The view exposes a search field beside the title, and the view model retains all loaded rows while publishing a filtered `Items` collection. Search matches name substrings without case and trims query edges. Filtering and reloads restore selection by ID among visible rows, fall back to the first visible row, and clear selection when no rows match. Search state persists across CRUD reloads; empty dictionaries and empty search results have separate localized messages.
 
 `ClearButtonStyles.xaml` extracts the existing Settings clear-button presentation into `InlineClearButtonStyle`, shared by Settings selectors, autocomplete fields, and the `ClearTextButtonStyle` used for dictionary/template search and transaction amount/description fields. Hover uses the theme's `ControlHoverBrush` rather than the Windows button chrome. Clear commands preserve bindings and use the view-model property setters, including the amount behavior's raw text binding. Buttons collapse when their clear command cannot execute; view click handlers return focus to the corresponding input. Clearing a search reapplies its filter immediately.

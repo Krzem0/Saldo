@@ -32,8 +32,9 @@ public sealed class TransactionSettingsTests
                     .AddSingleton<IPartyRepository>(parties)
                     .AddSingleton<ILocationRepository>(new FakeLocationRepository([location]))
                     .AddScoped<GetTransactionSettings>().AddScoped<SetTransactionDefaults>().BuildServiceProvider();
+                var dialogs = new TransactionTemplatesTests.TestDialogs();
                 var vm = new SettingsViewModel(new LocalizationService(), null!,
-                    provider.GetRequiredService<IServiceScopeFactory>(), null!,
+                    provider.GetRequiredService<IServiceScopeFactory>(), dialogs,
                     NullLogger<SettingsViewModel>.Instance, null!);
                 vm.LoadTransactionSettingsAsync().GetAwaiter().GetResult();
                 Assert.Equal(1, vm.SelectedDefaultPayerOption!.Id);
@@ -45,7 +46,8 @@ public sealed class TransactionSettingsTests
                 vm.SelectedDefaultLocationOption = vm.DefaultLocationOptions[0];
                 vm.TransactionSettingsSaveTask.GetAwaiter().GetResult();
                 Assert.Equal(2, settings.LocationId);
-                Assert.Equal(Saldo.Desktop.Wpf.Services.MessageDialogKind.Information, vm.TransactionSettingsMessageKind);
+                Assert.Null(vm.TransactionSettingsMessageKind);
+                Assert.Equal("Settings.Saved", Assert.Single(dialogs.Notifications).Code);
                 Assert.Equal(2, vm.DefaultPayerOptions.Count);
                 Assert.True(vm.ClearDefaultPayerCommand.CanExecute(null));
                 if (selectedId is null)

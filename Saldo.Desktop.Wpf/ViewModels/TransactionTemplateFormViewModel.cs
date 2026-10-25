@@ -164,7 +164,11 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
             var result = _id is int id
                 ? await scope.ServiceProvider.GetRequiredService<EditTransactionTemplate>().ExecuteAsync(id, command)
                 : await scope.ServiceProvider.GetRequiredService<AddTransactionTemplate>().ExecuteAsync(command);
-            if (result.IsSuccess) RequestClose?.Invoke(true);
+            if (result.IsSuccess)
+            {
+                _dialogs.Notify("Template.Saved", T("Notifications_TemplateSaved"), Name);
+                RequestClose?.Invoke(true);
+            }
             else foreach (var error in result.Errors) AddError(error);
         }
         catch (Exception)
@@ -226,6 +230,7 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
         {
             var category = await services.GetRequiredService<AddCategory>().ExecuteAsync(input.Name, input.ColorCode, iconKey: input.IconKey);
             Categories.Add(category); SelectedCategory = category; CategoryText = category.Name;
+            NotifyReference("Entity_Category", category.Name);
         });
     }
     private async Task AddPartyAsync(bool payer)
@@ -236,6 +241,7 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
         {
             var party = await services.GetRequiredService<AddParty>().ExecuteAsync(name);
             Parties.Add(party);
+            NotifyReference("Entity_Party", party.Name);
             if (payer) { SelectedPayer = party; PayerText = party.Name; }
             else { SelectedCounterparty = party; CounterpartyText = party.Name; }
         });
@@ -248,6 +254,7 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
         {
             var location = await services.GetRequiredService<AddLocation>().ExecuteAsync(name);
             Locations.Add(location); SelectedLocation = location; LocationText = location.Name;
+            NotifyReference("Entity_Location", location.Name);
         });
     }
     private async Task AddTagAsync()
@@ -258,6 +265,7 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
         {
             var tag = await services.GetRequiredService<AddTag>().ExecuteAsync(input.Name, input.ColorCode, iconKey: input.IconKey);
             Tags.Add(new(tag.Id, tag.Name, tag.ColorCode, tag.IconKey) { IsSelected = true });
+            NotifyReference("Entity_Tag", tag.Name);
         });
     }
     private async Task AddReferenceAsync(Func<IServiceProvider, Task> add)
@@ -272,4 +280,6 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
         }
         finally { IsBusy = false; OnPropertyChanged(nameof(SummaryError)); }
     }
+    private void NotifyReference(string entityKey, string name) => _dialogs.Notify("Reference.Added",
+        string.Format(Localization.CurrentCulture, T("Notifications_ReferenceAdded"), T(entityKey), name));
 }

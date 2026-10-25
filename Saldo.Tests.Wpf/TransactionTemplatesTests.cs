@@ -247,6 +247,9 @@ public sealed class TransactionTemplatesTests
         public Func<AddEditTransactionViewModel, bool?>? TransactionCallback { get; set; }
         public string? BackupPath { get; set; }
         public List<(string Title, string Message, MessageDialogKind? Kind)> Messages { get; } = [];
+        public List<(string Code, string Message, string? Details, NotificationSeverity Severity)> Notifications { get; } = [];
+        public void Notify(string code, string message, string? details = null, NotificationSeverity severity = NotificationSeverity.Success)
+            => Notifications.Add((code, message, details, severity));
         public void ShowMessage(string title, string message) => Messages.Add((title, message, null));
         public void ShowMessage(string title, string message, MessageDialogKind kind) => Messages.Add((title, message, kind));
         public bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel) => TransactionCallback?.Invoke(viewModel);

@@ -1,11 +1,15 @@
 using Saldo.Desktop.Wpf.ViewModels;
 using Saldo.Desktop.Wpf.Views;
 using System.Windows;
+using Saldo.Application.Interfaces;
 
 namespace Saldo.Desktop.Wpf.Services;
 
-public sealed class WpfDialogService : IDialogService
+public sealed class WpfDialogService(INotificationService? notifications = null) : IDialogService
 {
+    public void Notify(string code, string message, string? details = null,
+        NotificationSeverity severity = NotificationSeverity.Success)
+        => notifications?.Publish(code, message, severity, details);
     public bool? ShowTransactionTemplate(TransactionTemplateFormViewModel viewModel)
     {
         var dialog = new TransactionTemplateDialog { DataContext = viewModel };
@@ -79,8 +83,14 @@ public sealed class WpfDialogService : IDialogService
 
     public void ShowMessage(string title, string message, MessageDialogKind kind) => ShowMessageCore(title, message, kind);
 
-    private static void ShowMessageCore(string title, string message, MessageDialogKind? kind)
+    private void ShowMessageCore(string title, string message, MessageDialogKind? kind)
     {
+        notifications?.Publish(title, message, kind switch
+        {
+            MessageDialogKind.Error => NotificationSeverity.Error,
+            MessageDialogKind.Warning => NotificationSeverity.Warning,
+            _ => NotificationSeverity.Information
+        });
         var dialog = new MessageDialog(title, message, kind);
         SetOwner(dialog);
         dialog.ShowDialog();

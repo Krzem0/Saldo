@@ -128,7 +128,8 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         }
         catch (Exception ex)
         {
-            DialogService.ShowMessage(string.Format(CultureInfo.CurrentCulture, T("LoadErrorTemplate"), EntityDisplayName), ex.Message, MessageDialogKind.Error);
+            Serilog.Log.Error(ex, "User operation failed.");
+            DialogService.ShowMessage(string.Format(CultureInfo.CurrentCulture, T("LoadErrorTemplate"), EntityDisplayName), T("Notifications_OperationFailed"), MessageDialogKind.Error);
         }
         finally
         {
@@ -146,13 +147,15 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
             await AddInputCoreAsync(scope, input, CancellationToken.None);
+            DialogService.Notify("Reference.Added", string.Format(Localization.CurrentCulture, T("Notifications_ReferenceAdded"), EntityDisplayName, input.Name));
             await LoadAsync();
         }
         catch (Exception ex)
         {
+            Serilog.Log.Error(ex, "User operation failed.");
            var message = ex is DuplicateReferenceException duplicate
                ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
-               : ex is InvalidTagNameException ? T("Validation_TagNameInvalid") : ex.Message;
+               : ex is InvalidTagNameException ? T("Validation_TagNameInvalid") : T("Notifications_OperationFailed");
             DialogService.ShowMessage(string.Format(CultureInfo.CurrentCulture, T("AddErrorTemplate"), EntityDisplayName), message,
                 ex is DuplicateReferenceException or InvalidTagNameException ? MessageDialogKind.Warning : MessageDialogKind.Error);
         }
@@ -168,13 +171,15 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
             await UpdateInputCoreAsync(scope, SelectedItem, input, CancellationToken.None);
+            DialogService.Notify("Reference.Updated", string.Format(Localization.CurrentCulture, T("Notifications_ReferenceUpdated"), EntityDisplayName, input.Name));
             await LoadAsync();
         }
         catch (Exception ex)
         {
+            Serilog.Log.Error(ex, "User operation failed.");
          var message = ex is DuplicateReferenceException duplicate
              ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
-             : ex is InvalidTagNameException ? T("Validation_TagNameInvalid") : ex.Message;
+             : ex is InvalidTagNameException ? T("Validation_TagNameInvalid") : T("Notifications_OperationFailed");
             DialogService.ShowMessage(string.Format(CultureInfo.CurrentCulture, T("UpdateErrorTemplate"), EntityDisplayName), message,
                 ex is DuplicateReferenceException or InvalidTagNameException ? MessageDialogKind.Warning : MessageDialogKind.Error);
         }
@@ -192,6 +197,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
             await DeleteCoreAsync(scope, SelectedItem, CancellationToken.None);
+            DialogService.Notify("Reference.Deleted", string.Format(Localization.CurrentCulture, T("Notifications_ReferenceDeleted"), EntityDisplayName, GetName(SelectedItem)));
             await LoadAsync();
         }
         catch (ReferenceEntityInUseException)

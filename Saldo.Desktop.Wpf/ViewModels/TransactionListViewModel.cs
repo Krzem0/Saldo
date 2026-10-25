@@ -393,10 +393,11 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         }
         catch (Exception ex)
         {
+            Serilog.Log.Error(ex, "User operation failed.");
             if (loadVersion == _loadVersion)
             {
                 SetPeriodVerification(null, failed: true);
-                _dialogService.ShowMessage(T("TransactionsLoadError"), ex.Message, MessageDialogKind.Error);
+                _dialogService.ShowMessage(T("TransactionsLoadError"), T("Notifications_OperationFailed"), MessageDialogKind.Error);
             }
         }
         finally
@@ -430,6 +431,9 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             if (result.IsFailed)
                 _dialogService.ShowMessage(title, string.Join(Environment.NewLine, result.Errors.Select(error => T(error.Message))), MessageDialogKind.Warning);
             await LoadAsync();
+            if (result.IsSuccess)
+                _dialogService.Notify(reopen ? "Period.Reopened" : "Period.Closed",
+                    string.Format(Localization.CurrentCulture, T(reopen ? "Notifications_PeriodReopened" : "Notifications_PeriodClosed"), MonthLabel));
             // The backup service verifies the closed month again before replacing
             // today's file; failures are reported independently of the saved close.
             if (!reopen && result.IsSuccess && _automaticBackups is not null)
@@ -554,7 +558,8 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage(T("ErrorTitle"), ex.Message, MessageDialogKind.Error);
+            Serilog.Log.Error(ex, "User operation failed.");
+            _dialogService.ShowMessage(T("ErrorTitle"), T("Notifications_OperationFailed"), MessageDialogKind.Error);
         }
     }
 
@@ -596,11 +601,13 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
                 return;
             }
 
+            _dialogService.Notify("Transaction.Deleted", T("Notifications_TransactionDeleted"));
             await LoadAsync();
         }
         catch (Exception ex)
         {
-            _dialogService.ShowMessage(T("ErrorTitle"), ex.Message, MessageDialogKind.Error);
+            Serilog.Log.Error(ex, "User operation failed.");
+            _dialogService.ShowMessage(T("ErrorTitle"), T("Notifications_OperationFailed"), MessageDialogKind.Error);
         }
     }
 

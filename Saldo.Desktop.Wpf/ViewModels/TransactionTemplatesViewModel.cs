@@ -107,9 +107,20 @@ public sealed class TransactionTemplatesViewModel : LocalizedViewModelBase
         }
         catch (Exception) { SetError("Template_DeleteFailed"); }
         finally { IsBusy = false; }
-        if (deleted) await LoadAsync();
+        if (deleted)
+        {
+            _dialogs.Notify("Template.Deleted", T("Notifications_TemplateDeleted"), selected.Template.Name);
+            await LoadAsync();
+        }
     }
-    private void SetError(string key) { _errorKey = key; OnPropertyChanged(nameof(ErrorMessage)); }
+    private void SetError(string key)
+    {
+        _errorKey = key; OnPropertyChanged(nameof(ErrorMessage));
+        if (key.Length > 0)
+        {
+            _dialogs.Notify(key, T(key), severity: NotificationSeverity.Error);
+        }
+    }
     private void FilterItems(int? selectedId)
     {
         var query = SearchText.Trim();

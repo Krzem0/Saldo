@@ -214,4 +214,22 @@
   <data name="AutoBackup_AfterCloseFailed" xml:space="preserve"><value>The month closing was saved, but its automatic backup was not updated. The previous copy has been retained. Retry the backup.</value></data>
   <data name="AutoBackup_RetentionFailed" xml:space="preserve"><value>The backup is ready, but some older automatic copies could not be removed. Retry cleanup.</value></data>
   <data name="AutoBackup_Retry" xml:space="preserve"><value>Retry</value></data>
+  <data name="Notifications_BackupCreated" xml:space="preserve"><value>Backup created.</value></data>
+  <data name="Notifications_BackupReused" xml:space="preserve"><value>The automatic backup for today is already available.</value></data>
+  <data name="Notifications_Empty" xml:space="preserve"><value>No notifications in this session.</value></data>
+  <data name="Notifications_Hint" xml:space="preserve"><value>The last 50 notifications from this session, newest first.</value></data>
+  <data name="Notifications_PeriodClosed" xml:space="preserve"><value>Month closed: {0}.</value></data>
+  <data name="Notifications_PeriodReopened" xml:space="preserve"><value>Month reopened: {0}.</value></data>
+  <data name="Notifications_ReferenceAdded" xml:space="preserve"><value>Entry added ({0}): {1}.</value></data>
+  <data name="Notifications_ReferenceDeleted" xml:space="preserve"><value>Entry deleted ({0}): {1}.</value></data>
+  <data name="Notifications_ReferenceUpdated" xml:space="preserve"><value>Entry updated ({0}): {1}.</value></data>
+  <data name="Notifications_Success" xml:space="preserve"><value>Success</value></data>
+  <data name="Notifications_TemplateDeleted" xml:space="preserve"><value>Template deleted.</value></data>
+  <data name="Notifications_TemplateSaved" xml:space="preserve"><value>Template saved.</value></data>
+  <data name="Notifications_Title" xml:space="preserve"><value>Notification history</value></data>
+  <data name="Notifications_TransactionAdded" xml:space="preserve"><value>Transaction added.</value></data>
+  <data name="Notifications_TransactionDeleted" xml:space="preserve"><value>Transaction deleted.</value></data>
+  <data name="Notifications_TransactionUpdated" xml:space="preserve"><value>Transaction updated.</value></data>
+  <data name="Notifications_OperationFailed" xml:space="preserve"><value>The operation failed. Try again. Details were saved in the log.</value></data>
+  <data name="Notifications_Repeated" xml:space="preserve"><value>{0} (Similar events: {1}; see history for details).</value></data>
 </root>

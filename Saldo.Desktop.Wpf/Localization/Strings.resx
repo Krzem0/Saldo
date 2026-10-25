@@ -214,4 +214,22 @@
   <data name="AutoBackup_AfterCloseFailed" xml:space="preserve"><value>Zamknięcie miesiąca zostało zapisane, ale automatyczna kopia zapasowa nie została zaktualizowana. Dotychczasowa kopia została zachowana. Ponów próbę.</value></data>
   <data name="AutoBackup_RetentionFailed" xml:space="preserve"><value>Kopia zapasowa jest gotowa, ale nie udało się usunąć wszystkich starszych kopii automatycznych. Ponów próbę sprzątania.</value></data>
   <data name="AutoBackup_Retry" xml:space="preserve"><value>Ponów próbę</value></data>
+  <data name="Notifications_BackupCreated" xml:space="preserve"><value>Utworzono kopię zapasową.</value></data>
+  <data name="Notifications_BackupReused" xml:space="preserve"><value>Dzisiejsza automatyczna kopia zapasowa jest już dostępna.</value></data>
+  <data name="Notifications_Empty" xml:space="preserve"><value>Brak informacji w bieżącej sesji.</value></data>
+  <data name="Notifications_Hint" xml:space="preserve"><value>Ostatnie 50 informacji z bieżącego uruchomienia aplikacji, od najnowszych.</value></data>
+  <data name="Notifications_PeriodClosed" xml:space="preserve"><value>Zamknięto miesiąc: {0}.</value></data>
+  <data name="Notifications_PeriodReopened" xml:space="preserve"><value>Ponownie otwarto miesiąc: {0}.</value></data>
+  <data name="Notifications_ReferenceAdded" xml:space="preserve"><value>Dodano wpis ({0}): {1}.</value></data>
+  <data name="Notifications_ReferenceDeleted" xml:space="preserve"><value>Usunięto wpis ({0}): {1}.</value></data>
+  <data name="Notifications_ReferenceUpdated" xml:space="preserve"><value>Zmieniono wpis ({0}): {1}.</value></data>
+  <data name="Notifications_Success" xml:space="preserve"><value>Sukces</value></data>
+  <data name="Notifications_TemplateDeleted" xml:space="preserve"><value>Usunięto szablon.</value></data>
+  <data name="Notifications_TemplateSaved" xml:space="preserve"><value>Zapisano szablon.</value></data>
+  <data name="Notifications_Title" xml:space="preserve"><value>Historia informacji</value></data>
+  <data name="Notifications_TransactionAdded" xml:space="preserve"><value>Dodano transakcję.</value></data>
+  <data name="Notifications_TransactionDeleted" xml:space="preserve"><value>Usunięto transakcję.</value></data>
+  <data name="Notifications_TransactionUpdated" xml:space="preserve"><value>Zapisano zmiany transakcji.</value></data>
+  <data name="Notifications_OperationFailed" xml:space="preserve"><value>Nie udało się wykonać operacji. Spróbuj ponownie. Szczegóły zapisano w logu.</value></data>
+  <data name="Notifications_Repeated" xml:space="preserve"><value>{0} (Podobne zdarzenia: {1}; szczegóły w historii).</value></data>
 </root>

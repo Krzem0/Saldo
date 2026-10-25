@@ -4,6 +4,7 @@
         xmlns:views="clr-namespace:Saldo.Desktop.Wpf.Views"
         xmlns:viewModels="clr-namespace:Saldo.Desktop.Wpf.ViewModels"
         xmlns:backup="clr-namespace:Saldo.Desktop.Wpf.Services"
+        xmlns:notifications="clr-namespace:Saldo.Application.Interfaces;assembly=Saldo.Application"
         Title="{Binding Source={StaticResource Localization}, Path=[AppTitle]}"
         Height="680" Width="1120"
         Background="{DynamicResource AppBackgroundBrush}"
@@ -97,13 +98,32 @@
         <Border Grid.Row="2" Padding="24,6" Background="{DynamicResource SurfaceBrush}"
                 BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="0,1,0,0"
                 DataContext="{StaticResource AutomaticBackup}">
-            <DockPanel>
+            <StackPanel>
+              <DockPanel DataContext="{StaticResource Notifications}" Margin="0,2">
+                <Button DockPanel.Dock="Left" Content="ⓘ" FontSize="18" Margin="0,0,10,0"
+                        Command="{Binding ShowHistoryCommand}" Style="{StaticResource SecondaryActionButtonStyle}"
+                        ToolTip="{Binding Source={StaticResource Localization}, Path=[Notifications_Title]}"
+                        AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[Notifications_Title]}"/>
+                <TextBlock Text="{Binding StatusText}" ToolTip="{Binding Current.Details}" TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center" FontSize="12">
+                  <TextBlock.Style><Style TargetType="TextBlock">
+                    <Setter Property="Foreground" Value="{DynamicResource MessageInformationTextBrush}"/>
+                    <Style.Triggers>
+                      <DataTrigger Binding="{Binding Current.Severity}" Value="{x:Static notifications:NotificationSeverity.Success}"><Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/></DataTrigger>
+                      <DataTrigger Binding="{Binding Current.Severity}" Value="{x:Static notifications:NotificationSeverity.Warning}"><Setter Property="Foreground" Value="{DynamicResource MessageWarningTextBrush}"/></DataTrigger>
+                      <DataTrigger Binding="{Binding Current.Severity}" Value="{x:Static notifications:NotificationSeverity.Error}"><Setter Property="Foreground" Value="{DynamicResource ValidationTextBrush}"/></DataTrigger>
+                    </Style.Triggers>
+                  </Style></TextBlock.Style>
+                </TextBlock>
+              </DockPanel>
+              <DockPanel Visibility="{Binding HasError, Converter={StaticResource AutoBackupVisibility}}" Margin="0,4,0,0">
                 <Button DockPanel.Dock="Right" Content="{Binding Source={StaticResource Localization}, Path=[AutoBackup_Retry]}"
                         Command="{Binding RetryCommand}" Margin="12,0,0,0" Style="{StaticResource SecondaryActionButtonStyle}"
                         Visibility="{Binding HasError, Converter={StaticResource AutoBackupVisibility}}"/>
                 <TextBlock Text="{Binding StatusText}" ToolTip="{Binding BackupPath}" FontSize="12" TextWrapping="Wrap"
-                           VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
-            </DockPanel>
+                           VerticalAlignment="Center" Foreground="{DynamicResource MessageWarningTextBrush}"/>
+              </DockPanel>
+            </StackPanel>
         </Border>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>

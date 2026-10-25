@@ -10,7 +10,8 @@ using Saldo.Desktop.Wpf.Localization;
 namespace Saldo.Desktop.Wpf.ViewModels;
 
 public sealed class AutomaticBackupViewModel(IAutomaticDatabaseBackupService backups,
-    ILocalizationService localization, ILogger<AutomaticBackupViewModel>? logger = null)
+    ILocalizationService localization, ILogger<AutomaticBackupViewModel>? logger = null,
+    INotificationService? notifications = null)
     : LocalizedViewModelBase(localization), IDatabaseWriteAccess
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
@@ -56,12 +57,17 @@ public sealed class AutomaticBackupViewModel(IAutomaticDatabaseBackupService bac
             _lastResult = result;
             _pendingClosedMonth = null;
             _errorKey = result.RetentionSucceeded ? null : "AutoBackup_RetentionFailed";
+            notifications?.Publish("Backup.Automatic.Ready", T(result.Created ? "Notifications_BackupCreated" : "Notifications_BackupReused"),
+                NotificationSeverity.Success, result.Path);
+            if (_errorKey is not null)
+                notifications?.Publish(_errorKey, T(_errorKey), NotificationSeverity.Warning);
         }
         catch (Exception ex)
         {
             (logger ?? NullLogger<AutomaticBackupViewModel>.Instance).LogError(ex, "Automatic database backup failed.");
             _pendingClosedMonth = closedMonth;
             _errorKey = CanWrite ? "AutoBackup_AfterCloseFailed" : "AutoBackup_StartupFailed";
+            notifications?.Publish(_errorKey, T(_errorKey), NotificationSeverity.Error);
         }
         finally
         {

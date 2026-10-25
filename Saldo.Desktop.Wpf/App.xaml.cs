@@ -63,6 +63,7 @@ public partial class App : System.Windows.Application
             logger.LogInformation("Opening main window.");
             var automaticBackups = _serviceProvider.GetRequiredService<AutomaticBackupViewModel>();
             Resources["AutomaticBackup"] = automaticBackups;
+            Resources["Notifications"] = _serviceProvider.GetRequiredService<NotificationsViewModel>();
             _serviceProvider.GetRequiredService<MainWindow>().Show();
             await automaticBackups.InitializeAsync();
         }
@@ -95,6 +96,8 @@ public partial class App : System.Windows.Application
             new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder { DataSource = dbPath }.ToString(),
             logger: provider.GetRequiredService<ILogger<AutomaticDatabaseBackupService>>()));
         services.AddSingleton<AutomaticBackupViewModel>();
+        services.AddSingleton<INotificationService, Saldo.Application.Notifications.NotificationService>();
+        services.AddSingleton<NotificationsViewModel>();
         services.AddSingleton<IDatabaseWriteAccess>(provider => provider.GetRequiredService<AutomaticBackupViewModel>());
 
         services.AddScoped<ITransactionSettingsRepository, TransactionSettingsRepository>();
@@ -263,7 +266,7 @@ public partial class App : System.Windows.Application
         try
         {
             Resources["Localization"] = _localization;
-            new WpfDialogService().ShowMessage(_localization["AppTitle"], message, MessageDialogKind.Error);
+            new WpfDialogService(_serviceProvider?.GetService<INotificationService>()).ShowMessage(_localization["AppTitle"], message, MessageDialogKind.Error);
         }
         catch (Exception ex)
         {

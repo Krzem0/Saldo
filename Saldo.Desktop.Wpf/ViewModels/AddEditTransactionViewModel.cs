@@ -497,6 +497,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
             var selectableTag = new SelectableTag(tag.Id, tag.Name, tag.ColorCode, tag.IconKey) { IsSelected = true };
             selectableTag.PropertyChanged += OnFormChanged;
             Tags.Add(selectableTag);
+            _dialogService.Notify("Reference.Added", string.Format(Localization.CurrentCulture, T("Notifications_ReferenceAdded"), T("Entity_Tag"), tag.Name));
             DismissRestoredDraftNotice();
             CommandManager.InvalidateRequerySuggested();
         }
@@ -529,6 +530,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
             var category = await scope.ServiceProvider.GetRequiredService<AddCategory>().ExecuteAsync(categoryInput.Name, categoryInput.ColorCode, iconKey: categoryInput.IconKey);
             Categories.Add(category);
             SelectedCategory = category;
+            _dialogService.Notify("Reference.Added", string.Format(Localization.CurrentCulture, T("Notifications_ReferenceAdded"), T("Entity_Category"), category.Name));
         }
         catch (Exception ex)
         {
@@ -547,6 +549,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
             await using var scope = _scopeFactory.CreateAsyncScope();
             var party = await scope.ServiceProvider.GetRequiredService<AddParty>().ExecuteAsync(name);
             Parties.Add(party);
+            _dialogService.Notify("Reference.Added", string.Format(Localization.CurrentCulture, T("Notifications_ReferenceAdded"), T("Entity_Party"), party.Name));
 
             if (payer)
             {
@@ -576,6 +579,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
             await using var scope = _scopeFactory.CreateAsyncScope();
             var location = await scope.ServiceProvider.GetRequiredService<AddLocation>().ExecuteAsync(name);
             Locations.Add(location);
+            _dialogService.Notify("Reference.Added", string.Format(Localization.CurrentCulture, T("Notifications_ReferenceAdded"), T("Entity_Location"), location.Name));
             SelectedLocation = location;
             LocationText = location.Name;
         }
@@ -587,9 +591,10 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
 
     private void ShowReferenceError(Exception exception)
     {
+        Serilog.Log.Error(exception, "Failed to add reference entry.");
         var message = exception is DuplicateReferenceException duplicate
             ? string.Format(CultureInfo.CurrentCulture, T("DuplicateReferenceErrorTemplate"), duplicate.Name)
-            : exception is InvalidTagNameException ? T("Validation_TagNameInvalid") : exception.Message;
+            : exception is InvalidTagNameException ? T("Validation_TagNameInvalid") : T("Notifications_OperationFailed");
         var kind = exception is DuplicateReferenceException or InvalidTagNameException
             ? MessageDialogKind.Warning : MessageDialogKind.Error;
         _dialogService.ShowMessage(T(kind == MessageDialogKind.Warning ? "Message_Warning" : "ErrorTitle"), message, kind);
@@ -779,6 +784,8 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
             }
         }
 
+        _dialogService.Notify(IsNewTransaction ? "Transaction.Added" : "Transaction.Updated",
+            T(IsNewTransaction ? "Notifications_TransactionAdded" : "Notifications_TransactionUpdated"));
         RequestClose?.Invoke(true);
     }
 
@@ -821,7 +828,11 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
             var result = await scope.ServiceProvider.GetRequiredService<AddTransactionTemplate>().ExecuteAsync(
                 new SaveTransactionTemplateCommand(name, SelectedType.Value, Description ?? string.Empty,
                     category?.Id, payer?.Id, counterparty?.Id, location?.Id, amount, SelectedTagIds));
-            if (result.IsSuccess) TemplateSaveMessage = T("Transaction_TemplateSaved");
+            if (result.IsSuccess)
+            {
+                TemplateSaveMessage = T("Transaction_TemplateSaved");
+                _dialogService.Notify("Template.Saved", TemplateSaveMessage, name);
+            }
             else
             {
                 foreach (var error in result.Errors)
