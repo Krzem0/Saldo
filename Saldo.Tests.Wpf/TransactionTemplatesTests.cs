@@ -213,6 +213,7 @@ public sealed class TransactionTemplatesTests
             services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<ITagRepository, TagRepository>();
             services.AddScoped<ITransactionRepository, TransactionRepository>();
+            services.AddScoped<IAccountingPeriodRepository, AccountingPeriodRepository>();
             services.AddScoped<ITransactionSettingsRepository, TransactionSettingsRepository>();
             services.AddScoped<GetNewTransactionDefaults>();
             services.AddScoped<ListTransactions>(); services.AddScoped<GetSummary>();

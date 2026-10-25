@@ -40,9 +40,9 @@ public sealed class TransactionRequirementsTests
             CategoryId = 1, Amount = 10m, Description = "Original" });
         var parties = new FakePartyRepository([]);
         var locations = new FakeLocationRepository([]);
-        var added = await new AddTransaction(repository, parties, locations).ExecuteAsync(
+        var added = await new AddTransaction(repository, parties, locations, new FakeAccountingPeriodRepository()).ExecuteAsync(
             new AddTransactionCommand(date, type, 20m, 1, null, null, null, null, description, null, []));
-        var edited = await new EditTransaction(repository, parties, locations).ExecuteAsync(
+        var edited = await new EditTransaction(repository, parties, locations, new FakeAccountingPeriodRepository()).ExecuteAsync(
             new EditTransactionCommand(1, date, type, 20m, 1, null, null, null, null, description, null, []));
         foreach (var result in new[] { added, edited })
         {

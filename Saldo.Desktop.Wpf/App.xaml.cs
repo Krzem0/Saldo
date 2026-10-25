@@ -93,6 +93,9 @@ public partial class App : System.Windows.Application
         services.AddScoped<SetDefaultLocation>();
         services.AddScoped<SetTransactionDefaults>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<IAccountingPeriodRepository, AccountingPeriodRepository>();
+        services.AddScoped<CloseAccountingPeriod>();
+        services.AddScoped<ReopenAccountingPeriod>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<IPartyRepository, PartyRepository>();

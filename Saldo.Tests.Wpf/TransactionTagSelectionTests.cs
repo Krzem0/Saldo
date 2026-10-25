@@ -183,8 +183,8 @@ public sealed class TransactionTagSelectionTests
         var partyRepository = new FakePartyRepository(parties);
         var locations = new FakeLocationRepository([]);
         var services = new ServiceCollection();
-        services.AddSingleton(new AddTransaction(repository, partyRepository, locations));
-        services.AddSingleton(new EditTransaction(repository, partyRepository, locations));
+        services.AddSingleton(new AddTransaction(repository, partyRepository, locations, new FakeAccountingPeriodRepository()));
+        services.AddSingleton(new EditTransaction(repository, partyRepository, locations, new FakeAccountingPeriodRepository()));
         using var provider = services.BuildServiceProvider();
         TransactionDto? existing = null;
         if (editing)
@@ -224,7 +224,7 @@ public sealed class TransactionTagSelectionTests
     {
         var repository = new FakeTransactionRepository();
         var services = new ServiceCollection();
-        services.AddSingleton(new AddTransaction(repository, new FakePartyRepository([]), new FakeLocationRepository([])));
+        services.AddSingleton(new AddTransaction(repository, new FakePartyRepository([]), new FakeLocationRepository([]), new FakeAccountingPeriodRepository()));
         using var provider = services.BuildServiceProvider();
         var viewModel = new AddEditTransactionViewModel(provider.GetRequiredService<IServiceScopeFactory>(),
             new UnusedDialogs(), new LocalizationService(), [new Category { Id = 1, Name = "Food" }], [], [], []);
@@ -359,7 +359,7 @@ public sealed class TransactionTagSelectionTests
     {
         var services = new ServiceCollection();
         services.AddSingleton(new EditTransaction(new FakeTransactionRepository(),
-            new FakePartyRepository([]), new FakeLocationRepository([])));
+            new FakePartyRepository([]), new FakeLocationRepository([]), new FakeAccountingPeriodRepository()));
         using var provider = services.BuildServiceProvider();
         var dto = new TransactionDto(1, new DateOnly(2026, 10, 4), TransactionType.Expense, 10m,
             1, "Food", null, 1, "Me", 1, "Shop", null, null, null, [], []);

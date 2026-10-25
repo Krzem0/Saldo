@@ -187,7 +187,7 @@ public sealed class TagWorkflowTests
         var transactions = new TransactionRepository(db.Context);
         var parties = new PartyRepository(db.Context, Microsoft.Extensions.Logging.Abstractions.NullLogger<PartyRepository>.Instance);
         var locations = new LocationRepository(db.Context, Microsoft.Extensions.Logging.Abstractions.NullLogger<LocationRepository>.Instance);
-        var added = await new AddTransaction(transactions, parties, locations).ExecuteAsync(new AddTransactionCommand(
+        var added = await new AddTransaction(transactions, parties, locations, new AccountingPeriodRepository(db.Context)).ExecuteAsync(new AddTransactionCommand(
             new DateOnly(2026, 10, 4), TransactionType.Expense, 20m, category.Id,
             party.Id, party.Name, party.Id, party.Name, "Papierosy", null, [iwona.Id, holiday.Id]));
         Assert.True(added.IsSuccess);
@@ -203,7 +203,7 @@ public sealed class TagWorkflowTests
         Assert.Contains(iwona.Id, listed.TagIds);
         Assert.Equal(new TransactionTagDto(iwona.Id, "Dla bliskich", "#F4C542"), listed.TagDetails[0]);
 
-        var edit = new EditTransaction(transactions, parties, locations);
+        var edit = new EditTransaction(transactions, parties, locations, new AccountingPeriodRepository(db.Context));
         EditTransactionCommand Command(IReadOnlyList<int> ids) => new(added.Value.Id,
             added.Value.Date, added.Value.Type, 25m, category.Id, party.Id, party.Name,
             party.Id, party.Name, "Updated", null, ids);

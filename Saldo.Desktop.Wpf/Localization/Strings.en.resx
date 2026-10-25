@@ -182,4 +182,6 @@
   <data name="Message_Information" xml:space="preserve"><value>Information</value></data>
   <data name="Message_Warning" xml:space="preserve"><value>Warning</value></data>
   <data name="Message_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="AccountingPeriod.Closed" xml:space="preserve"><value>The accounting period is closed. Reopen it to change transactions. When changing the date, both periods must be open.</value></data>
+  <data name="AccountingPeriod.InvalidMonth" xml:space="preserve"><value>Select a valid accounting month.</value></data>
 </root>

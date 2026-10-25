@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Saldo.Application.Interfaces;
+using Saldo.Application.Errors;
 using Saldo.Domain.Entities;
 using Saldo.Domain.ValueObjects;
 using Saldo.Infrastructure.Sqlite.Persistence;
@@ -49,6 +50,7 @@ public sealed class TransactionRepository : ITransactionRepository
     public async Task AddAsync(Transaction transaction, CancellationToken ct = default)
     {
         await using var databaseTransaction = await _context.Database.BeginTransactionAsync(ct);
+        await EnsureOpenAsync(transaction.Date, ct);
         await EnsurePeriodAsync(transaction.Date, ct);
         ClearReferenceNavigations(transaction);
         _context.Transactions.Add(transaction);
@@ -59,6 +61,12 @@ public sealed class TransactionRepository : ITransactionRepository
     public async Task UpdateAsync(Transaction transaction, CancellationToken ct = default)
     {
         await using var databaseTransaction = await _context.Database.BeginTransactionAsync(ct);
+        // Read the persisted source date, not a potentially edited/tracked entity.
+        var sourceDate = await _context.Transactions.AsNoTracking()
+            .Where(t => t.Id == transaction.Id).Select(t => (DateOnly?)t.Date).SingleOrDefaultAsync(ct);
+        if (sourceDate is { } originalDate)
+            await EnsureOpenAsync(originalDate, ct);
+        await EnsureOpenAsync(transaction.Date, ct);
         await EnsurePeriodAsync(transaction.Date, ct);
         var tags = transaction.Tags.ToList();
         // Delete-and-reinsert tags to avoid tracking conflicts
@@ -103,6 +111,13 @@ public sealed class TransactionRepository : ITransactionRepository
         await databaseTransaction.CommitAsync(ct);
     }
 
+    private async Task EnsureOpenAsync(DateOnly date, CancellationToken ct)
+    {
+        if (await _context.AccountingPeriods.AnyAsync(
+                period => period.IsClosed && period.StartDate <= date && date < period.EndDateExclusive, ct))
+            throw new AccountingPeriodClosedException(date);
+    }
+
     private Task EnsurePeriodAsync(DateOnly date, CancellationToken ct)
     {
         var period = CalendarMonth.FromDate(date);
@@ -125,8 +140,14 @@ public sealed class TransactionRepository : ITransactionRepository
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
+        await using var databaseTransaction = await _context.Database.BeginTransactionAsync(ct);
+        var date = await _context.Transactions.AsNoTracking()
+            .Where(t => t.Id == id).Select(t => (DateOnly?)t.Date).SingleOrDefaultAsync(ct);
+        if (date is { } originalDate)
+            await EnsureOpenAsync(originalDate, ct);
         await _context.Transactions
             .Where(t => t.Id == id)
             .ExecuteDeleteAsync(ct);
+        await databaseTransaction.CommitAsync(ct);
     }
 }

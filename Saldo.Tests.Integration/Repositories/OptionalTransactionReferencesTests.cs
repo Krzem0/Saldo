@@ -31,7 +31,7 @@ public sealed class OptionalTransactionReferencesTests
             12m, category.Id, withPayer ? party.Id : null, null,
             withCounterparty ? party.Id : null, null, " Groceries ", null, []);
 
-        var added = await new AddTransaction(transactions, parties, locations).ExecuteAsync(command);
+        var added = await new AddTransaction(transactions, parties, locations, new AccountingPeriodRepository(db.Context)).ExecuteAsync(command);
         Assert.True(added.IsSuccess);
         Assert.Equal(withPayer ? party.Id : (int?)null, added.Value.PayerId);
         Assert.Equal(withPayer ? "Me" : null, added.Value.PayerName);
@@ -41,7 +41,7 @@ public sealed class OptionalTransactionReferencesTests
         db.Context.ChangeTracker.Clear();
         Assert.Single(await transactions.GetByMonthAsync(2019, 5));
 
-        var edited = await new EditTransaction(transactions, parties, locations).ExecuteAsync(
+        var edited = await new EditTransaction(transactions, parties, locations, new AccountingPeriodRepository(db.Context)).ExecuteAsync(
             new EditTransactionCommand(added.Value.Id, command.Date, command.Type, command.Amount,
                 category.Id, null, null, null, null, "Updated", null, []));
         Assert.True(edited.IsSuccess);

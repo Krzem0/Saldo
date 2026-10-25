@@ -19,7 +19,7 @@ public sealed class AddTransactionTests
     {
         var useCase = new AddTransaction(new FakeTransactionRepository(), new FakePartyRepository([
             new() { Id = 1, Name = "Me" }, new() { Id = 2, Name = "Shop" }
-        ]), new FakeLocationRepository([new Location { Id = 1, Name = "Shop" }]));
+        ]), new FakeLocationRepository([new Location { Id = 1, Name = "Shop" }]), new FakeAccountingPeriodRepository());
 
         var result = await useCase.ExecuteAsync(ValidCommand());
 
@@ -79,7 +79,7 @@ public sealed class AddTransactionTests
     public async Task ExecuteAsync_NewCounterpartyName_DoesNotCreateParty()
     {
         var parties = new FakePartyRepository([new() { Id = 1, Name = "Me" }]);
-        var result = await new AddTransaction(new FakeTransactionRepository(), parties, new FakeLocationRepository())
+        var result = await new AddTransaction(new FakeTransactionRepository(), parties, new FakeLocationRepository(), new FakeAccountingPeriodRepository())
             .ExecuteAsync(ValidCommand() with { CounterpartyId = null, CounterpartyName = "NewShop" });
 
         Assert.True(result.IsFailed);
@@ -89,5 +89,5 @@ public sealed class AddTransactionTests
     private static AddTransaction CreateUseCase() => new(
         new FakeTransactionRepository(),
         new FakePartyRepository([new() { Id = 1, Name = "Me" }, new() { Id = 2, Name = "Shop" }]),
-        new FakeLocationRepository([new Location { Id = 1, Name = "Shop" }]));
+        new FakeLocationRepository([new Location { Id = 1, Name = "Shop" }]), new FakeAccountingPeriodRepository());
 }

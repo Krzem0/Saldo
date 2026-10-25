@@ -149,7 +149,7 @@
 
 ## Accounting Periods
 
-See [Accounting periods](docs/features/accounting-periods.md) for the implemented calendar-month persistence foundation and the remaining closing, verification, and backup stages. Browsing does not create periods; transaction writes create only the needed month, and gaps are allowed. Closing and closed-period protection are not implemented yet.
+See [Accounting periods](docs/features/accounting-periods.md) for the implemented calendar-month persistence and write protection. Browsing does not create periods; transaction writes create only the needed month, and gaps are allowed. Application use cases support closing/reopening, and transaction writes reject closed source or destination months with localized errors. GUI close/reopen controls, closing snapshots, integrity verification, and automatic backups remain planned.
 
 ## Status
 

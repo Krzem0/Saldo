@@ -1,4 +1,6 @@
 using Saldo.Application.Interfaces;
+using Saldo.Application.Errors;
+using Saldo.Application.Validation;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -8,16 +10,18 @@ namespace Saldo.Application.UseCases;
 public sealed class DeleteTransaction
 {
     private readonly ITransactionRepository _transactions;
+    private readonly IAccountingPeriodRepository _periods;
     private readonly ILogger<DeleteTransaction> _logger;
 
-    public DeleteTransaction(ITransactionRepository transactions)
-        : this(transactions, NullLogger<DeleteTransaction>.Instance)
+    public DeleteTransaction(ITransactionRepository transactions, IAccountingPeriodRepository periods)
+        : this(transactions, periods, NullLogger<DeleteTransaction>.Instance)
     {
     }
 
-    public DeleteTransaction(ITransactionRepository transactions, ILogger<DeleteTransaction> logger)
+    public DeleteTransaction(ITransactionRepository transactions, IAccountingPeriodRepository periods, ILogger<DeleteTransaction> logger)
     {
         _transactions = transactions;
+        _periods = periods;
         _logger = logger;
     }
 
@@ -38,7 +42,17 @@ public sealed class DeleteTransaction
             return Result.Fail($"Transaction {id} not found.");
         }
 
-        await _transactions.DeleteAsync(existing.Id, ct);
+        if (await AccountingPeriodProtection.GetClosedErrorAsync(_periods, ct, existing.Date) is { } closedError)
+            return Result.Fail(closedError);
+
+        try
+        {
+            await _transactions.DeleteAsync(existing.Id, ct);
+        }
+        catch (AccountingPeriodClosedException ex)
+        {
+            return Result.Fail(ex.ToError());
+        }
 
         _logger.LogInformation("Transaction {TransactionId} deleted successfully.", existing.Id);
 

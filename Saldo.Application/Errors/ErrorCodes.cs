@@ -2,6 +2,12 @@ namespace Saldo.Application.Errors;
 
 public static class ErrorCodes
 {
+    public static class AccountingPeriod
+    {
+        public const string Closed = "AccountingPeriod.Closed";
+        public const string InvalidMonth = "AccountingPeriod.InvalidMonth";
+    }
+
     public static class Transaction
     {
         public const string IdMustBePositive = "Transaction.IdMustBePositive";

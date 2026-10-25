@@ -272,8 +272,8 @@ public sealed class TransactionDateSessionTests
             .AddSingleton<ICategoryRepository>(new Categories())
             .AddSingleton<ITagRepository>(new Tags())
             .AddSingleton<ITransactionSettingsRepository>(new Settings())
-            .AddSingleton(new AddTransaction(transactions, parties, locations))
-            .AddSingleton(new EditTransaction(transactions, parties, locations))
+            .AddSingleton(new AddTransaction(transactions, parties, locations, new FakeAccountingPeriodRepository()))
+            .AddSingleton(new EditTransaction(transactions, parties, locations, new FakeAccountingPeriodRepository()))
             .AddScoped<GetNewTransactionDefaults>().AddScoped<ListTransactions>().AddScoped<GetSummary>()
             .BuildServiceProvider();
     }

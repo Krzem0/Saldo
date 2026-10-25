@@ -14,24 +14,26 @@ namespace Saldo.Application.UseCases;
 public sealed class AddTransaction
 {
     private readonly ITransactionRepository _transactions;
+    private readonly IAccountingPeriodRepository _periods;
     private readonly IPartyRepository _parties;
     private readonly ILocationRepository _locations;
     private readonly ILogger<AddTransaction> _logger;
     private readonly IValidator<AddTransactionCommand> _validator;
 
-    public AddTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations)
-        : this(transactions, parties, locations, new AddTransactionCommandValidator(), NullLogger<AddTransaction>.Instance)
+    public AddTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, IAccountingPeriodRepository periods)
+        : this(transactions, parties, locations, periods, new AddTransactionCommandValidator(), NullLogger<AddTransaction>.Instance)
     {
     }
 
-    public AddTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, ILogger<AddTransaction> logger)
-        : this(transactions, parties, locations, new AddTransactionCommandValidator(), logger)
+    public AddTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, IAccountingPeriodRepository periods, ILogger<AddTransaction> logger)
+        : this(transactions, parties, locations, periods, new AddTransactionCommandValidator(), logger)
     {
     }
 
-    public AddTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, IValidator<AddTransactionCommand> validator, ILogger<AddTransaction> logger)
+    public AddTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, IAccountingPeriodRepository periods, IValidator<AddTransactionCommand> validator, ILogger<AddTransaction> logger)
     {
         _transactions = transactions;
+        _periods = periods;
         _parties = parties;
         _locations = locations;
         _logger = logger;
@@ -76,6 +78,9 @@ public sealed class AddTransaction
             return Result.Fail<TransactionDto>(errors);
         }
 
+        if (await AccountingPeriodProtection.GetClosedErrorAsync(_periods, ct, command.Date) is { } closedError)
+            return Result.Fail<TransactionDto>(closedError);
+
         var transaction = new Transaction
         {
             Date = command.Date,
@@ -94,7 +99,14 @@ public sealed class AddTransaction
                 .ToList()
         };
 
-        await _transactions.AddAsync(transaction, ct);
+        try
+        {
+            await _transactions.AddAsync(transaction, ct);
+        }
+        catch (AccountingPeriodClosedException ex)
+        {
+            return Result.Fail<TransactionDto>(ex.ToError());
+        }
 
         var saved = await _transactions.GetByIdAsync(transaction.Id, ct)
             ?? throw new InvalidOperationException($"Transaction {transaction.Id} not found after insert.");

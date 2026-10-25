@@ -14,24 +14,26 @@ namespace Saldo.Application.UseCases;
 public sealed class EditTransaction
 {
     private readonly ITransactionRepository _transactions;
+    private readonly IAccountingPeriodRepository _periods;
     private readonly IPartyRepository _parties;
     private readonly ILocationRepository _locations;
     private readonly ILogger<EditTransaction> _logger;
     private readonly IValidator<EditTransactionCommand> _validator;
 
-    public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations)
-        : this(transactions, parties, locations, new EditTransactionCommandValidator(), NullLogger<EditTransaction>.Instance)
+    public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, IAccountingPeriodRepository periods)
+        : this(transactions, parties, locations, periods, new EditTransactionCommandValidator(), NullLogger<EditTransaction>.Instance)
     {
     }
 
-    public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, ILogger<EditTransaction> logger)
-        : this(transactions, parties, locations, new EditTransactionCommandValidator(), logger)
+    public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, IAccountingPeriodRepository periods, ILogger<EditTransaction> logger)
+        : this(transactions, parties, locations, periods, new EditTransactionCommandValidator(), logger)
     {
     }
 
-    public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, IValidator<EditTransactionCommand> validator, ILogger<EditTransaction> logger)
+    public EditTransaction(ITransactionRepository transactions, IPartyRepository parties, ILocationRepository locations, IAccountingPeriodRepository periods, IValidator<EditTransactionCommand> validator, ILogger<EditTransaction> logger)
     {
         _transactions = transactions;
+        _periods = periods;
         _parties = parties;
         _locations = locations;
         _logger = logger;
@@ -88,6 +90,9 @@ public sealed class EditTransaction
             return Result.Fail<TransactionDto>(errors);
         }
 
+        if (await AccountingPeriodProtection.GetClosedErrorAsync(_periods, ct, existing.Date, command.Date) is { } closedError)
+            return Result.Fail<TransactionDto>(closedError);
+
         existing.Date = command.Date;
         existing.Type = command.Type;
         existing.Amount = command.Amount;
@@ -103,7 +108,14 @@ public sealed class EditTransaction
             .Select(tagId => new TransactionTag { TagId = tagId })
             .ToList();
 
-        await _transactions.UpdateAsync(existing, ct);
+        try
+        {
+            await _transactions.UpdateAsync(existing, ct);
+        }
+        catch (AccountingPeriodClosedException ex)
+        {
+            return Result.Fail<TransactionDto>(ex.ToError());
+        }
 
         var saved = await _transactions.GetByIdAsync(existing.Id, ct)
             ?? throw new InvalidOperationException($"Transaction {existing.Id} not found after update.");

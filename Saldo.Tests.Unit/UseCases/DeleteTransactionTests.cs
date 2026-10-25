@@ -19,7 +19,7 @@ public sealed class DeleteTransactionTests
             PayerId = 1,
             CounterpartyId = 1
         });
-        return (new DeleteTransaction(repo), repo);
+        return (new DeleteTransaction(repo, new FakeAccountingPeriodRepository()), repo);
     }
 
     [Fact]

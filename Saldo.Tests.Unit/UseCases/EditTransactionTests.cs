@@ -27,7 +27,7 @@ public sealed class EditTransactionTests
             CounterpartyId = 1,
             Description = "Original"
         });
-        return (new EditTransaction(repo, parties, locations), repo, 1);
+        return (new EditTransaction(repo, parties, locations, new FakeAccountingPeriodRepository()), repo, 1);
     }
 
     private static EditTransactionCommand ValidCommand(int id = 1) => new(

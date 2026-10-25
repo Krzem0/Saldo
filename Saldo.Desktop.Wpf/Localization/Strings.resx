@@ -182,4 +182,6 @@
   <data name="Message_Information" xml:space="preserve"><value>Informacja</value></data>
   <data name="Message_Warning" xml:space="preserve"><value>Ostrzeżenie</value></data>
   <data name="Message_Error" xml:space="preserve"><value>Błąd</value></data>
+  <data name="AccountingPeriod.Closed" xml:space="preserve"><value>Okres rozliczeniowy jest zamknięty. Otwórz go ponownie, aby zmienić transakcje. Przy zmianie daty oba okresy muszą być otwarte.</value></data>
+  <data name="AccountingPeriod.InvalidMonth" xml:space="preserve"><value>Wybierz prawidłowy miesiąc rozliczeniowy.</value></data>
 </root>

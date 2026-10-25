@@ -125,7 +125,9 @@ Rules:
 
 ### Accounting Periods
 
-For accounting-period persistence, see [Accounting periods](docs/features/accounting-periods.md). `TransactionRepository` ensures the destination period with an idempotent insert inside the transaction write's database transaction. Reads never create periods; the unique monthly start and exact-boundary check constraint prevent duplicates and overlaps. Closing and closed-period enforcement are separate future workflows.
+For accounting-period persistence and protection, see [Accounting periods](docs/features/accounting-periods.md). `TransactionRepository` ensures the destination period with an idempotent insert inside the transaction write's database transaction. Reads never create periods; the unique monthly start and exact-boundary check constraint prevent duplicates and overlaps.
+
+`IAccountingPeriodRepository` exposes no-tracking month reads and serialized state changes. Application `CloseAccountingPeriod` and `ReopenAccountingPeriod` expose idempotent state transitions, including closing empty months. Add/edit/delete use cases precheck the affected periods and return stable validation errors. SQLite repeats the source/destination checks inside non-deferred write transactions before changing transaction data or tags, preventing races with closing. A persistence rejection is translated to `AccountingPeriod.Closed` at the use-case boundary. This stage changes only the closed flag; snapshot calculation, verification, and GUI period controls remain future work.
 
 ### Database Backups
 
