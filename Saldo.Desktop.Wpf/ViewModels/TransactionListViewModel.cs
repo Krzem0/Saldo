@@ -33,6 +33,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
     private bool? _isPeriodClosed;
     private bool _periodLoadFailed;
     private AccountingPeriodVerificationDto? _periodVerification;
+    private TaskCompletionSource? _periodChangeFinished;
     private TransactionType? _typeFilter;
     private string _searchText = string.Empty;
     public string SearchText
@@ -207,7 +208,8 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         private set { if (SetField(ref _isChangingPeriod, value)) NotifyPeriodStateChanged(); }
     }
     public bool? IsPeriodClosed => _isPeriodClosed;
-    public bool CanCreateTransaction => !IsLoading && !IsChangingPeriod;
+    public bool CanCreateTransaction => !IsLoading && !IsChangingPeriod && (_automaticBackups?.CanWrite ?? true);
+    public Task WaitForPeriodChangeAsync() => _periodChangeFinished?.Task ?? Task.CompletedTask;
     public string PeriodStateText => IsChangingPeriod ? T("AccountingPeriod_Changing")
         : IsLoading ? T("AccountingPeriod_Loading")
         : _isPeriodClosed switch
@@ -300,6 +302,11 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         _scopeFactory = scopeFactory;
         _dialogService = dialogService;
         _automaticBackups = automaticBackups;
+        if (_automaticBackups is not null)
+            _automaticBackups.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName == nameof(AutomaticBackupViewModel.CanWrite)) NotifyPeriodStateChanged();
+            };
         _year       = DateTime.Today.Year;
         _month      = DateTime.Today.Month;
         _pickerYear = _year;
@@ -404,6 +411,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         var year = Year;
         var month = Month;
         var title = T(reopen ? "AccountingPeriod_Reopen" : "AccountingPeriod_Close");
+        _periodChangeFinished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         IsChangingPeriod = true;
         IsMonthPickerOpen = false;
         IsTemplatePickerOpen = false;
@@ -431,7 +439,11 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             SetPeriodVerification(null, failed: true);
             _dialogService.ShowMessage(title, T("AccountingPeriod_ChangeFailed"), MessageDialogKind.Error);
         }
-        finally { IsChangingPeriod = false; }
+        finally
+        {
+            IsChangingPeriod = false;
+            _periodChangeFinished.TrySetResult();
+        }
     }
 
     private void ShowVerificationWarning(AccountingPeriodVerificationDto verification)

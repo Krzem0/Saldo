@@ -13,7 +13,9 @@ public sealed class SqliteDatabaseBackupService : IDatabaseBackupService
     public SqliteDatabaseBackupService(SaldoDbContext context) : this(context.Database.GetConnectionString()!) { }
     internal SqliteDatabaseBackupService(string connectionString) => _connectionString = connectionString;
 
-    public async Task CreateAsync(string destinationPath, CancellationToken ct = default)
+    public Task CreateAsync(string destinationPath, CancellationToken ct = default) => CreateValidatedAsync(destinationPath, null, ct);
+
+    internal async Task CreateValidatedAsync(string destinationPath, Func<string, CancellationToken, Task>? validate, CancellationToken ct)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
         var source = new SqliteConnectionStringBuilder(_connectionString);
@@ -36,11 +38,12 @@ public sealed class SqliteDatabaseBackupService : IDatabaseBackupService
         // BackupDatabase is synchronous; use dedicated connections off the UI thread.
         var sourceLock = SourceLocks.GetOrAdd(sourcePath, _ => new SemaphoreSlim(1, 1));
         await sourceLock.WaitAsync(ct);
-        try { await Task.Run(() => CreateBackup(sourceConnectionString, targetPath, ct), ct); }
+        try { await Task.Run(() => CreateBackupAsync(sourceConnectionString, targetPath, validate, ct), ct); }
         finally { sourceLock.Release(); }
     }
 
-    private static void CreateBackup(string sourceConnectionString, string targetPath, CancellationToken ct)
+    private static async Task CreateBackupAsync(string sourceConnectionString, string targetPath,
+        Func<string, CancellationToken, Task>? validate, CancellationToken ct)
     {
         var temporaryPath = Path.Combine(Path.GetDirectoryName(targetPath)!, $".saldo-backup-{Guid.NewGuid():N}.db");
         try
@@ -69,6 +72,8 @@ public sealed class SqliteDatabaseBackupService : IDatabaseBackupService
                     throw new InvalidDataException("The backup failed SQLite integrity validation.");
             }
 
+            ct.ThrowIfCancellationRequested();
+            if (validate is not null) await validate(temporaryPath, ct);
             ct.ThrowIfCancellationRequested();
             // Finish the snapshot before replacing any previous backup at the selected path.
             File.Move(temporaryPath, targetPath, overwrite: true);

@@ -80,14 +80,12 @@ public sealed class TransactionRepository : ITransactionRepository
             .Where(entry => entry.Entity.TransactionId == transaction.Id).ToList())
             link.State = EntityState.Detached;
 
-        // The caller may pass an entity still tracked after an earlier insert.
-        // Detach it before clearing navigations so EF does not interpret that as
-        // severing required relationships.
-        var entry = _context.Entry(transaction);
-        if (entry.State != EntityState.Detached)
-        {
+        // A no-tracking read may return a different instance from one still
+        // tracked after an earlier insert in this scope. Detach either instance
+        // before attaching the edited data and clearing required navigations.
+        foreach (var entry in _context.ChangeTracker.Entries<Transaction>()
+                     .Where(entry => entry.Entity.Id == transaction.Id).ToList())
             entry.State = EntityState.Detached;
-        }
 
         // Reference entities are selected by their foreign keys. They may come from
         // no-tracking queries, so attaching their navigation objects could make EF

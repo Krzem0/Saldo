@@ -20,6 +20,7 @@ public sealed class AutomaticBackupViewModel(IAutomaticDatabaseBackupService bac
     private AutomaticBackupResult? _lastResult;
     private (int Year, int Month)? _pendingClosedMonth;
     private ICommand? _retryCommand;
+    private TaskCompletionSource? _idle;
 
     public bool CanWrite => _canWrite;
     public bool IsBusy => _pendingRequests > 0;
@@ -32,6 +33,7 @@ public sealed class AutomaticBackupViewModel(IAutomaticDatabaseBackupService bac
 
     public Task InitializeAsync() => RunAsync(null);
     public Task BackupAfterClosingAsync(int year, int month) => RunAsync((year, month));
+    public Task WaitForIdleAsync() => _idle?.Task ?? Task.CompletedTask;
 
     public void EnsureCanWrite()
     {
@@ -40,7 +42,8 @@ public sealed class AutomaticBackupViewModel(IAutomaticDatabaseBackupService bac
 
     private async Task RunAsync((int Year, int Month)? closedMonth)
     {
-        _pendingRequests++;
+        if (_pendingRequests++ == 0)
+            _idle = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         NotifyState();
         await _gate.WaitAsync();
         try
@@ -64,6 +67,7 @@ public sealed class AutomaticBackupViewModel(IAutomaticDatabaseBackupService bac
         {
             _gate.Release();
             _pendingRequests--;
+            if (_pendingRequests == 0) _idle!.TrySetResult();
             NotifyState();
         }
     }

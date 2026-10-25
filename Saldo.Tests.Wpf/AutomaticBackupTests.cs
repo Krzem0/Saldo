@@ -93,6 +93,25 @@ public sealed class AutomaticBackupTests
         Assert.Empty(service.ClosedMonths);
     });
 
+    [Fact]
+    public void IdleWait_IncludesQueuedBackupAndItsFailure() => AccountingPeriodVerificationTests.Run(async () =>
+    {
+        var service = new Backups { PauseStartup = true, PauseAfterClose = true, FailAfterClose = true };
+        var state = new AutomaticBackupViewModel(service, new LocalizationService());
+        Assert.True(state.WaitForIdleAsync().IsCompleted);
+        var startup = state.InitializeAsync();
+        var closingBackup = state.BackupAfterClosingAsync(2026, 1);
+        var idle = state.WaitForIdleAsync();
+        Assert.False(idle.IsCompleted);
+        service.ReleaseStartup.TrySetResult();
+        await service.AfterCloseEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.False(idle.IsCompleted);
+        service.ReleaseAfterClose.TrySetResult();
+        await Task.WhenAll(startup, closingBackup, idle).WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.False(state.IsBusy);
+        Assert.True(state.HasError);
+    });
+
     private static async Task WaitAsync(AutomaticBackupViewModel state)
     {
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
@@ -104,10 +123,13 @@ public sealed class AutomaticBackupTests
         public bool PauseStartup { get; init; }
         public bool FailStartup { get; set; }
         public bool FailAfterClose { get; set; }
+        public bool PauseAfterClose { get; init; }
         public bool RetentionSucceeded { get; set; } = true;
         public int StartupCalls { get; private set; }
         public List<(int, int)> ClosedMonths { get; } = [];
         public TaskCompletionSource ReleaseStartup { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource AfterCloseEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource ReleaseAfterClose { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public async Task<AutomaticBackupResult> EnsureDailyAsync(CancellationToken ct = default)
         {
             StartupCalls++;
@@ -115,11 +137,13 @@ public sealed class AutomaticBackupTests
             if (FailStartup) throw new IOException("Simulated startup backup failure.");
             return new("daily.db", new DateOnly(2026, 10, 25), true, RetentionSucceeded);
         }
-        public Task<AutomaticBackupResult> CreateAfterClosingAsync(int year, int month, CancellationToken ct = default)
+        public async Task<AutomaticBackupResult> CreateAfterClosingAsync(int year, int month, CancellationToken ct = default)
         {
             ClosedMonths.Add((year, month));
+            AfterCloseEntered.TrySetResult();
+            if (PauseAfterClose) await ReleaseAfterClose.Task.WaitAsync(ct);
             if (FailAfterClose) throw new IOException("Simulated after-close backup failure.");
-            return Task.FromResult(new AutomaticBackupResult("daily.db", new DateOnly(2026, 10, 25), true, RetentionSucceeded));
+            return new AutomaticBackupResult("daily.db", new DateOnly(2026, 10, 25), true, RetentionSucceeded);
         }
     }
 }

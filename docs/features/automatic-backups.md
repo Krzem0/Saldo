@@ -45,6 +45,9 @@ existing database. Keep the existing manual-backup procedure before an upgrade.
 - Before replacement, the service checks that the requested month is still
   closed and its saved snapshot matches current data. Failed verification,
   missing snapshots, or reopened months cannot silently produce a replacement.
+- The completed temporary copy is also verified before the final rename. A
+  reopen or change between the source precheck and copying therefore cannot
+  replace the previous daily file with an unverified snapshot.
 - The copy replaces today's file; multiple closures still leave one daily file.
 - Reopening and ordinary integrity checks do not request a new backup.
 - Copy failure does not roll back the saved close or revoke write access. The
@@ -78,6 +81,12 @@ existing database. Keep the existing manual-backup procedure before an upgrade.
   programmatically before startup backup success.
 - Closing starts the backup independently of its UI command lifetime, so navigation
   and other operations can resume while the copy completes.
+- Normal main-window closing waits asynchronously for an in-progress period
+  state change, then for the entire automatic-backup queue. The window stops
+  accepting input while waiting; the dispatcher is not blocked. Forced process
+  termination or operating-system shutdown is outside this guarantee.
+- The startup gate also participates in transaction command availability, including
+  the row context-menu copy command; disabled toolbar controls are not its only UI protection.
 
 ## Verification and limitations
 
@@ -86,7 +95,11 @@ They cover same-day restart behavior, concurrent requests, five-day retention
 with gaps, per-database filenames, post-close snapshot content, corrupted files,
 locked destinations, failed retention/retry, and database write protection.
 WPF tests cover disabled write controls, retry, successful close/reopen hooks,
-and preservation of closed state after a copy failure.
+preservation of closed state after a copy failure, context-menu availability,
+and waiting for a backup that is enqueued by an unfinished period close.
+
+See the [integration verification report](../verification/accounting-periods-and-backups.md)
+for the end-to-end workflow, measured large-month check, and review fixes.
 
 Backups adjacent to the database protect against accidental changes; they share
 the source disk's failure risk. Manual copies to another location remain available.

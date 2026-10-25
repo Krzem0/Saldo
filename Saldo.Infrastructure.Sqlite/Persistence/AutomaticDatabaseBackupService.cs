@@ -18,7 +18,7 @@ public sealed class AutomaticDatabaseBackupService : IAutomaticDatabaseBackupSer
     private readonly string _directory;
     private readonly string _prefix;
     private readonly SemaphoreSlim _gate;
-    private readonly IDatabaseBackupService _backups;
+    private readonly SqliteDatabaseBackupService _backups;
     private readonly TimeProvider _clock;
     private readonly ILogger<AutomaticDatabaseBackupService> _logger;
 
@@ -50,12 +50,7 @@ public sealed class AutomaticDatabaseBackupService : IAutomaticDatabaseBackupSer
         {
             if (closedMonth is { } month)
             {
-                await using var context = new SaldoDbContext(new DbContextOptionsBuilder<SaldoDbContext>()
-                    .UseSqlite(_connectionString).Options);
-                var result = await new VerifyAccountingPeriod(new AccountingPeriodRepository(context))
-                    .ExecuteAsync(month.Year, month.Month, ct);
-                if (result.IsFailed || result.Value.Status != AccountingPeriodVerificationStatus.Valid)
-                    throw new InvalidDataException("The closed period must pass integrity verification before replacing its daily backup.");
+                await VerifyClosedMonthAsync(_connectionString, month, ct);
             }
 
             ct.ThrowIfCancellationRequested();
@@ -63,13 +58,34 @@ public sealed class AutomaticDatabaseBackupService : IAutomaticDatabaseBackupSer
             Directory.CreateDirectory(_directory);
             var target = Path.Combine(_directory, _prefix + date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + ".db");
             var created = closedMonth.HasValue || !IsValidBackup(target);
-            if (created) await _backups.CreateAsync(target, ct);
+            if (created)
+            {
+                // Validate the actual copied database, not only the source read
+                // earlier: the source may have been reopened/changed meanwhile.
+                Func<string, CancellationToken, Task>? validate = closedMonth is { } copiedMonth
+                    ? (path, token) => VerifyClosedMonthAsync(new SqliteConnectionStringBuilder
+                    {
+                        DataSource = path, Mode = SqliteOpenMode.ReadOnly, Pooling = false
+                    }.ToString(), copiedMonth, token)
+                    : null;
+                await _backups.CreateValidatedAsync(target, validate, ct);
+            }
             var retentionSucceeded = Prune(target, ct);
             _logger.LogInformation("Automatic backup ready at {Path}; created: {Created}; retention completed: {RetentionSucceeded}.", target, created, retentionSucceeded);
             return new AutomaticBackupResult(target, date, created, retentionSucceeded);
         }
         finally { _gate.Release(); }
     }, ct);
+
+    private static async Task VerifyClosedMonthAsync(string connectionString, (int Year, int Month) month, CancellationToken ct)
+    {
+        await using var context = new SaldoDbContext(new DbContextOptionsBuilder<SaldoDbContext>()
+            .UseSqlite(connectionString).Options);
+        var result = await new VerifyAccountingPeriod(new AccountingPeriodRepository(context))
+            .ExecuteAsync(month.Year, month.Month, ct);
+        if (result.IsFailed || result.Value.Status != AccountingPeriodVerificationStatus.Valid)
+            throw new InvalidDataException("The closed period must pass integrity verification before replacing its daily backup.");
+    }
 
     private static bool IsValidBackup(string path)
     {

@@ -77,6 +77,9 @@ to closed captures a fresh snapshot.
 - During loading or a state change, new transaction/template/copy actions are
   disabled. During a state change, navigation, refresh, and repeat state changes
   are also blocked. Closing/reopening preserves existing new-form drafts.
+- Startup backup availability also gates these commands, including copying from
+  the row context menu. Normal application exit waits for a pending state change
+  and its resulting automatic backup.
 - A failed state operation leaves the visible state unknown; the user can refresh
   to read the actual database state before another change. A failed verification
   also prevents editing/deleting and changing state until a successful reload.
@@ -155,5 +158,8 @@ the existing `MigrateAsync` workflow. As with other schema upgrades, keep a
 manual backup before first starting the upgraded app against an existing database.
 
 ## Next stages
+
+The [integration verification report](../verification/accounting-periods-and-backups.md)
+records the final automated checks and practical limits of the verification.
 
 - Other accounting cycles only when their transition rules have been designed.

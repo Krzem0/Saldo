@@ -117,6 +117,34 @@ public sealed class AutomaticDatabaseBackupTests : IDisposable
         Assert.True((await _context.AccountingPeriods.AsNoTracking().SingleAsync()).IsClosed);
     }
 
+    [Theory]
+    [InlineData("UPDATE AccountingPeriods SET IsClosed = 0")]
+    [InlineData("UPDATE Transactions SET Description = 'Changed after precheck'")]
+    public async Task ChangesAfterSourcePrecheck_AreRejectedBeforeReplacingDailyCopy(string sql)
+    {
+        await SeedTransactionAsync();
+        var service = Service();
+        var first = await service.EnsureDailyAsync();
+        var original = await File.ReadAllBytesAsync(first.Path);
+        await new CloseAccountingPeriod(new AccountingPeriodRepository(_context)).ExecuteAsync(2026, 1);
+        // The local-date lookup occurs after the source precheck and before the
+        // copy. Simulate a second writer reopening/changing that month then.
+        _clock.BeforeRead = () =>
+        {
+            _clock.BeforeRead = null;
+            using var writer = new SqliteConnection(ConnectionString);
+            writer.Open();
+            using var command = writer.CreateCommand();
+            command.CommandText = sql;
+            command.ExecuteNonQuery();
+        };
+
+        await Assert.ThrowsAsync<InvalidDataException>(() => service.CreateAfterClosingAsync(2026, 1));
+
+        Assert.Equal(original, await File.ReadAllBytesAsync(first.Path));
+        Assert.Empty(Directory.GetFiles(BackupDirectory, ".saldo-backup-*"));
+    }
+
     [Fact]
     public async Task FailedReplacement_PreservesPreviousCopyAndDoesNotPrune()
     {
@@ -266,7 +294,8 @@ public sealed class AutomaticDatabaseBackupTests : IDisposable
     private sealed class MutableClock : TimeProvider
     {
         public DateTimeOffset UtcNow { get; set; } = new(2026, 10, 25, 10, 0, 0, TimeSpan.Zero);
-        public override DateTimeOffset GetUtcNow() => UtcNow;
+        public Action? BeforeRead { get; set; }
+        public override DateTimeOffset GetUtcNow() { BeforeRead?.Invoke(); return UtcNow; }
         public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.CreateCustomTimeZone("Test", TimeSpan.FromHours(2), "Test", "Test");
     }
 

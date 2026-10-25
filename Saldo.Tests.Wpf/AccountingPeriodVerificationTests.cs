@@ -145,6 +145,67 @@ public sealed class AccountingPeriodVerificationTests
     });
 
     [Fact]
+    public void StartupGate_DisablesCopyContextCommandUntilBackupCompletes() => Run(async () =>
+    {
+        var service = new AutomaticBackupTests.Backups { PauseStartup = true };
+        var localization = new LocalizationService();
+        var backups = new AutomaticBackupViewModel(service, localization);
+        var transactions = new FakeTransactionRepository();
+        await transactions.AddAsync(new Transaction
+        {
+            Date = DateOnly.FromDateTime(DateTime.Today), Amount = 10m, CategoryId = 1,
+            Type = TransactionType.Expense, Description = "Original"
+        });
+        using var provider = Provider(transactions, new FakeAccountingPeriodRepository());
+        var viewModel = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), new Messages(), localization, backups);
+        viewModel.LoadCommand.Execute(null);
+        await WaitForLoadAsync(viewModel);
+        var row = Assert.Single(viewModel.Transactions);
+        var startup = backups.InitializeAsync();
+        Assert.False(viewModel.AddSimilarCommand.CanExecute(row));
+        Assert.False(viewModel.OpenTemplatePickerCommand.CanExecute(null));
+        Assert.False(viewModel.ChangePeriodCommand.CanExecute(null));
+        service.ReleaseStartup.TrySetResult();
+        await startup;
+        Assert.True(viewModel.AddSimilarCommand.CanExecute(row));
+        Assert.True(viewModel.OpenTemplatePickerCommand.CanExecute(null));
+        Assert.True(viewModel.ChangePeriodCommand.CanExecute(null));
+    });
+
+    [Fact]
+    public void ShutdownWait_HandlesCloseThatHasNotEnqueuedItsBackupYet() => Run(async () =>
+    {
+        var service = new AutomaticBackupTests.Backups { PauseAfterClose = true };
+        var localization = new LocalizationService();
+        var backups = new AutomaticBackupViewModel(service, localization);
+        await backups.InitializeAsync();
+        var periods = new ControlledReadRepository(new FakeAccountingPeriodRepository()) { PauseChange = true };
+        using var provider = Provider(new FakeTransactionRepository(), periods);
+        var viewModel = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(),
+            new Messages { ConfirmChange = true }, localization, backups);
+        viewModel.LoadCommand.Execute(null);
+        await WaitForLoadAsync(viewModel);
+        viewModel.ChangePeriodCommand.Execute(null);
+        await periods.ChangeEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.False(backups.IsBusy);
+        async Task WaitForShutdownAsync()
+        {
+            await viewModel.WaitForPeriodChangeAsync();
+            await backups.WaitForIdleAsync();
+        }
+        var shutdown = WaitForShutdownAsync();
+        Assert.False(shutdown.IsCompleted);
+        periods.ReleaseChange.TrySetResult();
+        await service.AfterCloseEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.False(shutdown.IsCompleted);
+        service.ReleaseAfterClose.TrySetResult();
+        await shutdown.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(viewModel.IsPeriodClosed);
+        Assert.False(backups.IsBusy);
+        Assert.Single(service.ClosedMonths);
+    });
+
+    [Fact]
     public void CancelledClose_DoesNotCreatePeriod() => Run(async () =>
     {
         var periods = new FakeAccountingPeriodRepository();
