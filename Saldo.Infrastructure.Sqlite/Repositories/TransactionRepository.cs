@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Saldo.Application.Interfaces;
 using Saldo.Domain.Entities;
+using Saldo.Domain.ValueObjects;
 using Saldo.Infrastructure.Sqlite.Persistence;
 
 namespace Saldo.Infrastructure.Sqlite.Repositories;
@@ -27,8 +28,9 @@ public sealed class TransactionRepository : ITransactionRepository
 
     public async Task<IReadOnlyList<Transaction>> GetByMonthAsync(int year, int month, CancellationToken ct = default)
     {
-        var start = new DateOnly(year, month, 1);
-        var end = start.AddMonths(1).AddDays(-1);
+        var period = CalendarMonth.FromYearMonth(year, month);
+        var start = period.StartDate;
+        var end = period.EndDateExclusive;
 
         return await _context.Transactions
             .Include(t => t.Category)
@@ -38,7 +40,7 @@ public sealed class TransactionRepository : ITransactionRepository
             .Include(t => t.Tags)
                 .ThenInclude(tt => tt.Tag)
             .AsNoTracking()
-            .Where(t => t.Date >= start && t.Date <= end)
+            .Where(t => t.Date >= start && t.Date < end)
             .OrderByDescending(t => t.Date)
             .ThenByDescending(t => t.Id)
             .ToListAsync(ct);
@@ -46,14 +48,18 @@ public sealed class TransactionRepository : ITransactionRepository
 
     public async Task AddAsync(Transaction transaction, CancellationToken ct = default)
     {
+        await using var databaseTransaction = await _context.Database.BeginTransactionAsync(ct);
+        await EnsurePeriodAsync(transaction.Date, ct);
         ClearReferenceNavigations(transaction);
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync(ct);
+        await databaseTransaction.CommitAsync(ct);
     }
 
     public async Task UpdateAsync(Transaction transaction, CancellationToken ct = default)
     {
         await using var databaseTransaction = await _context.Database.BeginTransactionAsync(ct);
+        await EnsurePeriodAsync(transaction.Date, ct);
         var tags = transaction.Tags.ToList();
         // Delete-and-reinsert tags to avoid tracking conflicts
         await _context.TransactionTags
@@ -95,6 +101,18 @@ public sealed class TransactionRepository : ITransactionRepository
 
         await _context.SaveChangesAsync(ct);
         await databaseTransaction.CommitAsync(ct);
+    }
+
+    private Task EnsurePeriodAsync(DateOnly date, CancellationToken ct)
+    {
+        var period = CalendarMonth.FromDate(date);
+        // The unique index arbitrates concurrent creation. Never replace an existing
+        // period: its state and future closing snapshot must remain untouched.
+        return _context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO AccountingPeriods (StartDate, EndDateExclusive, IsClosed)
+            VALUES ({period.StartDate}, {period.EndDateExclusive}, 0)
+            ON CONFLICT (StartDate) DO NOTHING;
+            """, ct);
     }
 
     private static void ClearReferenceNavigations(Transaction transaction)

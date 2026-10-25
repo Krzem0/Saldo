@@ -143,9 +143,13 @@
 
 ## Development Database Changes
 
-- In the current local development phase, schema changes are included in the initial migration, its designer, and the EF model snapshot
+- Earlier local-development schema changes were included in the initial migration. New changes use incremental migrations; `AddAccountingPeriods` creates the accounting-period foundation and backfills only months containing transactions
 - Changing an already applied initial migration does not upgrade an existing database. An existing development database must be updated explicitly after a backup, with schema and data-integrity checks
 - `TransactionSettings.DefaultLocationId` is nullable, indexed, and references `Locations` with `ON DELETE SET NULL`; new databases start with no default location
+
+## Accounting Periods
+
+See [Accounting periods](docs/features/accounting-periods.md) for the implemented calendar-month persistence foundation and the remaining closing, verification, and backup stages. Browsing does not create periods; transaction writes create only the needed month, and gaps are allowed. Closing and closed-period protection are not implemented yet.
 
 ## Status
 

@@ -89,7 +89,8 @@ Responsible for:
 
 Contains:
 
-- Entities such as `Transaction`, `Category`, `Party`, `Location`, `Tag`, `TransactionTag`, and `TransactionSettings`
+- Entities such as `Transaction`, `Category`, `Party`, `Location`, `Tag`, `TransactionTag`, `TransactionSettings`, and `AccountingPeriod`
+- `CalendarMonth`, the shared inclusive-start/exclusive-end calendar-month boundary calculation
 - Enums such as `TransactionType`
 
 Rules:
@@ -119,8 +120,12 @@ Rules:
 
 - Implements interfaces defined in the Application layer
 - No UI code
-- During the current single-instance local development phase, schema changes update the initial migration, its designer, and the model snapshot. Incremental upgrade migrations are deferred until deployed databases need to be preserved across schema versions
+- Earlier local-development schema changes updated the initial migration. New schema changes use incremental migrations and update the model snapshot, preserving the previous migrations. `AddAccountingPeriods` is the first incremental upgrade and backfills open periods for occupied months
 - Editing an already applied initial migration does not alter an existing database. Updating a local development database is a separate, explicit operation: create a consistent backup, apply the required schema change, and verify data preservation, integrity, and foreign keys
+
+### Accounting Periods
+
+For accounting-period persistence, see [Accounting periods](docs/features/accounting-periods.md). `TransactionRepository` ensures the destination period with an idempotent insert inside the transaction write's database transaction. Reads never create periods; the unique monthly start and exact-boundary check constraint prevent duplicates and overlaps. Closing and closed-period enforcement are separate future workflows.
 
 ### Database Backups
 
