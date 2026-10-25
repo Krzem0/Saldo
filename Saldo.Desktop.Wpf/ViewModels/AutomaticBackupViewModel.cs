@@ -57,8 +57,9 @@ public sealed class AutomaticBackupViewModel(IAutomaticDatabaseBackupService bac
             _lastResult = result;
             _pendingClosedMonth = null;
             _errorKey = result.RetentionSucceeded ? null : "AutoBackup_RetentionFailed";
-            notifications?.Publish("Backup.Automatic.Ready", T(result.Created ? "Notifications_BackupCreated" : "Notifications_BackupReused"),
-                NotificationSeverity.Success, result.Path);
+            if (result.Created)
+                notifications?.Publish("Backup.Automatic.Ready", T("Notifications_BackupCreated"),
+                    NotificationSeverity.Success, result.Path);
             if (_errorKey is not null)
                 notifications?.Publish(_errorKey, T(_errorKey), NotificationSeverity.Warning);
         }

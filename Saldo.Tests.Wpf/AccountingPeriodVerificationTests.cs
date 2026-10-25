@@ -338,6 +338,48 @@ public sealed class AccountingPeriodVerificationTests
     });
 
     [Fact]
+    public void EnteringClosedMonth_DoesNotBrieflyPresentOpenStateOrCloseAction() => Run(async () =>
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var target = today.AddMonths(1);
+        var periods = new FakeAccountingPeriodRepository();
+        await new CloseAccountingPeriod(periods).ExecuteAsync(target.Year, target.Month);
+        var repository = new ControlledReadRepository(periods) { PauseRead = true };
+        var localization = new LocalizationService();
+        using var provider = Provider(new FakeTransactionRepository(), repository);
+        var viewModel = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), new Messages(), localization);
+        viewModel.LoadCommand.Execute(null);
+        await WaitForLoadAsync(viewModel);
+        Assert.False(viewModel.IsPeriodClosed);
+        List<(bool? Closed, string Action)> loadingStates = [];
+        viewModel.PropertyChanged += (_, args) =>
+        {
+            if (viewModel.IsLoading && args.PropertyName == nameof(TransactionListViewModel.IsPeriodClosed))
+                loadingStates.Add((viewModel.IsPeriodClosed, viewModel.PeriodActionText));
+        };
+
+        viewModel.NextMonthCommand.Execute(null);
+        try
+        {
+            await repository.ReadEntered.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Assert.Null(viewModel.IsPeriodClosed);
+            Assert.Equal(localization["AccountingPeriod_Loading"], viewModel.PeriodStateText);
+            Assert.Equal("…", viewModel.PeriodActionText);
+            Assert.False(viewModel.ChangePeriodCommand.CanExecute(null));
+            Assert.NotEmpty(loadingStates);
+            Assert.All(loadingStates, state =>
+            {
+                Assert.Null(state.Closed);
+                Assert.Equal("…", state.Action);
+            });
+        }
+        finally { repository.ReleaseRead.TrySetResult(); }
+        await WaitForLoadAsync(viewModel);
+        Assert.True(viewModel.IsPeriodClosed);
+        Assert.Equal(localization["AccountingPeriod_Reopen"], viewModel.PeriodActionText);
+    });
+
+    [Fact]
     public void NavigationDuringVerification_LoadsNewMonthAndIgnoresOldWarning() => Run(async () =>
     {
         var today = DateOnly.FromDateTime(DateTime.Today);

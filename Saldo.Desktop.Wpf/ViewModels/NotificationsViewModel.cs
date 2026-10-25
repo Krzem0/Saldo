@@ -18,7 +18,7 @@ public sealed class NotificationsViewModel : LocalizedViewModelBase, IDisposable
     private bool _disposed;
     public ObservableCollection<Notification> History { get; } = [];
     public Notification? Current => _queue.Current;
-    public string StatusText => Current is null ? T("Notifications_Empty") : _queue.CurrentCount > 1
+    public string StatusText => Current is null ? string.Empty : _queue.CurrentCount > 1
         ? string.Format(Localization.CurrentCulture, T("Notifications_Repeated"), Current.Message, _queue.CurrentCount)
         : Current.Message;
     public ICommand ShowHistoryCommand { get; }

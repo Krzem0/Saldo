@@ -207,7 +207,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         get => _isChangingPeriod;
         private set { if (SetField(ref _isChangingPeriod, value)) NotifyPeriodStateChanged(); }
     }
-    public bool? IsPeriodClosed => _isPeriodClosed;
+    public bool? IsPeriodClosed => IsLoading || IsChangingPeriod ? null : _isPeriodClosed;
     public bool CanCreateTransaction => !IsLoading && !IsChangingPeriod && (_automaticBackups?.CanWrite ?? true);
     public Task WaitForPeriodChangeAsync() => _periodChangeFinished?.Task ?? Task.CompletedTask;
     public string PeriodStateText => IsChangingPeriod ? T("AccountingPeriod_Changing")
@@ -218,7 +218,12 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             false => T("AccountingPeriod_Open"),
             null => T("AccountingPeriod_Unknown")
         };
-    public string PeriodActionText => T(_isPeriodClosed == true ? "AccountingPeriod_Reopen" : "AccountingPeriod_Close");
+    public string PeriodActionText => IsPeriodClosed switch
+    {
+        true => T("AccountingPeriod_Reopen"),
+        false => T("AccountingPeriod_Close"),
+        null => "…"
+    };
     public string PeriodIntegrityText => IsLoading || IsChangingPeriod ? string.Empty
         : _periodLoadFailed ? T("AccountingPeriod.VerificationFailed")
         : _periodVerification?.Status switch
@@ -491,6 +496,10 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         if (IsChangingPeriod) return;
         if (Year == year && Month == month) return;
 
+        // Clear presentation state before announcing a new month, so bindings
+        // cannot briefly show the previous month's state or a default close action.
+        IsLoading = true;
+        SetPeriodVerification(null);
         Year = year;
         Month = month;
         var today = DateOnly.FromDateTime(DateTime.Today);

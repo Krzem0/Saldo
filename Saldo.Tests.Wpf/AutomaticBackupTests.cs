@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using Saldo.Application.DTOs;
 using Saldo.Application.Errors;
 using Saldo.Application.Interfaces;
+using Saldo.Application.Notifications;
 using Saldo.Desktop.Wpf.Localization;
 using Saldo.Desktop.Wpf.Services;
 using Saldo.Desktop.Wpf.ViewModels;
@@ -12,6 +13,28 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class AutomaticBackupTests
 {
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    public void ReusedDailyBackup_IsSilentButNewCopiesAndRetentionFailuresAreReported(bool created, bool retentionSucceeded) => AccountingPeriodVerificationTests.Run(async () =>
+    {
+        var service = new Backups { CreatedAtStartup = created, RetentionSucceeded = retentionSucceeded };
+        var notifications = new NotificationService();
+        var localization = new LocalizationService();
+        var state = new AutomaticBackupViewModel(service, localization, notifications: notifications);
+
+        await state.InitializeAsync();
+
+        Assert.True(state.CanWrite);
+        Assert.Equal(created ? 1 : 0, notifications.History.Count(item => item.Severity == NotificationSeverity.Success));
+        Assert.Equal(retentionSucceeded ? 0 : 1, notifications.History.Count(item => item.Severity == NotificationSeverity.Warning));
+        if (created)
+            Assert.Equal(localization["Notifications_BackupCreated"], notifications.History[0].Message);
+        if (!created && retentionSucceeded) Assert.Empty(notifications.History);
+    });
+
     [Fact]
     public void StartupBackup_BlocksOnlyWriteControlsUntilSuccess() => AccountingPeriodVerificationTests.Run(async () =>
     {
@@ -120,6 +143,7 @@ public sealed class AutomaticBackupTests
 
     internal sealed class Backups : IAutomaticDatabaseBackupService
     {
+        public bool CreatedAtStartup { get; init; } = true;
         public bool PauseStartup { get; init; }
         public bool FailStartup { get; set; }
         public bool FailAfterClose { get; set; }
@@ -135,7 +159,7 @@ public sealed class AutomaticBackupTests
             StartupCalls++;
             if (PauseStartup) await ReleaseStartup.Task.WaitAsync(ct);
             if (FailStartup) throw new IOException("Simulated startup backup failure.");
-            return new("daily.db", new DateOnly(2026, 10, 25), true, RetentionSucceeded);
+            return new("daily.db", new DateOnly(2026, 10, 25), CreatedAtStartup, RetentionSucceeded);
         }
         public async Task<AutomaticBackupResult> CreateAfterClosingAsync(int year, int month, CancellationToken ct = default)
         {

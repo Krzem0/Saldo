@@ -54,6 +54,8 @@ public sealed class NotificationTests
     {
         var service = new NotificationService();
         using var vm = new NotificationsViewModel(service, new LocalizationService());
+        Assert.Empty(vm.StatusText);
+        Assert.Empty(vm.History);
         await Task.Run(() => { for (var i = 0; i < 80; i++) service.Publish(i.ToString(), $"Message {i}"); });
         await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
         Assert.Equal(50, vm.History.Count);

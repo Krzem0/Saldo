@@ -83,6 +83,8 @@ public sealed class TransactionListViewTests
                     .BuildServiceProvider();
                 var vm = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), null!, new LocalizationService());
                 view.DataContext = vm;
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                Assert.Equal(Visibility.Hidden, ((Border)view.FindName("PeriodStateGroup")).Visibility);
                 vm.LoadCommand.Execute(null);
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
                 var grid = (DataGrid)view.FindName("TransactionGrid");
@@ -93,8 +95,9 @@ public sealed class TransactionListViewTests
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
                 Assert.Equal(((LocalizationService)view.Resources["Localization"])["AccountingPeriod_Open"], periodState.Text);
                 Assert.True(periodAction.IsEnabled);
+                Assert.Equal(Visibility.Visible, ((Border)view.FindName("PeriodStateGroup")).Visibility);
                 Assert.Equal(((SolidColorBrush)view.Resources["SuccessBackgroundBrush"]).Color,
-                    ((SolidColorBrush)((Border)periodState.Parent).Background).Color);
+                    ((SolidColorBrush)((Border)view.FindName("PeriodStateGroup")).Background).Color);
                 Assert.Equal(Visibility.Collapsed, ((Button)view.FindName("PeriodRetryButton")).Visibility);
                 Assert.Equal(Visibility.Collapsed, ((TextBlock)view.FindName("PeriodIntegrityLabel")).Visibility);
                 Assert.Equal(2, grid.Items.Count);
@@ -104,8 +107,10 @@ public sealed class TransactionListViewTests
                 var summaryButtons = (Grid)view.FindName("SummaryButtons");
                 var searchBorder = (Border)((Grid)((TextBox)view.FindName("TransactionSearchBox")).Parent).Parent;
                 var summaryCenter = summaryButtons.TranslatePoint(new Point(summaryButtons.ActualWidth / 2, 0), view).X;
+                Assert.True(periodAction.TranslatePoint(new Point(), view).Y < summaryButtons.TranslatePoint(new Point(), view).Y);
+                var monthPicker = (Button)view.FindName("MonthPickerButton");
                 Assert.True(periodAction.TranslatePoint(new Point(periodAction.ActualWidth, 0), view).X
-                    <= summaryButtons.TranslatePoint(new Point(), view).X);
+                    <= monthPicker.TranslatePoint(new Point(), view).X);
                 Assert.Equal(view.ActualWidth / 2, summaryCenter, 1);
                 Assert.True(summaryButtons.TranslatePoint(new Point(summaryButtons.ActualWidth, 0), view).X
                     <= searchBorder.TranslatePoint(new Point(), view).X);

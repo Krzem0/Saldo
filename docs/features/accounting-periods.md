@@ -57,11 +57,18 @@ to closed captures a fresh snapshot.
 
 ## Monthly GUI
 
-- The summary bar shows the selected month's open/closed state, or a checking,
+- The month-navigation row shows the selected month's open/closed state, or a checking,
   changing, or unknown-state message. Open periods use green, closed periods use
   blue, with theme-aware backgrounds and text. The text labels also identify the
   state independently of color. A second line appears only for integrity problems
   or failed reads; successful verification has no extra message.
+- State and action share one colored, outlined group, separated internally by a
+  divider, to the left of the centered month picker and above the summary bar.
+- While a month loads, changes state, or has unknown state, the entire state/action
+  group is hidden with its layout space retained. It appears only after the state
+  is established. A new selection clears the previous presentation before changing
+  the displayed month; unknown state never implies an open period. Problem text
+  and retry remain available separately if reading the state fails.
 - The action button switches between **Close month** and **Reopen month** based
   on the loaded state. **Check again** reloads data and status and appears only
   when a problem is reported; there is no always-visible refresh button.

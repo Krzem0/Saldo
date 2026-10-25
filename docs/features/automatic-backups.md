@@ -29,6 +29,9 @@ Status: implemented. Restore from a backup remains a separate planned feature.
    tables. A missing, empty, corrupted, or unrelated SQLite file is replaced.
 4. A valid existing copy is retained unchanged. A second launch on the same day
    does not replace it with later transaction data.
+   Reusing that copy is silent in the notification area and history; a success
+   notification is published only when a new copy was actually written. Retention
+   warnings and backup errors remain visible even when no new copy was needed.
 5. Success enables writes. Failure leaves the app read-only, with a persistent
    localized status and a Retry button. Failure is not marked as a completed backup.
 

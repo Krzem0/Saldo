@@ -171,12 +171,80 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <Button Grid.Column="0" Content="&lt;" Command="{Binding PreviousMonthCommand}" Style="{StaticResource MonthNavigationButtonStyle}"/>
 
+            <Border x:Name="PeriodStateGroup" Grid.Column="1" Margin="12,0,12,0" CornerRadius="5" BorderThickness="1"
+                    HorizontalAlignment="Left" VerticalAlignment="Center">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Visibility" Value="Hidden"/>
+                        <Setter Property="Background" Value="{DynamicResource ControlBrush}"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+                        <Setter Property="TextElement.Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsPeriodClosed}" Value="False">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessTextBrush}"/>
+                                <Setter Property="TextElement.Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsPeriodClosed}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Setter Property="Background" Value="{DynamicResource MessageInformationBackgroundBrush}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource MessageInformationTextBrush}"/>
+                                <Setter Property="TextElement.Foreground" Value="{DynamicResource MessageInformationTextBrush}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="1"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="PeriodStateLabel" Text="{Binding PeriodStateText}" FontSize="12" FontWeight="SemiBold"
+                               Margin="9,6" VerticalAlignment="Center"/>
+                    <Border Grid.Column="1" Margin="0,5" Opacity="0.5"
+                            Background="{Binding BorderBrush, ElementName=PeriodStateGroup}"/>
+                    <Button x:Name="PeriodActionButton" Grid.Column="2" Content="{Binding PeriodActionText}" Command="{Binding ChangePeriodCommand}"
+                            backup:DatabaseWriteGuard.IsWriteAction="True" Padding="9,6" Background="Transparent" BorderThickness="0"
+                            Foreground="{Binding Path=(TextElement.Foreground), ElementName=PeriodStateGroup}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="ActionSurface" Background="{TemplateBinding Background}" CornerRadius="0,4,4,0"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="ActionSurface" Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                                    <Setter TargetName="ActionSurface" Property="Background" Value="{DynamicResource ControlHoverBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter TargetName="ActionSurface" Property="Opacity" Value="0.5"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+            </Border>
+
             <!-- Clickable month label + picker popup -->
-            <Grid Grid.Column="1" HorizontalAlignment="Center">
+            <Grid Grid.Column="2" HorizontalAlignment="Center">
                 <StackPanel>
                     <Button x:Name="MonthPickerButton"
                             Command="{Binding OpenMonthPickerCommand}"
@@ -355,7 +423,7 @@
                 </Popup>
             </Grid>
 
-            <Button Grid.Column="2" Content="&gt;" Command="{Binding NextMonthCommand}" Style="{StaticResource MonthNavigationButtonStyle}"/>
+            <Button Grid.Column="4" Content="&gt;" Command="{Binding NextMonthCommand}" Style="{StaticResource MonthNavigationButtonStyle}"/>
         </Grid>
 
         <!-- Summary bar -->
@@ -369,31 +437,6 @@
                 <Grid Grid.Column="0" Margin="0,0,12,0">
                     <StackPanel VerticalAlignment="Center">
                         <WrapPanel>
-                            <Border Padding="7,4" Margin="0,0,6,2" CornerRadius="4" BorderThickness="1">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{DynamicResource ControlBrush}"/>
-                                        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
-                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsPeriodClosed}" Value="False">
-                                                <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessTextBrush}"/>
-                                                <Setter Property="TextElement.Foreground" Value="{DynamicResource SuccessTextBrush}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding IsPeriodClosed}" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource MessageInformationBackgroundBrush}"/>
-                                                <Setter Property="BorderBrush" Value="{DynamicResource MessageInformationTextBrush}"/>
-                                                <Setter Property="TextElement.Foreground" Value="{DynamicResource MessageInformationTextBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock x:Name="PeriodStateLabel" Text="{Binding PeriodStateText}" FontSize="12" FontWeight="SemiBold"/>
-                            </Border>
-                            <Button x:Name="PeriodActionButton" Content="{Binding PeriodActionText}" Command="{Binding ChangePeriodCommand}"
-                                    backup:DatabaseWriteGuard.IsWriteAction="True"
-                                    Style="{StaticResource SecondaryActionButtonStyle}" Padding="8,4" Margin="0,0,6,2"/>
                             <Button x:Name="PeriodRetryButton" Content="{Binding Source={StaticResource Localization}, Path=[AccountingPeriod_Retry]}"
                                     Command="{Binding LoadCommand}" Padding="8,4" Margin="0,0,0,2">
                                 <Button.Style>
