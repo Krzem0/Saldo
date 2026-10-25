@@ -22,7 +22,7 @@ public sealed class CategoriesViewModel : ReferenceListViewModel<Category>
 
     protected override ReferenceItemInput? ShowAddDialog()
     {
-        var result = DialogService.ShowReferenceColorDialog(string.Format(System.Globalization.CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName), allowIcons: true);
+        var result = DialogService.ShowReferenceColorDialog(string.Format(System.Globalization.CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName), allowIcons: true, existingNames: ExistingNames);
         return result is null ? null : new ReferenceItemInput(result.Name, result.ColorCode, result.IconKey);
     }
 

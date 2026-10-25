@@ -17,7 +17,7 @@ public sealed class TagsViewModel(IServiceScopeFactory scopeFactory, IDialogServ
     protected override ReferenceItemInput? ShowAddDialog()
     {
         var result = DialogService.ShowReferenceColorDialog(
-            string.Format(System.Globalization.CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName), allowIcons: true);
+            string.Format(System.Globalization.CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName), allowIcons: true, existingNames: ExistingNames);
         return result is null ? null : new ReferenceItemInput(result.Name, result.ColorCode, result.IconKey);
     }
     protected override ReferenceItemInput? ShowEditDialog(Tag item)

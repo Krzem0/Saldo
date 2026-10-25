@@ -7,10 +7,11 @@ public partial class NameDialog : Window
 {
     public string EnteredName { get; set; }
 
-    public NameDialog(string title, string? initialValue)
+    public NameDialog(string title, string? initialValue, IReadOnlyList<string>? existingNames = null)
     {
         InitializeComponent();
         Title = title;
+        NameSuggestions.ExistingNames = existingNames;
         EnteredName = initialValue ?? string.Empty;
         DataContext = this;
         SourceInitialized += OnSourceInitialized;

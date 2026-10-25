@@ -24,16 +24,16 @@ public sealed class WpfDialogService(INotificationService? notifications = null)
         return dialog.ShowDialog();
     }
 
-    public string? ShowNameDialog(string title, string? initialValue = null)
+    public string? ShowNameDialog(string title, string? initialValue = null, IReadOnlyList<string>? existingNames = null)
     {
-        var dialog = new NameDialog(title, initialValue);
+        var dialog = new NameDialog(title, initialValue, existingNames);
         SetOwner(dialog);
         return dialog.ShowDialog() == true ? dialog.EnteredName : null;
     }
 
-    public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null)
+    public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null, IReadOnlyList<string>? existingNames = null)
     {
-        var dialog = new ReferenceColorDialog(title, initialName, initialColorCode, allowIcons, initialIconKey);
+        var dialog = new ReferenceColorDialog(title, initialName, initialColorCode, allowIcons, initialIconKey, existingNames);
         SetOwner(dialog);
         return dialog.ShowDialog() == true ? dialog.Result : null;
     }

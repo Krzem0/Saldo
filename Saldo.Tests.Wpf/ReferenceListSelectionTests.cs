@@ -14,6 +14,22 @@ namespace Saldo.Tests.Wpf;
 public sealed class ReferenceListSelectionTests
 {
     [Fact]
+    public void Add_SuggestsNamesFromEntireDictionaryDespiteActiveSearch() => OnSta(() =>
+    {
+        using var provider = new ServiceCollection().BuildServiceProvider();
+        var dialogs = new UnusedDialogs();
+        var vm = new TestReferenceList(provider.GetRequiredService<IServiceScopeFactory>(), dialogs)
+        {
+            Rows = [new Tag { Id = 1, Name = "Zakupy" }, new Tag { Id = 2, Name = "Transport" }]
+        };
+        vm.LoadCommand.Execute(null);
+        vm.SearchText = "Zakupy";
+        Assert.Single(vm.Items);
+        vm.AddCommand.Execute(null);
+        Assert.Equal(new[] { "Zakupy", "Transport" }, dialogs.ExistingNames);
+    });
+
+    [Fact]
     public void Search_FiltersByNamePreservesVisibleSelectionAndRemainsActiveAfterReload() => OnSta(() =>
     {
         using var provider = new ServiceCollection().BuildServiceProvider();
@@ -90,8 +106,8 @@ public sealed class ReferenceListSelectionTests
         }
     });
 
-    private sealed class TestReferenceList(IServiceScopeFactory scopes)
-        : ReferenceListViewModel<Tag>(scopes, new UnusedDialogs(), new LocalizationService())
+    private sealed class TestReferenceList(IServiceScopeFactory scopes, IDialogService? dialogs = null)
+        : ReferenceListViewModel<Tag>(scopes, dialogs ?? new UnusedDialogs(), new LocalizationService())
     {
         public IReadOnlyList<Tag> Rows { get; set; } = [];
         protected override string EntityDisplayNameKey => "Entity_Tag";
@@ -109,9 +125,14 @@ public sealed class ReferenceListSelectionTests
 
     private sealed class UnusedDialogs : IDialogService
     {
+        public IReadOnlyList<string>? ExistingNames { get; private set; }
         public bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel) => throw new NotSupportedException();
-        public string? ShowNameDialog(string title, string? initialValue = null) => throw new NotSupportedException();
-        public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null)
+        public string? ShowNameDialog(string title, string? initialValue = null, IReadOnlyList<string>? existingNames = null)
+        {
+            ExistingNames = existingNames;
+            return null;
+        }
+        public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null, IReadOnlyList<string>? existingNames = null)
             => throw new NotSupportedException();
         public bool ConfirmDelete(string title, string message) => throw new NotSupportedException();
         public UnsavedChangesChoice ConfirmUnsavedChanges(string title, string message) => throw new NotSupportedException();

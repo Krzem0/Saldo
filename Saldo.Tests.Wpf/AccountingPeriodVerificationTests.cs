@@ -515,9 +515,9 @@ public sealed class AccountingPeriodVerificationTests
         }
         public void ShowMessage(string title, string message, MessageDialogKind kind) => Items.Add((title, message, kind));
         public bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel) => throw new NotSupportedException();
-        public string? ShowNameDialog(string title, string? initialValue = null) => throw new NotSupportedException();
+        public string? ShowNameDialog(string title, string? initialValue = null, IReadOnlyList<string>? existingNames = null) => throw new NotSupportedException();
         public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null,
-            bool allowIcons = false, string? initialIconKey = null) => throw new NotSupportedException();
+            bool allowIcons = false, string? initialIconKey = null, IReadOnlyList<string>? existingNames = null) => throw new NotSupportedException();
         public bool ConfirmDelete(string title, string message) => throw new NotSupportedException();
         public UnsavedChangesChoice ConfirmUnsavedChanges(string title, string message) => throw new NotSupportedException();
         public string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter) => throw new NotSupportedException();

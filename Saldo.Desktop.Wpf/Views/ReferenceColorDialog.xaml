@@ -26,10 +26,15 @@
                    Foreground="{DynamicResource PrimaryTextBrush}"
                    FontWeight="SemiBold"
                    Margin="0,0,0,4"/>
-        <TextBox x:Name="NameBox" Grid.Row="1" MinWidth="260"
-                 Padding="8,5"
-                 TextChanged="NameBox_TextChanged"
-                 Text="{Binding EnteredName, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}"/>
+        <StackPanel Grid.Row="1" Width="300">
+            <TextBox x:Name="NameBox" MinWidth="260"
+                     Padding="8,5"
+                     TextChanged="NameBox_TextChanged"
+                     Text="{Binding EnteredName, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}"/>
+            <controls:ExistingNameSuggestions x:Name="NameSuggestions"
+                Query="{Binding Text, ElementName=NameBox}"
+                Heading="{Binding Source={StaticResource Localization}, Path=[ReferenceList_SimilarNames]}"/>
+            </StackPanel>
         <TextBlock x:Name="NameErrorText" Grid.Row="2"
                    Text="{Binding Source={StaticResource Localization}, Path=[Validation_NameRequired]}"
                    Foreground="{DynamicResource ValidationTextBrush}"

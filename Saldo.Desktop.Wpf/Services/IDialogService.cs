@@ -11,9 +11,9 @@ public interface IDialogService
     bool? ShowTransactionTemplate(TransactionTemplateFormViewModel viewModel) => throw new NotSupportedException();
 
     /// <summary>Shows a simple single-field name input dialog. Returns the entered name or null when cancelled.</summary>
-    string? ShowNameDialog(string title, string? initialValue = null);
+    string? ShowNameDialog(string title, string? initialValue = null, IReadOnlyList<string>? existingNames = null);
 
-    ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null);
+    ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null, IReadOnlyList<string>? existingNames = null);
 
     bool ConfirmDelete(string title, string message);
     bool ConfirmAccountingPeriodChange(string title, string message, string actionLabel) => throw new NotSupportedException();

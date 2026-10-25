@@ -253,13 +253,13 @@ public sealed class TransactionTemplatesTests
         public void ShowMessage(string title, string message) => Messages.Add((title, message, null));
         public void ShowMessage(string title, string message, MessageDialogKind kind) => Messages.Add((title, message, kind));
         public bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel) => TransactionCallback?.Invoke(viewModel);
-        public string? ShowNameDialog(string title, string? initialValue = null)
+        public string? ShowNameDialog(string title, string? initialValue = null, IReadOnlyList<string>? existingNames = null)
         {
             NameInitialValue = initialValue;
             return NameResult;
         }
         public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null,
-            string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null) => ReferenceResult;
+            string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null, IReadOnlyList<string>? existingNames = null) => ReferenceResult;
         public bool ConfirmDelete(string title, string message) => DeleteConfirmed;
         public UnsavedChangesChoice ConfirmUnsavedChanges(string title, string message) => UnsavedChoice;
         public string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter) => BackupPath;

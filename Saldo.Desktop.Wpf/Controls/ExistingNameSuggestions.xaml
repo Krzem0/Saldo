@@ -1,0 +1,28 @@
+<UserControl x:Class="Saldo.Desktop.Wpf.Controls.ExistingNameSuggestions"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root" Visibility="Collapsed" Focusable="False">
+    <Border Margin="0,8,0,0" CornerRadius="4"
+            BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="1"
+            Background="{DynamicResource SurfaceBrush}">
+        <StackPanel>
+            <Border Background="{DynamicResource ControlBrush}" CornerRadius="3,3,0,0"
+                    BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="0,0,0,1"
+                    Padding="10,7">
+                <TextBlock Text="{Binding Heading, ElementName=Root}" FontWeight="Bold" FontSize="11"
+                           Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
+            </Border>
+            <ScrollViewer MaxHeight="140" Margin="10,6,10,8" VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled" Focusable="False">
+                <ItemsControl x:Name="MatchesList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,2"
+                                       Foreground="{DynamicResource PrimaryTextBrush}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </StackPanel>
+    </Border>
+</UserControl>

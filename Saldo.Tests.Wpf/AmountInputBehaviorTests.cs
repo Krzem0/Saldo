@@ -26,6 +26,7 @@ public sealed class AmountInputBehaviorTests
         var state = new AmountState { Raw = raw };
         var box = CreateBox(state);
         Focus(box, true);
+        box.Text = raw;
         box.Select(selectionStart, selectionLength);
         using var source = new HwndSource(new HwndSourceParameters("Amount keypad verification")
             { Width = 1, Height = 1, WindowStyle = 0 });
@@ -52,6 +53,7 @@ public sealed class AmountInputBehaviorTests
         var state = new AmountState { Raw = "25" };
         var box = CreateBox(state);
         Focus(box, true);
+        box.Text = "25";
         box.CaretIndex = 2;
         void TypeSeparator()
         {
@@ -73,10 +75,11 @@ public sealed class AmountInputBehaviorTests
     });
 
     [Theory]
-    [InlineData("pl-PL", "25", "25")]
-    [InlineData("pl-PL", "1234,5", "1234,5")]
-    [InlineData("en-US", "1234.5", "1234.5")]
-    public void FocusChanges_FormatPresentationWithoutChangingBoundAmount(string culture, string raw, string editable)
+    [InlineData("pl-PL", "11")]
+    [InlineData("pl-PL", "1234,5")]
+    [InlineData("en-US", "11")]
+    [InlineData("en-US", "1234.5")]
+    public void FocusChanges_PreserveFormattedAmountAndSelectionWithoutChangingBoundAmount(string culture, string raw)
         => OnSta(() =>
         {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
@@ -84,14 +87,58 @@ public sealed class AmountInputBehaviorTests
             var box = CreateBox(state);
             var amount = decimal.Parse(raw, CultureInfo.CurrentCulture);
             Assert.Equal(amount.ToString("N2", CultureInfo.CurrentCulture), box.Text);
+            var fractionStart = box.Text.IndexOf(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator,
+                StringComparison.Ordinal) + 1;
+            box.Select(fractionStart, 2);
             Focus(box, true);
-            Assert.Equal(editable, box.Text);
+            Assert.Equal(amount.ToString("N2", CultureInfo.CurrentCulture), box.Text);
+            Assert.Equal(fractionStart, box.SelectionStart);
+            Assert.Equal(2, box.SelectionLength);
             Focus(box, false);
             Assert.Equal(raw, state.Raw);
             Assert.Equal(0, state.Changes);
             Assert.Equal(amount, decimal.Parse(state.Raw, NumberStyles.Number, CultureInfo.CurrentCulture));
             Assert.DoesNotContain("zł", state.Raw);
         });
+
+    [Theory]
+    [InlineData("pl-PL", "11")]
+    [InlineData("en-US", "11")]
+    [InlineData("pl-PL", "1234")]
+    [InlineData("en-US", "1234")]
+    public void ReenteringAmount_AllowsReplacingFractionAndEditingGroupedInteger(string culture, string raw) => OnSta(() =>
+    {
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+        var state = new AmountState();
+        var box = CreateBox(state);
+        Focus(box, true);
+        box.Text = raw;
+        Focus(box, false);
+        var formatted = decimal.Parse(raw).ToString("N2");
+        var fractionStart = formatted.IndexOf(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator,
+            StringComparison.Ordinal) + 1;
+        box.Select(fractionStart, 2);
+        Focus(box, true);
+        Assert.Equal(formatted, box.Text);
+        Assert.Equal(fractionStart, box.SelectionStart);
+
+        var input = new TextCompositionEventArgs(Keyboard.PrimaryDevice,
+            new TextComposition(InputManager.Current, box, "75"))
+            { RoutedEvent = TextCompositionManager.PreviewTextInputEvent };
+        box.RaiseEvent(input);
+        Assert.False(input.Handled);
+        box.SelectedText = "75";
+        Assert.Equal(decimal.Parse(raw) + 0.75m, decimal.Parse(state.Raw, NumberStyles.Number));
+
+        box.Select(0, 1);
+        var integerInput = new TextCompositionEventArgs(Keyboard.PrimaryDevice,
+            new TextComposition(InputManager.Current, box, "2"))
+            { RoutedEvent = TextCompositionManager.PreviewTextInputEvent };
+        box.RaiseEvent(integerInput);
+        Assert.False(integerInput.Handled);
+        Focus(box, false);
+        Assert.EndsWith("75", box.Text);
+    });
 
     [Fact]
     public void TypingFractionThenBlurring_PreservesRawInputAndAllowsReset() => OnSta(() =>

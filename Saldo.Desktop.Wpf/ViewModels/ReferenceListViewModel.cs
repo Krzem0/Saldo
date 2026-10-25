@@ -91,9 +91,11 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         => UpdateCoreAsync(scope, item, input.Name.Trim(), input.ColorCode, ct);
     protected abstract Task DeleteCoreAsync(IServiceScope scope, T item, CancellationToken ct);
 
+    protected IReadOnlyList<string> ExistingNames => _allItems.Select(GetName).ToArray();
+
     protected virtual ReferenceItemInput? ShowAddDialog()
     {
-        var name = DialogService.ShowNameDialog(string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName));
+        var name = DialogService.ShowNameDialog(string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), EntityDisplayName), existingNames: ExistingNames);
         return name is null ? null : new ReferenceItemInput(name);
     }
 

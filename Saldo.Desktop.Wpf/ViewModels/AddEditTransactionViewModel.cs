@@ -488,7 +488,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
     private async Task AddTagAsync()
     {
         var input = _dialogService.ShowReferenceColorDialog(
-            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Tag")), allowIcons: true);
+            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Tag")), allowIcons: true, existingNames: Tags.Select(item => item.Name).ToArray());
         if (input is null) return;
         try
         {
@@ -521,7 +521,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
     private async Task AddCategoryAsync()
     {
         var categoryInput = _dialogService.ShowReferenceColorDialog(
-            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Category")), allowIcons: true);
+            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Category")), allowIcons: true, existingNames: Categories.Select(item => item.Name).ToArray());
         if (categoryInput is null) return;
 
         try
@@ -541,7 +541,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
     private async Task AddPartyAsync(bool payer)
     {
         var name = _dialogService.ShowNameDialog(
-            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Party")));
+            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Party")), existingNames: Parties.Select(item => item.Name).ToArray());
         if (name is null) return;
 
         try
@@ -571,7 +571,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
     private async Task AddLocationAsync()
     {
         var name = _dialogService.ShowNameDialog(
-            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Location")));
+            string.Format(CultureInfo.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Location")), existingNames: Locations.Select(item => item.Name).ToArray());
         if (name is null) return;
 
         try

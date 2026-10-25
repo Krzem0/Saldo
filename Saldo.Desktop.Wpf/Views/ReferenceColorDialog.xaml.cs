@@ -16,10 +16,11 @@ public partial class ReferenceColorDialog : Window
 
     public string EnteredName { get; set; }
 
-    public ReferenceColorDialog(string title, string? initialName, string? initialColorCode, bool allowIcons = false, string? initialIconKey = null)
+    public ReferenceColorDialog(string title, string? initialName, string? initialColorCode, bool allowIcons = false, string? initialIconKey = null, IReadOnlyList<string>? existingNames = null)
     {
         InitializeComponent();
         Title = title;
+        NameSuggestions.ExistingNames = existingNames;
         EnteredName = initialName ?? string.Empty;
 
         _localization = (ILocalizationService)System.Windows.Application.Current.Resources["Localization"];

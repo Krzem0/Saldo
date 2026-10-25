@@ -224,7 +224,7 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
 
     private async Task AddCategoryAsync()
     {
-        var input = _dialogs.ShowReferenceColorDialog(string.Format(Localization.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Category")), allowIcons: true);
+        var input = _dialogs.ShowReferenceColorDialog(string.Format(Localization.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Category")), allowIcons: true, existingNames: Categories.Select(item => item.Name).ToArray());
         if (input is null) return;
         await AddReferenceAsync(async services =>
         {
@@ -235,7 +235,7 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
     }
     private async Task AddPartyAsync(bool payer)
     {
-        var name = _dialogs.ShowNameDialog(string.Format(Localization.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Party")));
+        var name = _dialogs.ShowNameDialog(string.Format(Localization.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Party")), existingNames: Parties.Select(item => item.Name).ToArray());
         if (name is null) return;
         await AddReferenceAsync(async services =>
         {
@@ -248,7 +248,7 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
     }
     private async Task AddLocationAsync()
     {
-        var name = _dialogs.ShowNameDialog(string.Format(Localization.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Location")));
+        var name = _dialogs.ShowNameDialog(string.Format(Localization.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Location")), existingNames: Locations.Select(item => item.Name).ToArray());
         if (name is null) return;
         await AddReferenceAsync(async services =>
         {
@@ -259,7 +259,7 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
     }
     private async Task AddTagAsync()
     {
-        var input = _dialogs.ShowReferenceColorDialog(string.Format(Localization.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Tag")), allowIcons: true);
+        var input = _dialogs.ShowReferenceColorDialog(string.Format(Localization.CurrentCulture, T("AddEntityTitleTemplate"), T("Entity_Tag")), allowIcons: true, existingNames: Tags.Select(item => item.Name).ToArray());
         if (input is null) return;
         await AddReferenceAsync(async services =>
         {

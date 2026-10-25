@@ -73,10 +73,8 @@ public static partial class AmountInputBehavior
     {
         var textBox = (TextBox)sender;
         textBox.SetValue(IsEditingProperty, true);
-        var raw = GetRawText(textBox);
-        SetPresentation(textBox, decimal.TryParse(raw, NumberStyles.Number, CultureInfo.CurrentCulture, out var amount)
-            ? amount.ToString("0.##", CultureInfo.CurrentCulture) : raw);
-        textBox.CaretIndex = textBox.Text.Length;
+        // Keep the displayed amount and selection intact so a mouse click lands
+        // on the digits the user saw, including the two fractional digits.
     }
 
     private static void OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -165,6 +163,9 @@ public static partial class AmountInputBehavior
         }
 
         var separator = Regex.Escape(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+        // Focused amounts retain their formatted thousands separators as well.
+        var groupSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator;
+        if (!string.IsNullOrEmpty(groupSeparator)) value = value.Replace(groupSeparator, string.Empty);
         return new Regex($"^\\d*(?:{separator}\\d{{0,2}})?$").IsMatch(value);
     }
 }

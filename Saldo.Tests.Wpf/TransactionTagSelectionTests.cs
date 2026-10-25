@@ -411,8 +411,8 @@ public sealed class TransactionTagSelectionTests
             return unsavedChanges;
         }
         public bool? ShowAddEditTransaction(AddEditTransactionViewModel viewModel) => throw new NotSupportedException();
-        public string? ShowNameDialog(string title, string? initialValue = null) => name;
-        public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null)
+        public string? ShowNameDialog(string title, string? initialValue = null, IReadOnlyList<string>? existingNames = null) => name;
+        public ReferenceColorDialogResult? ShowReferenceColorDialog(string title, string? initialName = null, string? initialColorCode = null, bool allowIcons = false, string? initialIconKey = null, IReadOnlyList<string>? existingNames = null)
             => name is null ? null : new(name, colorCode, iconKey);
         public bool ConfirmDelete(string title, string message) => throw new NotSupportedException();
         public string? ShowBackupSaveDialog(string title, string suggestedFileName, string filter) => throw new NotSupportedException();
