@@ -58,10 +58,13 @@ to closed captures a fresh snapshot.
 ## Monthly GUI
 
 - The summary bar shows the selected month's open/closed state, or a checking,
-  changing, or unknown-state message. A second line retains the integrity result
-  after any warning dialog is dismissed.
+  changing, or unknown-state message. Open periods use green, closed periods use
+  blue, with theme-aware backgrounds and text. The text labels also identify the
+  state independently of color. A second line appears only for integrity problems
+  or failed reads; successful verification has no extra message.
 - The action button switches between **Close month** and **Reopen month** based
-  on the loaded state. The refresh button reloads transactions and period status.
+  on the loaded state. **Check again** reloads data and status and appears only
+  when a problem is reported; there is no always-visible refresh button.
 - Closing and reopening require an owned, themed confirmation dialog naming the
   month and explaining the effect. Cancel is the default Enter/Escape action;
   cancellation writes nothing and does not create an absent period.

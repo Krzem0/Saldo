@@ -223,13 +223,13 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         : _periodLoadFailed ? T("AccountingPeriod.VerificationFailed")
         : _periodVerification?.Status switch
         {
-            AccountingPeriodVerificationStatus.Valid => T("AccountingPeriod_IntegrityValid"),
             AccountingPeriodVerificationStatus.Mismatch => T("AccountingPeriod_IntegrityMismatch") + " "
                 + string.Join(", ", _periodVerification.Differences.Select(difference => T($"AccountingPeriod_Difference_{difference}"))),
             AccountingPeriodVerificationStatus.MissingSnapshot => T("AccountingPeriod_IntegrityMissing"),
             AccountingPeriodVerificationStatus.UnsupportedHashVersion => T("AccountingPeriod_IntegrityUnsupported"),
             _ => string.Empty
         };
+    public bool HasPeriodIssue => !IsLoading && !IsChangingPeriod && !string.IsNullOrEmpty(PeriodIntegrityText);
 
     private void SetPeriodVerification(AccountingPeriodVerificationDto? verification, bool failed = false)
     {
@@ -246,6 +246,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         OnPropertyChanged(nameof(PeriodStateText));
         OnPropertyChanged(nameof(PeriodActionText));
         OnPropertyChanged(nameof(PeriodIntegrityText));
+        OnPropertyChanged(nameof(HasPeriodIssue));
         CommandManager.InvalidateRequerySuggested();
     }
 

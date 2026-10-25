@@ -93,6 +93,10 @@ public sealed class TransactionListViewTests
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
                 Assert.Equal(((LocalizationService)view.Resources["Localization"])["AccountingPeriod_Open"], periodState.Text);
                 Assert.True(periodAction.IsEnabled);
+                Assert.Equal(((SolidColorBrush)view.Resources["SuccessBackgroundBrush"]).Color,
+                    ((SolidColorBrush)((Border)periodState.Parent).Background).Color);
+                Assert.Equal(Visibility.Collapsed, ((Button)view.FindName("PeriodRetryButton")).Visibility);
+                Assert.Equal(Visibility.Collapsed, ((TextBlock)view.FindName("PeriodIntegrityLabel")).Visibility);
                 Assert.Equal(2, grid.Items.Count);
                 Assert.True(vm.IsAllFilterActive);
                 var buttons = Descendants(view).OfType<Button>().ToList();

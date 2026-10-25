@@ -369,21 +369,58 @@
                 <Grid Grid.Column="0" Margin="0,0,12,0">
                     <StackPanel VerticalAlignment="Center">
                         <WrapPanel>
-                            <Border Padding="7,4" Margin="0,0,6,2" CornerRadius="4"
-                                    Background="{DynamicResource ControlBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
-                                <TextBlock x:Name="PeriodStateLabel" Text="{Binding PeriodStateText}" FontSize="12" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <Border Padding="7,4" Margin="0,0,6,2" CornerRadius="4" BorderThickness="1">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{DynamicResource ControlBrush}"/>
+                                        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}"/>
+                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPeriodClosed}" Value="False">
+                                                <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessTextBrush}"/>
+                                                <Setter Property="TextElement.Foreground" Value="{DynamicResource SuccessTextBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsPeriodClosed}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource MessageInformationBackgroundBrush}"/>
+                                                <Setter Property="BorderBrush" Value="{DynamicResource MessageInformationTextBrush}"/>
+                                                <Setter Property="TextElement.Foreground" Value="{DynamicResource MessageInformationTextBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock x:Name="PeriodStateLabel" Text="{Binding PeriodStateText}" FontSize="12" FontWeight="SemiBold"/>
                             </Border>
                             <Button x:Name="PeriodActionButton" Content="{Binding PeriodActionText}" Command="{Binding ChangePeriodCommand}"
                                     backup:DatabaseWriteGuard.IsWriteAction="True"
                                     Style="{StaticResource SecondaryActionButtonStyle}" Padding="8,4" Margin="0,0,6,2"/>
-                            <Button Content="↻" Command="{Binding LoadCommand}" Style="{StaticResource SecondaryActionButtonStyle}"
-                                    Padding="6,3" Margin="0,0,0,2" FontSize="16"
-                                    ToolTip="{Binding Source={StaticResource Localization}, Path=[AccountingPeriod_Refresh]}"
-                                    AutomationProperties.Name="{Binding Source={StaticResource Localization}, Path=[AccountingPeriod_Refresh]}"/>
+                            <Button x:Name="PeriodRetryButton" Content="{Binding Source={StaticResource Localization}, Path=[AccountingPeriod_Retry]}"
+                                    Command="{Binding LoadCommand}" Padding="8,4" Margin="0,0,0,2">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding HasPeriodIssue}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                         </WrapPanel>
                         <TextBlock x:Name="PeriodIntegrityLabel" Text="{Binding PeriodIntegrityText}" TextWrapping="Wrap" FontSize="11"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                   Foreground="{DynamicResource SecondaryTextBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasPeriodIssue}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </StackPanel>
                 </Grid>
                 <Grid Grid.Column="1" x:Name="SummaryButtons" VerticalAlignment="Center">

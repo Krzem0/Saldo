@@ -61,6 +61,7 @@ public sealed class AccountingPeriodVerificationTests
         Assert.False(viewModel.DeleteCommand.CanExecute(null));
         Assert.Equal(scenario != "failure", viewModel.ChangePeriodCommand.CanExecute(null));
         Assert.NotEmpty(viewModel.PeriodIntegrityText);
+        Assert.True(viewModel.HasPeriodIssue);
     });
 
     [Theory]
@@ -95,7 +96,8 @@ public sealed class AccountingPeriodVerificationTests
         Assert.True(viewModel.IsPeriodClosed);
         Assert.Equal(localization["AccountingPeriod_Closed"], viewModel.PeriodStateText);
         Assert.Equal(localization["AccountingPeriod_Reopen"], viewModel.PeriodActionText);
-        Assert.Equal(localization["AccountingPeriod_IntegrityValid"], viewModel.PeriodIntegrityText);
+        Assert.Empty(viewModel.PeriodIntegrityText);
+        Assert.False(viewModel.HasPeriodIssue);
         Assert.False(viewModel.EditCommand.CanExecute(null));
         Assert.False(viewModel.DeleteCommand.CanExecute(null));
         Assert.True(viewModel.AddCommand.CanExecute(null));

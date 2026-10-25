@@ -69,8 +69,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="76"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="0,0,0,1" Padding="24,0">
@@ -94,7 +94,9 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Padding="24,6" Background="{DynamicResource SurfaceBrush}" DataContext="{StaticResource AutomaticBackup}">
+        <Border Grid.Row="2" Padding="24,6" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource SurfaceBorderBrush}" BorderThickness="0,1,0,0"
+                DataContext="{StaticResource AutomaticBackup}">
             <DockPanel>
                 <Button DockPanel.Dock="Right" Content="{Binding Source={StaticResource Localization}, Path=[AutoBackup_Retry]}"
                         Command="{Binding RetryCommand}" Margin="12,0,0,0" Style="{StaticResource SecondaryActionButtonStyle}"
@@ -103,7 +105,7 @@
                            VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"/>
             </DockPanel>
         </Border>
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="196"/>
                 <ColumnDefinition Width="*"/>

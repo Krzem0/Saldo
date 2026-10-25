@@ -200,8 +200,7 @@
   <data name="AccountingPeriod_Changing" xml:space="preserve"><value>Changing period state…</value></data>
   <data name="AccountingPeriod_Close" xml:space="preserve"><value>Close month</value></data>
   <data name="AccountingPeriod_Reopen" xml:space="preserve"><value>Reopen month</value></data>
-  <data name="AccountingPeriod_Refresh" xml:space="preserve"><value>Refresh data and check the period state</value></data>
-  <data name="AccountingPeriod_IntegrityValid" xml:space="preserve"><value>Data matches the closing snapshot.</value></data>
+  <data name="AccountingPeriod_Retry" xml:space="preserve"><value>Check again</value></data>
   <data name="AccountingPeriod_IntegrityMismatch" xml:space="preserve"><value>Data mismatch:</value></data>
   <data name="AccountingPeriod_IntegrityMissing" xml:space="preserve"><value>Closing snapshot is incomplete or missing.</value></data>
   <data name="AccountingPeriod_IntegrityUnsupported" xml:space="preserve"><value>Unsupported data hash version.</value></data>
