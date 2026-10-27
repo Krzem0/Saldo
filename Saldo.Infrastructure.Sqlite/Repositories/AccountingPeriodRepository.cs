@@ -30,18 +30,33 @@ public sealed class AccountingPeriodRepository(SaldoDbContext context) : IAccoun
             if (existing is { IsClosed: true }) return;
             var transactions = await ReadTransactionsAsync(month, ct);
             var snapshot = AccountingPeriodSnapshot.Calculate(month, transactions, ct);
-            await context.Database.ExecuteSqlInterpolatedAsync($"""
-                INSERT INTO AccountingPeriods (StartDate, EndDateExclusive, IsClosed,
-                    ClosedIncomeTotal, ClosedExpenseTotal, ClosedTransactionCount, ClosedDataHash, HashVersion)
-                VALUES ({month.StartDate}, {month.EndDateExclusive}, 1,
-                    {snapshot.IncomeTotal}, {snapshot.ExpenseTotal}, {snapshot.TransactionCount}, {snapshot.DataHash}, {snapshot.HashVersion})
-                ON CONFLICT (StartDate) DO UPDATE SET IsClosed = 1,
-                    ClosedIncomeTotal = excluded.ClosedIncomeTotal,
-                    ClosedExpenseTotal = excluded.ClosedExpenseTotal,
-                    ClosedTransactionCount = excluded.ClosedTransactionCount,
-                    ClosedDataHash = excluded.ClosedDataHash,
-                    HashVersion = excluded.HashVersion;
-                """, ct);
+            if (existing is not null)
+            {
+                // Update an existing month without consuming another generated ID.
+                await context.AccountingPeriods.Where(period => period.StartDate == month.StartDate)
+                    .ExecuteUpdateAsync(update => update
+                        .SetProperty(period => period.IsClosed, true)
+                        .SetProperty(period => period.ClosedIncomeTotal, snapshot.IncomeTotal)
+                        .SetProperty(period => period.ClosedExpenseTotal, snapshot.ExpenseTotal)
+                        .SetProperty(period => period.ClosedTransactionCount, snapshot.TransactionCount)
+                        .SetProperty(period => period.ClosedDataHash, snapshot.DataHash)
+                        .SetProperty(period => period.HashVersion, snapshot.HashVersion), ct);
+            }
+            else
+            {
+                await context.Database.ExecuteSqlInterpolatedAsync($"""
+                    INSERT INTO AccountingPeriods (StartDate, EndDateExclusive, IsClosed,
+                        ClosedIncomeTotal, ClosedExpenseTotal, ClosedTransactionCount, ClosedDataHash, HashVersion)
+                    VALUES ({month.StartDate}, {month.EndDateExclusive}, 1,
+                        {snapshot.IncomeTotal}, {snapshot.ExpenseTotal}, {snapshot.TransactionCount}, {snapshot.DataHash}, {snapshot.HashVersion})
+                    ON CONFLICT (StartDate) DO UPDATE SET IsClosed = 1,
+                        ClosedIncomeTotal = excluded.ClosedIncomeTotal,
+                        ClosedExpenseTotal = excluded.ClosedExpenseTotal,
+                        ClosedTransactionCount = excluded.ClosedTransactionCount,
+                        ClosedDataHash = excluded.ClosedDataHash,
+                        HashVersion = excluded.HashVersion;
+                    """, ct);
+            }
         }
         else
         {

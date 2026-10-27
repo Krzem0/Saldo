@@ -121,11 +121,14 @@ public sealed class TransactionRepository : ITransactionRepository
     private Task EnsurePeriodAsync(DateOnly date, CancellationToken ct)
     {
         var period = CalendarMonth.FromDate(date);
-        // The unique index arbitrates concurrent creation. Never replace an existing
-        // period: its state and future closing snapshot must remain untouched.
+        // Filter existing months before inserting so AUTOINCREMENT is not consumed
+        // by every transaction save. The write transaction serializes creation;
+        // the unique index remains a final guard against duplicate months.
         return _context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO AccountingPeriods (StartDate, EndDateExclusive, IsClosed)
-            VALUES ({period.StartDate}, {period.EndDateExclusive}, 0)
+            SELECT {period.StartDate}, {period.EndDateExclusive}, 0
+            WHERE NOT EXISTS (
+                SELECT 1 FROM AccountingPeriods WHERE StartDate = {period.StartDate})
             ON CONFLICT (StartDate) DO NOTHING;
             """, ct);
     }

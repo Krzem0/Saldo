@@ -91,11 +91,12 @@ public sealed class TransactionListViewTests
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
                 var grid = (DataGrid)view.FindName("TransactionGrid");
                 var summary = vm.Summary;
-                var periodState = (TextBlock)view.FindName("PeriodStateLabel");
+                var periodState = (MahApps.Metro.IconPacks.PackIconMaterial)view.FindName("PeriodStateIcon");
                 var periodAction = (Button)view.FindName("PeriodActionButton");
                 System.Windows.Input.CommandManager.InvalidateRequerySuggested();
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
-                Assert.Equal(((LocalizationService)view.Resources["Localization"])["AccountingPeriod_Open"], periodState.Text);
+                Assert.Equal(((LocalizationService)view.Resources["Localization"])["AccountingPeriod_Open"], periodState.ToolTip);
+                Assert.Equal(MahApps.Metro.IconPacks.PackIconMaterialKind.LockOpenVariantOutline, periodState.Kind);
                 Assert.True(periodAction.IsEnabled);
                 Assert.Equal(Visibility.Visible, ((Border)view.FindName("PeriodStateGroup")).Visibility);
                 Assert.Equal(((SolidColorBrush)view.Resources["SuccessBackgroundBrush"]).Color,

@@ -13,6 +13,32 @@ namespace Saldo.Tests.Integration.Repositories;
 public sealed class AccountingPeriodTests
 {
     [Fact]
+    public async Task ExistingMonthWrites_DoNotConsumePeriodIds()
+    {
+        using var db = new TestDatabase(useMigrations: true);
+        var categoryId = await AddCategoryAsync(db.Context);
+        var transactions = new TransactionRepository(db.Context);
+        var periods = new AccountingPeriodRepository(db.Context);
+        var transaction = MakeTransaction(categoryId, new DateOnly(2026, 1, 10));
+        await transactions.AddAsync(transaction);
+        var januaryId = await db.Context.AccountingPeriods.Select(period => period.Id).SingleAsync();
+
+        await transactions.AddAsync(MakeTransaction(categoryId, new DateOnly(2026, 1, 20)));
+        transaction.Amount = 123m;
+        await transactions.UpdateAsync(transaction);
+        var january = Saldo.Domain.ValueObjects.CalendarMonth.FromDate(transaction.Date);
+        await periods.SetClosedAsync(january, true);
+        await periods.SetClosedAsync(january, false);
+        await periods.SetClosedAsync(january, true);
+        await transactions.AddAsync(MakeTransaction(categoryId, new DateOnly(2026, 2, 1)));
+
+        var saved = await db.Context.AccountingPeriods.AsNoTracking().OrderBy(period => period.StartDate).ToListAsync();
+        Assert.Equal(new[] { januaryId, januaryId + 1 }, saved.Select(period => period.Id));
+        Assert.True(saved[0].IsClosed);
+        Assert.Equal(2, saved[0].ClosedTransactionCount);
+    }
+
+    [Fact]
     public async Task FreshDatabaseAndMonthReads_DoNotCreatePeriods()
     {
         using var db = new TestDatabase(useMigrations: true);

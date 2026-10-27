@@ -193,13 +193,14 @@
   <data name="AccountingPeriod_Difference_ExpenseTotal" xml:space="preserve"><value>suma wydatków</value></data>
   <data name="AccountingPeriod_Difference_TransactionCount" xml:space="preserve"><value>liczba transakcji</value></data>
   <data name="AccountingPeriod_Difference_DataHash" xml:space="preserve"><value>odcisk danych</value></data>
-  <data name="AccountingPeriod_Open" xml:space="preserve"><value>Okres otwarty</value></data>
-  <data name="AccountingPeriod_Closed" xml:space="preserve"><value>Okres zamknięty</value></data>
+  <data name="AccountingPeriod_Month" xml:space="preserve"><value>Miesiąc</value></data>
+  <data name="AccountingPeriod_Open" xml:space="preserve"><value>Miesiąc otwarty</value></data>
+  <data name="AccountingPeriod_Closed" xml:space="preserve"><value>Miesiąc zamknięty</value></data>
   <data name="AccountingPeriod_Unknown" xml:space="preserve"><value>Stan okresu nieznany</value></data>
   <data name="AccountingPeriod_Loading" xml:space="preserve"><value>Sprawdzanie okresu…</value></data>
   <data name="AccountingPeriod_Changing" xml:space="preserve"><value>Zmiana stanu okresu…</value></data>
-  <data name="AccountingPeriod_Close" xml:space="preserve"><value>Zamknij miesiąc</value></data>
-  <data name="AccountingPeriod_Reopen" xml:space="preserve"><value>Otwórz ponownie</value></data>
+  <data name="AccountingPeriod_Close" xml:space="preserve"><value>Zamknij okres</value></data>
+  <data name="AccountingPeriod_Reopen" xml:space="preserve"><value>Otwórz okres</value></data>
   <data name="AccountingPeriod_Retry" xml:space="preserve"><value>Sprawdź ponownie</value></data>
   <data name="AccountingPeriod_IntegrityMismatch" xml:space="preserve"><value>Niezgodność danych:</value></data>
   <data name="AccountingPeriod_IntegrityMissing" xml:space="preserve"><value>Brak kompletnego podsumowania zamknięcia.</value></data>

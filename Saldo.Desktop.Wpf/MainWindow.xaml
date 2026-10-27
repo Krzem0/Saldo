@@ -204,7 +204,17 @@
                 </DockPanel>
             </Border>
 
-            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Margin="18,16,18,18" ClipToBounds="True">
+            <Border Grid.Column="1" Background="{DynamicResource SurfaceBrush}" CornerRadius="8" ClipToBounds="True">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Margin" Value="18,16,18,18"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsTransactionsSelected}" Value="True">
+                                <Setter Property="Margin" Value="6"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <ContentControl Content="{Binding CurrentPage}"/>
             </Border>
         </Grid>

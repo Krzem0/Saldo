@@ -226,11 +226,32 @@
                         <ColumnDefinition Width="1"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="PeriodStateLabel" Text="{Binding PeriodStateText}" FontSize="12" FontWeight="SemiBold"
-                               Margin="9,6" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" Margin="9,6" ToolTip="{Binding PeriodStateText}"
+                                ToolTipService.InitialShowDelay="250">
+                    <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[AccountingPeriod_Month]}"
+                               FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <icons:PackIconMaterial x:Name="PeriodStateIcon" Width="16" Height="16" Margin="6,0,0,0"
+                                            VerticalAlignment="Center" ToolTip="{Binding PeriodStateText}"
+                                            ToolTipService.InitialShowDelay="250"
+                                            AutomationProperties.Name="{Binding PeriodStateText}"
+                                            Foreground="{Binding Path=(TextElement.Foreground), ElementName=PeriodStateGroup}">
+                        <icons:PackIconMaterial.Style>
+                            <Style TargetType="icons:PackIconMaterial">
+                                <Setter Property="Kind" Value="LockOpenVariantOutline"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsPeriodClosed}" Value="True">
+                                        <Setter Property="Kind" Value="LockOutline"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </icons:PackIconMaterial.Style>
+                    </icons:PackIconMaterial>
+                    </StackPanel>
                     <Border Grid.Column="1" Margin="0,5" Opacity="0.5"
                             Background="{Binding BorderBrush, ElementName=PeriodStateGroup}"/>
-                    <Button x:Name="PeriodActionButton" Grid.Column="2" Content="{Binding PeriodActionText}" Command="{Binding ChangePeriodCommand}"
+                    <Button x:Name="PeriodActionButton" Grid.Column="2" Command="{Binding ChangePeriodCommand}"
+                            ToolTip="{Binding PeriodActionText}" AutomationProperties.Name="{Binding PeriodActionText}"
+                            ToolTipService.InitialShowDelay="250"
                             backup:DatabaseWriteGuard.IsWriteAction="True" Padding="9,6" Background="Transparent" BorderThickness="0"
                             Foreground="{Binding Path=(TextElement.Foreground), ElementName=PeriodStateGroup}">
                         <Button.Style>
@@ -258,6 +279,19 @@
                                 </Setter>
                             </Style>
                         </Button.Style>
+                        <icons:PackIconMaterial Width="16" Height="16" VerticalAlignment="Center" IsHitTestVisible="False"
+                                                Foreground="{Binding Foreground, ElementName=PeriodActionButton}">
+                            <icons:PackIconMaterial.Style>
+                                <Style TargetType="icons:PackIconMaterial">
+                                    <Setter Property="Kind" Value="ArchiveArrowDownOutline"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPeriodClosed}" Value="True">
+                                            <Setter Property="Kind" Value="ArchiveArrowUpOutline"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </icons:PackIconMaterial.Style>
+                        </icons:PackIconMaterial>
                     </Button>
                 </Grid>
             </Border>
@@ -494,6 +528,8 @@
 
                 <Button Grid.Column="0" Background="{DynamicResource SuccessBackgroundBrush}" Style="{StaticResource SummaryFilterButtonStyle}" Command="{Binding ShowIncomeCommand}" Tag="{Binding IsIncomeFilterActive}" Margin="0,0,4,0">
                     <StackPanel Orientation="Horizontal">
+                        <icons:PackIconMaterial Kind="ArrowDown" Width="16" Height="16" Margin="0,0,6,0"
+                                                VerticalAlignment="Center" Foreground="{DynamicResource SuccessTextBrush}" IsHitTestVisible="False"/>
                         <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Income]}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,6,0"/>
                         <TextBlock Foreground="{DynamicResource SuccessTextBrush}" FontWeight="Bold">
                             <TextBlock.Text>
@@ -508,6 +544,8 @@
 
                 <Button Grid.Column="1" Background="{DynamicResource ExpenseBackgroundBrush}" Style="{StaticResource SummaryFilterButtonStyle}" Command="{Binding ShowExpensesCommand}" Tag="{Binding IsExpenseFilterActive}" Margin="0,0,4,0">
                     <StackPanel Orientation="Horizontal">
+                        <icons:PackIconMaterial Kind="ArrowUp" Width="16" Height="16" Margin="0,0,6,0"
+                                                VerticalAlignment="Center" Foreground="{DynamicResource ExpenseTextBrush}" IsHitTestVisible="False"/>
                         <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Expense]}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,6,0"/>
                         <TextBlock Foreground="{DynamicResource ExpenseTextBrush}" FontWeight="Bold">
                             <TextBlock.Text>
@@ -522,6 +560,8 @@
 
                 <Button Grid.Column="2" Background="{DynamicResource SummaryBalanceBrush}" Style="{StaticResource SummaryFilterButtonStyle}" Command="{Binding ShowAllCommand}" Tag="{Binding IsAllFilterActive}">
                     <StackPanel Orientation="Horizontal">
+                        <icons:PackIconMaterial Kind="WalletOutline" Width="16" Height="16" Margin="0,0,6,0"
+                                                VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" IsHitTestVisible="False"/>
                         <TextBlock Text="{Binding Source={StaticResource Localization}, Path=[Summary_Balance]}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" FontWeight="SemiBold" Margin="0,0,6,0"/>
                         <TextBlock Foreground="{DynamicResource PrimaryTextBrush}" FontWeight="Bold">
                             <TextBlock.Text>
