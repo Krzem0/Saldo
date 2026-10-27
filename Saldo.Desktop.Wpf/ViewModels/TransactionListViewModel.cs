@@ -82,6 +82,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             if (_dialogService.ShowAddEditTransaction(form) == true)
             {
                 _lastNewTransactionDate = DateOnly.FromDateTime(form.Date);
+                _newTransactionDraft = null;
                 await LoadAsync();
             }
             else if (_newTransactionDraft is null && form.HasDraftContent)
@@ -558,6 +559,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             if (_dialogService.ShowAddEditTransaction(form) == true)
             {
                 _lastNewTransactionDate = DateOnly.FromDateTime(form.Date);
+                _newTransactionDraft = null;
                 await LoadAsync();
             }
             else if (_newTransactionDraft is null && form.HasDraftContent)

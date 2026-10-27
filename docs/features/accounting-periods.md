@@ -80,6 +80,10 @@ to closed captures a fresh snapshot.
 - Edit and Delete are disabled for a closed or unknown period, during loading,
   and while changing state. Application/SQLite protections remain authoritative
   for a period closed externally or after a form was opened.
+- Row-context **Edit transaction** and left-button double-click invoke the same
+  Edit command as the footer and respect those availability rules. Right-click
+  selects the target transaction before showing the menu. Double-clicking a row
+  action button, a column header, or empty table space does not open editing.
 - Add, copy, and template actions remain available for a loaded closed month:
   users can prepare a new transaction and choose an open destination date. A
   save with a closed date returns the existing localized validation error.
@@ -87,6 +91,8 @@ to closed captures a fresh snapshot.
 - During loading or a state change, new transaction/template/copy actions are
   disabled. During a state change, navigation, refresh, and repeat state changes
   are also blocked. Closing/reopening preserves existing new-form drafts.
+- Disabled previous/next month arrows use the current theme's resources, so
+  closing/reopening does not introduce light-only colors in the dark theme.
 - Startup backup availability also gates these commands, including copying from
   the row context menu. Normal application exit waits for a pending state change
   and its resulting automatic backup.

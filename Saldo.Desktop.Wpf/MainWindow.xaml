@@ -5,6 +5,7 @@
         xmlns:viewModels="clr-namespace:Saldo.Desktop.Wpf.ViewModels"
         xmlns:backup="clr-namespace:Saldo.Desktop.Wpf.Services"
         xmlns:notifications="clr-namespace:Saldo.Application.Interfaces;assembly=Saldo.Application"
+        xmlns:icons="clr-namespace:MahApps.Metro.IconPacks;assembly=MahApps.Metro.IconPacks.Material"
         Title="{Binding Source={StaticResource Localization}, Path=[AppTitle]}"
         Height="680" Width="1120"
         Background="{DynamicResource AppBackgroundBrush}"
@@ -48,7 +49,17 @@
                                 BorderThickness="3,0,0,0"
                                 CornerRadius="4"
                                 Padding="{TemplateBinding Padding}">
-                            <ContentPresenter VerticalAlignment="Center"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="18"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <icons:PackIconMaterial Width="18" Height="18" VerticalAlignment="Center"
+                                                        Kind="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
+                                                        Foreground="{TemplateBinding Foreground}"
+                                                        IsHitTestVisible="False"/>
+                                <ContentPresenter Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -140,12 +151,14 @@
                         <RadioButton GroupName="Navigation"
                                      Content="{Binding Source={StaticResource Localization}, Path=[TabTransactions]}"
                                      Command="{Binding ShowTransactionsCommand}"
+                                     Tag="{x:Static icons:PackIconMaterialKind.SwapVertical}"
                                      IsChecked="{Binding IsTransactionsSelected, Mode=OneWay}"
                                      Style="{StaticResource NavigationItemStyle}"/>
 
                         <RadioButton GroupName="Navigation"
                                      Content="{Binding Source={StaticResource Localization}, Path=[Templates], Mode=OneWay}"
                                      Command="{Binding ShowTemplatesCommand}"
+                                     Tag="{x:Static icons:PackIconMaterialKind.FileDocumentMultipleOutline}"
                                      IsChecked="{Binding IsTemplatesSelected, Mode=OneWay}"
                                      Style="{StaticResource NavigationItemStyle}"/>
                         <Separator Margin="8,18,8,14" Background="#CDDDD6"/>
@@ -156,21 +169,25 @@
                         <RadioButton GroupName="Navigation"
                                      Content="{Binding Source={StaticResource Localization}, Path=[TabCategories]}"
                                      Command="{Binding ShowCategoriesCommand}"
+                                     Tag="{x:Static icons:PackIconMaterialKind.FolderOutline}"
                                      IsChecked="{Binding IsCategoriesSelected, Mode=OneWay}"
                                      Style="{StaticResource NavigationItemStyle}"/>
                         <RadioButton GroupName="Navigation"
                                      Content="{Binding Source={StaticResource Localization}, Path=[TabParties]}"
                                      Command="{Binding ShowPartiesCommand}"
+                                     Tag="{x:Static icons:PackIconMaterialKind.AccountGroupOutline}"
                                      IsChecked="{Binding IsPartiesSelected, Mode=OneWay}"
                                      Style="{StaticResource NavigationItemStyle}"/>
                         <RadioButton GroupName="Navigation"
                                      Content="{Binding Source={StaticResource Localization}, Path=[TabLocations]}"
                                      Command="{Binding ShowLocationsCommand}"
+                                     Tag="{x:Static icons:PackIconMaterialKind.MapMarkerOutline}"
                                      IsChecked="{Binding IsLocationsSelected, Mode=OneWay}"
                                      Style="{StaticResource NavigationItemStyle}"/>
                         <RadioButton GroupName="Navigation"
                                      Content="{Binding Source={StaticResource Localization}, Path=[Tags]}"
                                      Command="{Binding ShowTagsCommand}"
+                                     Tag="{x:Static icons:PackIconMaterialKind.TagOutline}"
                                      IsChecked="{Binding IsTagsSelected, Mode=OneWay}"
                                      Style="{StaticResource NavigationItemStyle}"/>
                     </StackPanel>
@@ -180,6 +197,7 @@
                         <RadioButton GroupName="Navigation"
                                      Content="{Binding Source={StaticResource Localization}, Path=[SettingsTitle]}"
                                      Command="{Binding ShowSettingsCommand}"
+                                     Tag="{x:Static icons:PackIconMaterialKind.CogOutline}"
                                      IsChecked="{Binding IsSettingsSelected, Mode=OneWay}"
                                      Style="{StaticResource NavigationItemStyle}"/>
                     </StackPanel>

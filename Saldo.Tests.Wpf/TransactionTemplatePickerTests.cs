@@ -95,6 +95,53 @@ public sealed class TransactionTemplatePickerTests
         Assert.Equal(h.Localization["Template_NotFound"], vm.TemplatePickerStatus);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task SavingFromTemplate_ClearsPreviousDraftAndKeepsSavedDate(bool draftFromTemplate)
+    {
+        using var h = new TransactionTemplatesTests.Harness("pl-PL");
+        var id = await Add(h, "Zakupy", 12.5m);
+        var vm = new TransactionListViewModel(h.Scopes, h.Dialogs, h.Localization);
+        h.Dialogs.TransactionCallback = form =>
+        {
+            form.Description = "Poprzedni szkic";
+            return false;
+        };
+        if (draftFromTemplate) await vm.AddFromTemplateAsync(id);
+        else vm.AddCommand.Execute(null);
+
+        var savedDate = DateTime.Today.AddDays(-2);
+        h.Dialogs.TransactionCallback = form =>
+        {
+            Assert.False(form.IsRestoredDraft);
+            form.Date = savedDate;
+            bool? saved = null;
+            form.RequestClose += result => saved = result;
+            form.SaveCommand.Execute(null);
+            Assert.True(saved);
+            return saved;
+        };
+        await vm.AddFromTemplateAsync(id);
+
+        var opened = false;
+        h.Dialogs.TransactionCallback = form =>
+        {
+            opened = true;
+            Assert.False(form.IsRestoredDraft);
+            Assert.False(form.ShowRestoredDraftNotice);
+            Assert.False(form.HasDraftContent);
+            Assert.Empty(form.AmountText);
+            Assert.True(string.IsNullOrEmpty(form.Description));
+            Assert.Null(form.SelectedCategory);
+            Assert.All(form.Tags, tag => Assert.False(tag.IsSelected));
+            Assert.Equal(savedDate, form.Date);
+            return false;
+        };
+        vm.AddCommand.Execute(null);
+        Assert.True(opened);
+    }
+
     private static async Task<int> Add(TransactionTemplatesTests.Harness h, string name, decimal? amount = null)
     {
         using var scope = h.Scopes.CreateScope();

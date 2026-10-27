@@ -17,11 +17,16 @@ This document tracks planned work. Implemented behavior and architectural decisi
 
 ## Later
 
-- [x] Select a named template from the Add transaction split button, with name search and scrolling. It opens a new form with template fields, optional amount, and the current new-transaction date, preserving any existing draft.
+- [x] Select a named template from the Add transaction split button, with name search and scrolling. It opens a new form with template fields, optional amount, and the current new-transaction date. Opening/cancelling preserves an existing draft; successfully saving the transaction clears it.
 - [x] Save the new-transaction form as a named template without saving the transaction.
 - [x] Load a template into an already open new-transaction form through a searchable picker beside Description, preserving the date.
 - [ ] Consider creating templates from existing saved transactions.
 - [x] Duplicate a transaction through the row context menu into a new-transaction form with its fields prefilled, except for an empty amount that must be entered, and the usual new-form date, allowing changes before saving a separate transaction without creating a template or modifying the original.
+- [x] Clear the remembered new-transaction draft after every successful add, including template and copy entry paths, retaining defaults and the saved date for the next fresh form.
+- [x] Edit transactions through the row context menu or left-button double-click, sharing the footer command and closed-month protection.
+- [x] Preserve formatted amounts on focus and select individual digits by mouse dragging in transaction and template forms.
+- [x] Show informational dictionary name matches from three characters, including a localized no-match message after typing or pasting.
+- [x] Swap payer and counterparty when manually changing expense/income in transaction and template forms.
 - [ ] Replace the full transaction tag cloud with a dropdown for choosing tags; display only selected tags below it using the current chip appearance (the current form still displays all available tags as selectable chips)
 - [ ] Further WPF visual polish and accessibility review
 - [ ] Recurring transactions

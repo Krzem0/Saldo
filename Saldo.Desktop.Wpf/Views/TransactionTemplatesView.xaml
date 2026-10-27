@@ -78,9 +78,9 @@
             </Grid>
         </Border>
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,14,0,0" backup:DatabaseWriteGuard.IsWriteAction="True">
-            <Button Content="{Binding Source={StaticResource Localization}, Path=[Add], Mode=OneWay}" Command="{Binding AddCommand}" Style="{StaticResource PrimaryActionButtonStyle}" Margin="0,0,8,0"/>
-            <Button Content="{Binding Source={StaticResource Localization}, Path=[Edit], Mode=OneWay}" Command="{Binding EditCommand}" Style="{StaticResource SecondaryActionButtonStyle}" Margin="0,0,8,0"/>
-            <Button Content="{Binding Source={StaticResource Localization}, Path=[Delete], Mode=OneWay}" Command="{Binding DeleteCommand}" Style="{StaticResource DangerActionButtonStyle}"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Add], Mode=OneWay}" Command="{Binding AddCommand}" ContentTemplate="{StaticResource AddActionContentTemplate}" Style="{StaticResource PrimaryActionButtonStyle}" Margin="0,0,8,0"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Edit], Mode=OneWay}" Command="{Binding EditCommand}" ContentTemplate="{StaticResource EditActionContentTemplate}" Style="{StaticResource SecondaryActionButtonStyle}" Margin="0,0,8,0"/>
+            <Button Content="{Binding Source={StaticResource Localization}, Path=[Delete], Mode=OneWay}" Command="{Binding DeleteCommand}" ContentTemplate="{StaticResource DeleteActionContentTemplate}" Style="{StaticResource DangerActionButtonStyle}"/>
         </StackPanel>
     </Grid>
 </UserControl>

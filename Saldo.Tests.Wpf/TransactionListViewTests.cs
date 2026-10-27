@@ -46,6 +46,8 @@ public sealed class TransactionListViewTests
                 foreach (var attribute in root.Descendants().Attributes("TargetUpdated").ToArray()) attribute.Remove();
                 foreach (var attribute in root.Descendants().Attributes("Click").ToArray()) attribute.Remove();
                 var resources = root.Element(presentation + "UserControl.Resources")!.Element(presentation + "ResourceDictionary")!;
+                resources.Element(presentation + "ResourceDictionary.MergedDictionaries")!.Add(
+                    new XElement(presentation + "ResourceDictionary", new XAttribute("Source", "/Saldo.Desktop.Wpf;component/Themes/ActionButtonTemplates.xaml")));
                 resources.Element(presentation + "ResourceDictionary.MergedDictionaries")!.AddAfterSelf(
                     new XElement(localization + "LocalizationService", new XAttribute(x + "Key", "Localization")));
                 foreach (var key in new[] { "MonthNavigationButtonStyle", "SecondaryActionButtonStyle", "DangerActionButtonStyle", "ClearTextButtonStyle" })
@@ -171,10 +173,18 @@ public sealed class TransactionListViewTests
                 Assert.NotNull(menu);
                 menu.PlacementTarget = expenseRow;
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
-                var addSimilar = Assert.IsType<MenuItem>(Assert.Single(menu.Items.Cast<object>()));
+                Assert.Equal(3, menu.Items.Count);
+                var edit = Assert.IsType<MenuItem>(menu.Items[0]);
+                Assert.Same(vm.EditCommand, edit.Command);
+                Assert.Equal(((LocalizationService)view.Resources["Localization"])["Transaction_EditTitle"], edit.Header);
+                Assert.Same(vm.EditCommand, Saldo.Desktop.Wpf.Controls.TransactionRowEditBehavior.GetCommand(expenseRow));
+                var addSimilar = Assert.IsType<MenuItem>(menu.Items[1]);
                 Assert.Same(vm.AddSimilarCommand, addSimilar.Command);
                 Assert.Same(expense, addSimilar.CommandParameter);
                 Assert.Equal(((LocalizationService)view.Resources["Localization"])["Transaction_Copy"], addSimilar.Header);
+                var delete = Assert.IsType<MenuItem>(menu.Items[2]);
+                Assert.Same(vm.DeleteCommand, delete.Command);
+                Assert.Equal(((LocalizationService)view.Resources["Localization"])["DeleteTransactionTitle"], delete.Header);
                 var actionsColumn = Assert.IsType<DataGridTemplateColumn>(grid.Columns.Last());
                 Assert.Equal(((LocalizationService)view.Resources["Localization"])["Actions"], actionsColumn.Header);
                 Assert.False(actionsColumn.CanUserSort);

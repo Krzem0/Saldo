@@ -81,7 +81,8 @@
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
-        <Button Content="{Binding Source={StaticResource Localization}, Path=[Transaction_AddTitle]}">
+        <Button Content="{Binding Source={StaticResource Localization}, Path=[Transaction_AddTitle]}"
+                ContentTemplate="{StaticResource AddActionContentTemplate}">
             <Button.Style>
                 <Style TargetType="Button" BasedOn="{StaticResource SplitButton}">
                     <Style.Triggers>

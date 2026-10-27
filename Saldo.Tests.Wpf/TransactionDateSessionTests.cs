@@ -14,7 +14,7 @@ public sealed class TransactionDateSessionTests
     [Theory]
     [InlineData(Saldo.Domain.Enums.TransactionType.Expense)]
     [InlineData(Saldo.Domain.Enums.TransactionType.Income)]
-    public async Task AddSimilar_CreatesSeparateTransactionWithNewFormDateAndPreservesExistingDraft(
+    public async Task AddSimilar_CreatesSeparateTransactionWithNewFormDateAndClearsExistingDraft(
         Saldo.Domain.Enums.TransactionType type)
     {
         var transactions = new FakeTransactionRepository();
@@ -32,7 +32,7 @@ public sealed class TransactionDateSessionTests
             type, 999m, 1, "Food", null, null, null, null, null, null, null, "Wrong row", [], []);
         var row = vm.SelectedTransaction with { Id = source.Id, Amount = source.Amount, Description = source.Description };
 
-        // Keep a separate unfinished Add form while creating a similar transaction.
+        // A successful save must clear the unfinished Add form as well.
         dialogs.Show = form => { form.Description = "Unfinished add form"; return false; };
         vm.AddCommand.Execute(null);
         dialogs.Show = form =>
@@ -70,7 +70,16 @@ public sealed class TransactionDateSessionTests
         Assert.Equal("Original description", (await transactions.GetByIdAsync(source.Id))!.Description);
         Assert.Equal(new DateOnly(2018, 4, 5), source.Date);
 
-        dialogs.Show = form => { Assert.Equal("Unfinished add form", form.Description); return false; };
+        dialogs.Show = form =>
+        {
+            Assert.False(form.IsRestoredDraft);
+            Assert.False(form.HasDraftContent);
+            Assert.True(string.IsNullOrEmpty(form.Description));
+            Assert.Empty(form.AmountText);
+            Assert.Null(form.SelectedCategory);
+            Assert.Equal(DateTime.Today.AddDays(-2), form.Date);
+            return false;
+        };
         vm.AddCommand.Execute(null);
         vm.OpenMonthPickerCommand.Execute(null);
         vm.PickerYearText = "2019";

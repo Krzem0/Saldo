@@ -5,6 +5,7 @@
     <ResourceDictionary>
         <ResourceDictionary.MergedDictionaries>
             <ResourceDictionary Source="/Saldo.Desktop.Wpf;component/Themes/ClearButtonStyles.xaml"/>
+            <ResourceDictionary Source="/Saldo.Desktop.Wpf;component/Themes/ActionButtonTemplates.xaml"/>
         </ResourceDictionary.MergedDictionaries>
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
