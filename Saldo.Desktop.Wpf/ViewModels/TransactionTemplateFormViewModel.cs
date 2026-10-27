@@ -45,7 +45,24 @@ public sealed class TransactionTemplateFormViewModel : LocalizedViewModelBase
     public AddEditTransactionViewModel.TypeItem SelectedType
     {
         get => _type;
-        set { if (SetField(ref _type, value)) { OnPropertyChanged(nameof(IsExpense)); OnPropertyChanged(nameof(IsIncome)); } }
+        set
+        {
+            var previousType = _type.Value;
+            if (!SetField(ref _type, value)) return;
+            if (previousType != value.Value)
+            {
+                var payer = SelectedPayer;
+                var payerText = PayerText;
+                var counterparty = SelectedCounterparty;
+                var counterpartyText = CounterpartyText;
+                SelectedPayer = counterparty;
+                PayerText = counterpartyText;
+                SelectedCounterparty = payer;
+                CounterpartyText = payerText;
+            }
+            OnPropertyChanged(nameof(IsExpense));
+            OnPropertyChanged(nameof(IsIncome));
+        }
     }
     public bool IsExpense { get => SelectedType.Value == TransactionType.Expense; set { if (value) SelectedType = Types[0]; } }
     public bool IsIncome { get => SelectedType.Value == TransactionType.Income; set { if (value) SelectedType = Types[1]; } }

@@ -76,7 +76,8 @@
                 <TextBox controls:AmountInputBehavior.RawText="{Binding AmountText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          Margin="0"
                          MinHeight="30"
-                         HorizontalContentAlignment="Right"
+                         HorizontalContentAlignment="Stretch"
+                         TextAlignment="Right"
                          controls:AmountInputBehavior.IsEnabled="True"/>
                 <TextBlock Text="{Binding AmountError}" Style="{StaticResource FieldErrorStyle}"
                            Visibility="{Binding HasAmountError, Converter={StaticResource BooleanToVisibilityConverter}}"/>

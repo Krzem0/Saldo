@@ -4,6 +4,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -13,6 +14,63 @@ namespace Saldo.Tests.Wpf;
 
 public sealed class AmountInputBehaviorTests
 {
+    [Theory]
+    [InlineData("pl-PL", 1460, false)]
+    [InlineData("pl-PL", 1460, true)]
+    [InlineData("en-US", 1460, false)]
+    [InlineData("en-US", 1460, true)]
+    [InlineData("pl-PL", 1427, false)]
+    [InlineData("pl-PL", 1427, true)]
+    [InlineData("en-US", 1427, false)]
+    [InlineData("en-US", 1427, true)]
+    public void DraggingAcrossOneDigit_SelectsOnlyThatDigitAndPreservesActiveEnd(string culture, int amount, bool backwards) => OnSta(() =>
+    {
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+        var state = new AmountState { Raw = amount.ToString(CultureInfo.CurrentCulture) };
+        var box = CreateBox(state);
+        box.Width = 200;
+        box.Height = 30;
+        box.Padding = new Thickness(32, 0, 4, 0);
+        box.HorizontalContentAlignment = HorizontalAlignment.Stretch;
+        box.TextAlignment = TextAlignment.Right;
+        box.VerticalContentAlignment = VerticalAlignment.Center;
+        box.AutoWordSelection = true;
+        using var source = new HwndSource(new HwndSourceParameters("Amount digit layout verification")
+            { Width = 200, Height = 30, WindowStyle = 0 });
+        source.RootVisual = box;
+        box.ApplyTemplate();
+        box.Measure(new Size(200, 30));
+        box.Arrange(new Rect(0, 0, 200, 30));
+        box.UpdateLayout();
+        Focus(box, true);
+
+        // Use the actual rendered digit positions, including the thousands separator.
+        var digit = box.Text.IndexOf('4');
+        var left = box.GetRectFromCharacterIndex(digit);
+        var right = box.GetRectFromCharacterIndex(digit + 1);
+        Assert.False(left.IsEmpty);
+        Assert.True(right.X > left.X);
+        var before = new Point(left.X + 0.1, left.Top + left.Height / 2);
+        var after = new Point(right.X + 0.1, right.Top + right.Height / 2);
+        AmountMouseSelection.Begin(box, backwards ? after : before);
+        AmountMouseSelection.Extend(box, backwards ? before : after);
+        Assert.Equal("4", box.SelectedText);
+        var collapse = backwards ? EditingCommands.SelectRightByCharacter : EditingCommands.SelectLeftByCharacter;
+        collapse.Execute(null, box);
+        Assert.Empty(box.SelectedText);
+        AmountMouseSelection.Extend(box, backwards ? before : after);
+        Assert.Equal("4", box.SelectedText);
+        // Moving back to the anchor must collapse selection, not retain a whole word.
+        AmountMouseSelection.Extend(box, backwards ? after : before);
+        Assert.Empty(box.SelectedText);
+        AmountMouseSelection.Extend(box, backwards ? before : after);
+        Assert.Equal("4", box.SelectedText);
+        AmountMouseSelection.End(box);
+        Assert.False(AmountMouseSelection.IsActive(box));
+        Assert.Equal(((decimal)amount).ToString("N2", CultureInfo.CurrentCulture), box.Text);
+        Assert.Equal(0, state.Changes);
+    });
+
     [Theory]
     [InlineData("pl-PL", "25", 2, 0, "25,", 3)]
     [InlineData("en-US", "25", 2, 0, "25.", 3)]

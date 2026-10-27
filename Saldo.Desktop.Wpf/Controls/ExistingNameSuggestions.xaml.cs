@@ -16,6 +16,9 @@ public partial class ExistingNameSuggestions : UserControl
     public static readonly DependencyProperty HeadingProperty = DependencyProperty.Register(
         nameof(Heading), typeof(string), typeof(ExistingNameSuggestions), new PropertyMetadata(string.Empty));
 
+    public static readonly DependencyProperty EmptyMessageProperty = DependencyProperty.Register(
+        nameof(EmptyMessage), typeof(string), typeof(ExistingNameSuggestions), new PropertyMetadata(string.Empty));
+
     public IReadOnlyList<string>? ExistingNames
     {
         get => (IReadOnlyList<string>?)GetValue(ExistingNamesProperty);
@@ -34,6 +37,12 @@ public partial class ExistingNameSuggestions : UserControl
         set => SetValue(HeadingProperty, value);
     }
 
+    public string EmptyMessage
+    {
+        get => (string)GetValue(EmptyMessageProperty);
+        set => SetValue(EmptyMessageProperty, value);
+    }
+
     public ExistingNameSuggestions() => InitializeComponent();
 
     private static void OnFilterChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
@@ -48,6 +57,9 @@ public partial class ExistingNameSuggestions : UserControl
             .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
         MatchesList.ItemsSource = matches;
-        Visibility = matches.Length == 0 ? Visibility.Collapsed : Visibility.Visible;
+        var isSearching = ExistingNames is not null && query.Length >= 3;
+        Visibility = isSearching ? Visibility.Visible : Visibility.Collapsed;
+        NoMatchesText.Visibility = isSearching && matches.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+        MatchesScroll.Visibility = matches.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 }

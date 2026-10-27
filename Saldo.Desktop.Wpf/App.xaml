@@ -244,9 +244,9 @@
                                 <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource ControlPressedBrush}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="#9BACA5"/>
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="#F0F3F1"/>
-                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#D6DEDA"/>
+                                <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="{DynamicResource ControlBrush}"/>
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="{DynamicResource SurfaceBorderBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

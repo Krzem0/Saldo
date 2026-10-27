@@ -233,4 +233,5 @@
   <data name="Notifications_OperationFailed" xml:space="preserve"><value>The operation failed. Try again. Details were saved in the log.</value></data>
   <data name="Notifications_Repeated" xml:space="preserve"><value>{0} (Similar events: {1}; see history for details).</value></data>
   <data name="ReferenceList_SimilarNames" xml:space="preserve"><value>Similar existing entries</value></data>
+  <data name="ReferenceList_NoSimilarNames" xml:space="preserve"><value>No similar entries found.</value></data>
 </root>

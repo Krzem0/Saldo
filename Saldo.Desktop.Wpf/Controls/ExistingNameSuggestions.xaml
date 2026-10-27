@@ -12,7 +12,10 @@
                 <TextBlock Text="{Binding Heading, ElementName=Root}" FontWeight="Bold" FontSize="11"
                            Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap"/>
             </Border>
-            <ScrollViewer MaxHeight="140" Margin="10,6,10,8" VerticalScrollBarVisibility="Auto"
+            <TextBlock x:Name="NoMatchesText" Text="{Binding EmptyMessage, ElementName=Root}"
+                       Margin="10,8" Foreground="{DynamicResource SecondaryTextBrush}"
+                       TextWrapping="Wrap" Visibility="Collapsed"/>
+            <ScrollViewer x:Name="MatchesScroll" MaxHeight="140" Margin="10,6,10,8" VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled" Focusable="False">
                 <ItemsControl x:Name="MatchesList">
                     <ItemsControl.ItemTemplate>

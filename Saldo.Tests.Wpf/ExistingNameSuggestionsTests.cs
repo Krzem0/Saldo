@@ -20,29 +20,65 @@ public sealed class ExistingNameSuggestionsTests
         suggestions.SetBinding(ExistingNameSuggestions.QueryProperty,
             new Binding(nameof(TextBox.Text)) { Source = input });
         var matches = (ItemsControl)suggestions.FindName("MatchesList");
+        var noMatches = (TextBlock)suggestions.FindName("NoMatchesText");
 
         foreach (var query in new[] { "", "k", "ko", "  ko  " })
         {
             input.Text = query;
             Assert.Equal(Visibility.Collapsed, suggestions.Visibility);
             Assert.Empty(matches.Items);
+            Assert.Equal(Visibility.Collapsed, noMatches.Visibility);
         }
 
         input.Text = "  KOW  ";
         Assert.Equal(Visibility.Visible, suggestions.Visibility);
+        Assert.Equal(Visibility.Collapsed, noMatches.Visibility);
         Assert.Equal(new[] { "Anna Kowalska", "Jan Kowalski" }, matches.Items.Cast<string>());
 
         input.Text = "kowalSki";
         Assert.Equal("Jan Kowalski", Assert.Single(matches.Items.Cast<string>()));
 
         input.Text = "nie istnieje";
-        Assert.Equal(Visibility.Collapsed, suggestions.Visibility);
+        Assert.Equal(Visibility.Visible, suggestions.Visibility);
+        Assert.Equal(Visibility.Visible, noMatches.Visibility);
         Assert.Empty(matches.Items);
 
         input.Text = "kow";
         input.Text = "";
         Assert.Equal(Visibility.Collapsed, suggestions.Visibility);
+        Assert.Equal(Visibility.Collapsed, noMatches.Visibility);
         Assert.Empty(matches.Items);
+    });
+
+    [Fact]
+    public void PastedText_ShowsNoMatchesAndSwitchesBackToResults() => OnSta(() =>
+    {
+        var input = new TextBox();
+        var suggestions = new ExistingNameSuggestions
+        {
+            ExistingNames = ["Transport"],
+            EmptyMessage = "Brak podobnych wpisów."
+        };
+        suggestions.SetBinding(ExistingNameSuggestions.QueryProperty,
+            new Binding(nameof(TextBox.Text)) { Source = input });
+        var message = (TextBlock)suggestions.FindName("NoMatchesText");
+        var results = (ScrollViewer)suggestions.FindName("MatchesScroll");
+
+        // Insert an entire string in one edit, as when pasting into the name field.
+        input.SelectedText = "Nowy płatnik";
+        Assert.Equal(Visibility.Visible, suggestions.Visibility);
+        Assert.Equal(Visibility.Visible, message.Visibility);
+        Assert.Equal("Brak podobnych wpisów.", message.Text);
+        Assert.Equal(Visibility.Collapsed, results.Visibility);
+
+        input.SelectAll();
+        input.SelectedText = "TRA";
+        Assert.Equal(Visibility.Visible, results.Visibility);
+        Assert.Equal(Visibility.Collapsed, message.Visibility);
+
+        suggestions.ExistingNames = [];
+        Assert.Equal(Visibility.Visible, message.Visibility);
+        Assert.Equal(Visibility.Collapsed, results.Visibility);
     });
 
     [Fact]

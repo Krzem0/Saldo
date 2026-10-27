@@ -46,6 +46,11 @@ public static partial class AmountInputBehavior
             textBox.TextChanged -= OnTextChanged;
             textBox.GotKeyboardFocus -= OnGotKeyboardFocus;
             textBox.LostKeyboardFocus -= OnLostKeyboardFocus;
+            textBox.PreviewMouseLeftButtonDown -= OnAmountMouseDown;
+            textBox.PreviewMouseMove -= OnAmountMouseMove;
+            textBox.PreviewMouseLeftButtonUp -= OnAmountMouseUp;
+            textBox.LostMouseCapture -= OnAmountLostCapture;
+            AmountMouseSelection.End(textBox);
             DataObject.RemovePastingHandler(textBox, OnPasting);
         }
 
@@ -56,11 +61,50 @@ public static partial class AmountInputBehavior
             textBox.TextChanged += OnTextChanged;
             textBox.GotKeyboardFocus += OnGotKeyboardFocus;
             textBox.LostKeyboardFocus += OnLostKeyboardFocus;
+            textBox.PreviewMouseLeftButtonDown += OnAmountMouseDown;
+            textBox.PreviewMouseMove += OnAmountMouseMove;
+            textBox.PreviewMouseLeftButtonUp += OnAmountMouseUp;
+            textBox.LostMouseCapture += OnAmountLostCapture;
             DataObject.AddPastingHandler(textBox, OnPasting);
             textBox.SetValue(IsEditingProperty, textBox.IsKeyboardFocusWithin);
             RefreshPresentation(textBox);
         }
     }
+
+    private static void OnAmountMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        var box = (TextBox)sender;
+        if (Keyboard.Modifiers != ModifierKeys.None) return;
+        if (!box.Focus()) return;
+        AmountMouseSelection.Begin(box, e.GetPosition(box));
+        if (!box.CaptureMouse()) AmountMouseSelection.End(box);
+        e.Handled = true;
+    }
+
+    private static void OnAmountMouseMove(object sender, MouseEventArgs e)
+    {
+        var box = (TextBox)sender;
+        if (!AmountMouseSelection.IsActive(box)) return;
+        if (e.LeftButton != MouseButtonState.Pressed)
+        {
+            AmountMouseSelection.End(box);
+            return;
+        }
+        AmountMouseSelection.Extend(box, e.GetPosition(box));
+        e.Handled = true;
+    }
+
+    private static void OnAmountMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        var box = (TextBox)sender;
+        if (!AmountMouseSelection.IsActive(box)) return;
+        AmountMouseSelection.Extend(box, e.GetPosition(box));
+        AmountMouseSelection.End(box);
+        e.Handled = true;
+    }
+
+    private static void OnAmountLostCapture(object sender, MouseEventArgs e)
+        => AmountMouseSelection.End((TextBox)sender);
 
     private static void OnTextChanged(object sender, TextChangedEventArgs e)
     {
@@ -80,6 +124,7 @@ public static partial class AmountInputBehavior
     private static void OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
         var textBox = (TextBox)sender;
+        AmountMouseSelection.End(textBox);
         textBox.SetValue(IsEditingProperty, false);
         RefreshPresentation(textBox);
     }

@@ -140,7 +140,8 @@
                          Padding="32,0,4,0"
                          MinHeight="30"
                          VerticalContentAlignment="Center"
-                         HorizontalContentAlignment="Right"
+                         HorizontalContentAlignment="Stretch"
+                         TextAlignment="Right"
                          controls:AmountInputBehavior.IsEnabled="True"/>
                 <Button Command="{Binding ClearAmountCommand}" Click="ClearAmount_Click" Margin="4,0,0,0" HorizontalAlignment="Left"
                         ToolTip="{Binding Source={StaticResource Localization}, Path=[ClearText]}"

@@ -30,7 +30,8 @@
                      Text="{Binding EnteredName, RelativeSource={RelativeSource AncestorType=Window}, UpdateSourceTrigger=PropertyChanged}"/>
             <controls:ExistingNameSuggestions x:Name="NameSuggestions"
                 Query="{Binding Text, ElementName=NameBox}"
-                Heading="{Binding Source={StaticResource Localization}, Path=[ReferenceList_SimilarNames]}"/>
+                Heading="{Binding Source={StaticResource Localization}, Path=[ReferenceList_SimilarNames]}"
+                EmptyMessage="{Binding Source={StaticResource Localization}, Path=[ReferenceList_NoSimilarNames]}"/>
             </StackPanel>
 
         <TextBlock x:Name="NameErrorText" Grid.Row="2"
