@@ -8,10 +8,10 @@ namespace Saldo.Infrastructure.Sqlite.Repositories;
 public sealed class TransactionTemplateRepository(SaldoDbContext context) : ITransactionTemplateRepository
 {
     public async Task<TransactionTemplate?> GetByIdAsync(int id, CancellationToken ct = default) =>
-        await context.TransactionTemplates.AsNoTracking().Include(x => x.Tags).FirstOrDefaultAsync(x => x.Id == id, ct);
+        await context.TransactionTemplates.AsNoTracking().Include(x => x.Tags).Include(x => x.Category).FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public async Task<IReadOnlyList<TransactionTemplate>> GetAllAsync(CancellationToken ct = default) =>
-        await context.TransactionTemplates.AsNoTracking().Include(x => x.Tags).OrderBy(x => x.Name).ToListAsync(ct);
+        await context.TransactionTemplates.AsNoTracking().Include(x => x.Tags).Include(x => x.Category).OrderBy(x => x.Name).ToListAsync(ct);
 
     public async Task AddAsync(TransactionTemplate template, CancellationToken ct = default)
     {

@@ -46,6 +46,8 @@ public sealed class TransactionListViewTests
                 foreach (var attribute in root.Descendants().Attributes("TargetUpdated").ToArray()) attribute.Remove();
                 foreach (var attribute in root.Descendants().Attributes("Click").ToArray()) attribute.Remove();
                 var resources = root.Element(presentation + "UserControl.Resources")!.Element(presentation + "ResourceDictionary")!;
+                var appResources = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Views", "App.xaml"));
+                resources.Add(new XElement(appResources.Descendants(presentation + "Style").Single(style => (string?)style.Attribute("TargetType") == "TextBox")));
                 resources.Element(presentation + "ResourceDictionary.MergedDictionaries")!.Add(
                     new XElement(presentation + "ResourceDictionary", new XAttribute("Source", "/Saldo.Desktop.Wpf;component/Themes/ActionButtonTemplates.xaml")));
                 resources.Element(presentation + "ResourceDictionary.MergedDictionaries")!.AddAfterSelf(
@@ -97,6 +99,17 @@ public sealed class TransactionListViewTests
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
                 Assert.Equal(((LocalizationService)view.Resources["Localization"])["AccountingPeriod_Open"], periodState.ToolTip);
                 Assert.Equal(MahApps.Metro.IconPacks.PackIconMaterialKind.LockOpenVariantOutline, periodState.Kind);
+                Assert.Same(periodState, periodAction.Content);
+                Assert.Same(periodAction, ((Border)view.FindName("PeriodStateGroup")).Child);
+                Assert.Equal(((LocalizationService)view.Resources["Localization"])["AccountingPeriod_CloseToolTip"], periodAction.ToolTip);
+                Assert.Same(vm.ChangePeriodCommand, periodAction.Command);
+                Assert.Single(Descendants((Border)view.FindName("PeriodStateGroup")).OfType<MahApps.Metro.IconPacks.PackIconMaterial>());
+                periodAction.DataContext = new { IsPeriodClosed = true, PeriodStateText = "Closed", PeriodActionToolTip = "Reopen", vm.ChangePeriodCommand };
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                Assert.Equal(MahApps.Metro.IconPacks.PackIconMaterialKind.LockOutline, periodState.Kind);
+                periodAction.ClearValue(FrameworkElement.DataContextProperty);
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
+                Assert.Equal(MahApps.Metro.IconPacks.PackIconMaterialKind.LockOpenVariantOutline, periodState.Kind);
                 Assert.True(periodAction.IsEnabled);
                 Assert.Equal(Visibility.Visible, ((Border)view.FindName("PeriodStateGroup")).Visibility);
                 Assert.Equal(((SolidColorBrush)view.Resources["SuccessBackgroundBrush"]).Color,
@@ -112,12 +125,15 @@ public sealed class TransactionListViewTests
                 var summaryCenter = summaryButtons.TranslatePoint(new Point(summaryButtons.ActualWidth / 2, 0), view).X;
                 Assert.True(periodAction.TranslatePoint(new Point(), view).Y < summaryButtons.TranslatePoint(new Point(), view).Y);
                 var monthPicker = (Button)view.FindName("MonthPickerButton");
-                Assert.True(periodAction.TranslatePoint(new Point(periodAction.ActualWidth, 0), view).X
-                    <= monthPicker.TranslatePoint(new Point(), view).X);
+                var lockPosition = periodAction.TranslatePoint(new Point(), view);
+                var monthRight = monthPicker.TranslatePoint(new Point(monthPicker.ActualWidth, 0), view);
+                Assert.InRange(lockPosition.X - monthRight.X, 8, 10);
+                Assert.InRange(Math.Abs(lockPosition.Y - monthRight.Y), 0, 1);
                 Assert.Equal(view.ActualWidth / 2, summaryCenter, 1);
                 Assert.True(summaryButtons.TranslatePoint(new Point(summaryButtons.ActualWidth, 0), view).X
                     <= searchBorder.TranslatePoint(new Point(), view).X);
                 var search = (TextBox)view.FindName("TransactionSearchBox");
+                Assert.Equal(((SolidColorBrush)view.Resources["PrimaryTextBrush"]).Color, Assert.IsType<SolidColorBrush>(search.CaretBrush).Color);
                 void Search(string text)
                 {
                     search.Text = text;
@@ -174,18 +190,36 @@ public sealed class TransactionListViewTests
                 Assert.NotNull(menu);
                 menu.PlacementTarget = expenseRow;
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.DataBind);
-                Assert.Equal(3, menu.Items.Count);
-                var edit = Assert.IsType<MenuItem>(menu.Items[0]);
+                Assert.Equal(4, menu.Items.Count);
+                var edit = Assert.IsType<MenuItem>(menu.Items[1]);
                 Assert.Same(vm.EditCommand, edit.Command);
                 Assert.Equal(((LocalizationService)view.Resources["Localization"])["Transaction_EditTitle"], edit.Header);
                 Assert.Same(vm.EditCommand, Saldo.Desktop.Wpf.Controls.TransactionRowEditBehavior.GetCommand(expenseRow));
-                var addSimilar = Assert.IsType<MenuItem>(menu.Items[1]);
+                var addSimilar = Assert.IsType<MenuItem>(menu.Items[0]);
                 Assert.Same(vm.AddSimilarCommand, addSimilar.Command);
                 Assert.Same(expense, addSimilar.CommandParameter);
                 Assert.Equal(((LocalizationService)view.Resources["Localization"])["Transaction_Copy"], addSimilar.Header);
-                var delete = Assert.IsType<MenuItem>(menu.Items[2]);
+                Assert.IsType<Separator>(menu.Items[2]);
+                var delete = Assert.IsType<MenuItem>(menu.Items[3]);
                 Assert.Same(vm.DeleteCommand, delete.Command);
                 Assert.Equal(((LocalizationService)view.Resources["Localization"])["DeleteTransactionTitle"], delete.Header);
+                var menuHost = new Window { Content = view, Width = 1200, Height = 800, ShowActivated = false, ShowInTaskbar = false };
+                try
+                {
+                    menuHost.Show();
+                    menu.StaysOpen = true;
+                    menu.IsOpen = true;
+                    menu.UpdateLayout();
+                    Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                    Assert.True(menu.IsOpen);
+                    Assert.True(menu.ActualHeight > 0);
+                }
+                finally
+                {
+                    menu.IsOpen = false;
+                    menuHost.Content = null;
+                    menuHost.Close();
+                }
                 var actionsColumn = Assert.IsType<DataGridTemplateColumn>(grid.Columns.Last());
                 Assert.Equal(((LocalizationService)view.Resources["Localization"])["Actions"], actionsColumn.Header);
                 Assert.False(actionsColumn.CanUserSort);

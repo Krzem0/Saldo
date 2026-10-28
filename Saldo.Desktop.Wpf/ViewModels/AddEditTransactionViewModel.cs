@@ -394,7 +394,7 @@ public sealed class AddEditTransactionViewModel : LocalizedViewModelBase, ITrans
             SelectedLocation = Locations.FirstOrDefault(l => l.Id == template.LocationId);
             LocationText = SelectedLocation?.Name ?? string.Empty;
         }
-        if (template.TagIds.Count > 0) SelectTags(template.TagIds);
+        SelectTags(template.TagIds);
     }
 
     public async Task LoadTemplateAsync(int id)

@@ -67,7 +67,7 @@ public sealed class InFormTemplatePickerTests
         Assert.Equal(h.Party.Id, vm.SelectedPayer!.Id); Assert.Equal(h.Party.Name, vm.PayerText);
         Assert.Equal(h.Party.Id, vm.SelectedCounterparty!.Id); Assert.Equal(h.Party.Name, vm.CounterpartyText);
         Assert.Equal(h.Location.Id, vm.SelectedLocation!.Id); Assert.Equal(h.Location.Name, vm.LocationText);
-        Assert.True(Assert.Single(vm.Tags).IsSelected);
+        Assert.False(Assert.Single(vm.Tags).IsSelected);
         Assert.Empty(vm.ValidationSummary);
         Assert.False(vm.TemplatePicker.IsTemplatePickerOpen);
         Assert.False(closed);

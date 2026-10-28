@@ -161,6 +161,7 @@
   <data name="Template_SaveFailed" xml:space="preserve"><value>Nie udało się zapisać szablonu. Spróbuj ponownie.</value></data>
   <data name="Template_LoadFailed" xml:space="preserve"><value>Nie udało się wczytać szablonów. Otwórz stronę ponownie.</value></data>
   <data name="Template_DeleteFailed" xml:space="preserve"><value>Nie udało się usunąć szablonu. Spróbuj ponownie.</value></data>
+  <data name="Transaction_AddFromTemplate" xml:space="preserve"><value>Dodaj z szablonu</value></data>
   <data name="TemplatePicker_Title" xml:space="preserve"><value>Wybierz szablon transakcji</value></data>
   <data name="TemplatePicker_Search" xml:space="preserve"><value>Szukaj szablonu po nazwie</value></data>
   <data name="TemplatePicker_Loading" xml:space="preserve"><value>Wczytywanie szablonów…</value></data>
@@ -199,6 +200,8 @@
   <data name="AccountingPeriod_Unknown" xml:space="preserve"><value>Stan okresu nieznany</value></data>
   <data name="AccountingPeriod_Loading" xml:space="preserve"><value>Sprawdzanie okresu…</value></data>
   <data name="AccountingPeriod_Changing" xml:space="preserve"><value>Zmiana stanu okresu…</value></data>
+  <data name="AccountingPeriod_CloseToolTip" xml:space="preserve"><value>Miesiąc otwarty — kliknij, aby zamknąć</value></data>
+  <data name="AccountingPeriod_ReopenToolTip" xml:space="preserve"><value>Miesiąc zamknięty — kliknij, aby otworzyć</value></data>
   <data name="AccountingPeriod_Close" xml:space="preserve"><value>Zamknij okres</value></data>
   <data name="AccountingPeriod_Reopen" xml:space="preserve"><value>Otwórz okres</value></data>
   <data name="AccountingPeriod_Retry" xml:space="preserve"><value>Sprawdź ponownie</value></data>

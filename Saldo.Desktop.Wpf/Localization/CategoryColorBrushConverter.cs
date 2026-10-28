@@ -6,6 +6,8 @@ namespace Saldo.Desktop.Wpf.Localization;
 
 public sealed class CategoryColorBrushConverter : IValueConverter
 {
+    public byte Alpha { get; set; } = 82;
+
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is not string colorCode || string.IsNullOrWhiteSpace(colorCode))
@@ -16,7 +18,7 @@ public sealed class CategoryColorBrushConverter : IValueConverter
         try
         {
             var color = (Color)ColorConverter.ConvertFromString(colorCode)!;
-            return new SolidColorBrush(Color.FromArgb(82, color.R, color.G, color.B));
+            return new SolidColorBrush(Color.FromArgb(Alpha, color.R, color.G, color.B));
         }
         catch (FormatException)
         {

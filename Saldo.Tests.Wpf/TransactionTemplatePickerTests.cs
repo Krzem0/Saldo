@@ -9,6 +9,24 @@ namespace Saldo.Tests.Wpf;
 public sealed class TransactionTemplatePickerTests
 {
     [Fact]
+    public async Task Picker_LoadsCategoryColorsAndLeavesTemplatesWithoutCategoryUncolored()
+    {
+        using var h = new TransactionTemplatesTests.Harness("pl-PL");
+        await Add(h, "Z kategorią");
+        var uncolored = h.Form();
+        uncolored.Name = "Bez kategorii";
+        uncolored.AmountText = "25";
+        await uncolored.SaveAsync();
+        var vm = new TransactionListViewModel(h.Scopes, h.Dialogs, h.Localization);
+
+        await vm.OpenTemplatePickerAsync();
+
+        Assert.Equal(2, vm.FilteredTemplates.Count);
+        Assert.Equal(h.Category.ColorCode, vm.FilteredTemplates.Single(t => t.Name == "Z kategorią").CategoryColorCode);
+        Assert.Null(vm.FilteredTemplates.Single(t => t.Name == "Bez kategorii").CategoryColorCode);
+    }
+
+    [Fact]
     public async Task Picker_SearchesNamesIgnoringCaseAndAccents_AndReloadsOnOpening()
     {
         using var h = new TransactionTemplatesTests.Harness("pl-PL");

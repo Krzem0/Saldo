@@ -376,6 +376,7 @@ public sealed class TransactionTemplatesViewTests
         Assert.Equal(harness.Category.ColorCode, badge.ColorCode);
         Assert.Equal(harness.Category.IconKey, badge.IconKey);
         var amountBox = Descendants(surface).OfType<TextBox>().Single(box => AmountInputBehavior.GetIsEnabled(box));
+        Assert.Equal(((SolidColorBrush)surface.Resources["PrimaryTextBrush"]).Color, Assert.IsType<SolidColorBrush>(amountBox.CaretBrush).Color);
         Assert.Equal(edit.AmountText, AmountInputBehavior.GetRawText(amountBox));
         Assert.True(Descendants(surface).OfType<Button>().Count(button => Equals(button.Content, "+")) >= 5);
         var locationSelector = selectors.Single(selector => ReferenceEquals(selector.SelectedItem, harness.Location));
@@ -410,12 +411,14 @@ public sealed class TransactionTemplatesViewTests
         vm.IsTemplatePickerOpen = false;
         var control = (UserControl)Load("AddTransactionButton.xaml", theme);
         control.DataContext = vm;
-        Layout(control, 230, 40);
+        Layout(control, 400, 40);
         var buttons = Descendants(control).OfType<Button>().ToArray();
         Assert.Equal(2, buttons.Length);
         Assert.Same(vm.AddCommand, buttons[0].Command);
         Assert.Same(vm.OpenTemplatePickerCommand, buttons[1].Command);
-        SavePreview(control, theme + "-add-button", 230, 40);
+        Assert.Contains(Descendants(buttons[1]).OfType<TextBlock>(), block => block.Text == "Dodaj z szablonu" && block.Visibility == Visibility.Visible);
+        Assert.True(buttons[1].ActualWidth > 120);
+        SavePreview(control, theme + "-add-button", 400, 40);
         var popup = (System.Windows.Controls.Primitives.Popup)control.FindName("TemplatePopup");
         var surface = (FrameworkElement)popup.Child;
         surface.Resources = control.Resources;
@@ -424,10 +427,18 @@ public sealed class TransactionTemplatesViewTests
         var list = Descendants(surface).OfType<ListBox>().Single();
         Assert.Equal(280, list.MaxHeight);
         Assert.Equal("Zakupy — Społem", Assert.Single(list.Items.Cast<Saldo.Application.DTOs.TransactionTemplateDto>()).Name);
+        var templateRow = Assert.Single(Descendants(list).OfType<ListBoxItem>());
+        var expectedCategoryColor = Color.FromArgb(28, 0x33, 0x66, 0xCC);
+        Assert.Equal(expectedCategoryColor, Assert.IsType<SolidColorBrush>(templateRow.Background).Color);
+        templateRow.IsSelected = true;
+        Layout(surface, 320, 180);
+        Assert.Equal(expectedCategoryColor, Assert.IsType<SolidColorBrush>(templateRow.Background).Color);
+        templateRow.IsSelected = false;
         Assert.Null(list.SelectedItem);
         Assert.False(vm.UseTemplateCommand.CanExecute(null));
         SavePreview(surface, theme + "-template-picker", 320, 180);
         var search = Descendants(surface).OfType<TextBox>().Single();
+        Assert.Equal(((SolidColorBrush)control.Resources["PrimaryTextBrush"]).Color, Assert.IsType<SolidColorBrush>(search.CaretBrush).Color);
         search.Text = "brak";
         Layout(surface, 320, 180);
         Assert.Empty(list.Items);
@@ -457,6 +468,8 @@ public sealed class TransactionTemplatesViewTests
         var surface = new Border { Child = content, Resources = window.Resources,
             Background = (Brush)window.Resources["SurfaceBrush"], DataContext = vm };
         Layout(surface, 520, 900);
+        foreach (var textBox in Descendants(surface).OfType<TextBox>())
+            Assert.Equal(((SolidColorBrush)surface.Resources["PrimaryTextBrush"]).Color, Assert.IsType<SolidColorBrush>(textBox.CaretBrush).Color);
         var buttons = Descendants(surface).OfType<Button>().ToArray();
         var picker = Descendants(surface).OfType<UserControl>().Single();
         Assert.Single(Descendants(picker).OfType<Button>(), b => b.Visibility == Visibility.Visible);
@@ -613,6 +626,8 @@ public sealed class TransactionTemplatesViewTests
         root.SetAttributeValue(XNamespace.Xmlns + "views", views + ";assembly=Saldo.Desktop.Wpf");
         root.SetAttributeValue(XNamespace.Xmlns + "services", "clr-namespace:Saldo.Desktop.Wpf.Services;assembly=Saldo.Desktop.Wpf");
         var localization = "clr-namespace:Saldo.Desktop.Wpf.Localization;assembly=Saldo.Desktop.Wpf";
+        foreach (var element in root.Descendants().Where(e => e.Name.NamespaceName == "clr-namespace:Saldo.Desktop.Wpf.Localization").ToArray())
+            element.Name = XName.Get(element.Name.LocalName, localization);
         root.SetAttributeValue(XNamespace.Xmlns + "localization", localization);
         var resourceProperty = root.Element(p + (root.Name.LocalName + ".Resources"));
         if (resourceProperty is null) { resourceProperty = new XElement(p + (root.Name.LocalName + ".Resources")); root.AddFirst(resourceProperty); }

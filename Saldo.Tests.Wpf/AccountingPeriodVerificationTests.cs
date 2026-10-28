@@ -281,6 +281,43 @@ public sealed class AccountingPeriodVerificationTests
         Assert.Equal("Original", (await transactions.GetByIdAsync(source.Id))!.Description);
     });
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void Confirmation_PreservesCurrentLockStateAndDisablesAction(bool initiallyClosed, bool confirmed) => Run(async () =>
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var repository = new FakeAccountingPeriodRepository();
+        if (initiallyClosed) await new CloseAccountingPeriod(repository).ExecuteAsync(today.Year, today.Month);
+        TransactionListViewModel viewModel = null!;
+        var confirmationShown = false;
+        var dialogs = new Messages
+        {
+            ConfirmChange = confirmed,
+            OnConfirm = () =>
+            {
+                confirmationShown = true;
+                Assert.True(viewModel.IsChangingPeriod);
+                Assert.Equal(initiallyClosed, viewModel.IsPeriodClosed);
+                Assert.False(viewModel.ChangePeriodCommand.CanExecute(null));
+            }
+        };
+        using var provider = Provider(new FakeTransactionRepository(), repository);
+        viewModel = new TransactionListViewModel(provider.GetRequiredService<IServiceScopeFactory>(), dialogs, new LocalizationService());
+        viewModel.LoadCommand.Execute(null);
+        await WaitForLoadAsync(viewModel);
+
+        viewModel.ChangePeriodCommand.Execute(null);
+        await WaitForIdleAsync(viewModel);
+
+        Assert.True(confirmationShown);
+        Assert.Empty(dialogs.Items);
+        Assert.Equal(confirmed ? !initiallyClosed : initiallyClosed, viewModel.IsPeriodClosed);
+        Assert.True(viewModel.ChangePeriodCommand.CanExecute(null));
+    });
+
     [Fact]
     public void ChangingState_DisablesWritesTemplatesNavigationAndDuplicateRequests() => Run(async () =>
     {
@@ -508,9 +545,11 @@ public sealed class AccountingPeriodVerificationTests
         public List<(string Title, string Message, MessageDialogKind Kind)> Items { get; } = [];
         public List<(string Title, string Message, string Action)> Confirmations { get; } = [];
         public bool ConfirmChange { get; init; }
+        public Action? OnConfirm { get; init; }
         public bool ConfirmAccountingPeriodChange(string title, string message, string actionLabel)
         {
             Confirmations.Add((title, message, actionLabel));
+            OnConfirm?.Invoke();
             return ConfirmChange;
         }
         public void ShowMessage(string title, string message, MessageDialogKind kind) => Items.Add((title, message, kind));

@@ -208,7 +208,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         get => _isChangingPeriod;
         private set { if (SetField(ref _isChangingPeriod, value)) NotifyPeriodStateChanged(); }
     }
-    public bool? IsPeriodClosed => IsLoading || IsChangingPeriod ? null : _isPeriodClosed;
+    public bool? IsPeriodClosed => IsLoading ? null : _isPeriodClosed;
     public bool CanCreateTransaction => !IsLoading && !IsChangingPeriod && (_automaticBackups?.CanWrite ?? true);
     public Task WaitForPeriodChangeAsync() => _periodChangeFinished?.Task ?? Task.CompletedTask;
     public string PeriodStateText => IsChangingPeriod ? T("AccountingPeriod_Changing")
@@ -219,6 +219,12 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
             false => T("AccountingPeriod_Open"),
             null => T("AccountingPeriod_Unknown")
         };
+    public string PeriodActionToolTip => IsPeriodClosed switch
+    {
+        true => T("AccountingPeriod_ReopenToolTip"),
+        false => T("AccountingPeriod_CloseToolTip"),
+        null => PeriodStateText
+    };
     public string PeriodActionText => IsPeriodClosed switch
     {
         true => T("AccountingPeriod_Reopen"),
@@ -251,6 +257,7 @@ public sealed class TransactionListViewModel : LocalizedViewModelBase, ITransact
         OnPropertyChanged(nameof(CanCreateTransaction));
         OnPropertyChanged(nameof(PeriodStateText));
         OnPropertyChanged(nameof(PeriodActionText));
+        OnPropertyChanged(nameof(PeriodActionToolTip));
         OnPropertyChanged(nameof(PeriodIntegrityText));
         OnPropertyChanged(nameof(HasPeriodIssue));
         CommandManager.InvalidateRequerySuggested();
