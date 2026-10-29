@@ -157,6 +157,9 @@ public sealed class TransactionTemplatesTests
         }
         var page = new TransactionTemplatesViewModel(harness.Scopes, harness.Dialogs, harness.Localization);
         await page.LoadAsync();
+        Assert.Null(page.SelectedItem);
+        Assert.False(page.EditCommand.CanExecute(null));
+        Assert.False(page.DeleteCommand.CanExecute(null));
         page.SelectedItem = page.Items[1];
         var id = page.SelectedItem.Template.Id;
         await page.LoadAsync();
@@ -167,10 +170,45 @@ public sealed class TransactionTemplatesTests
         Assert.Equal(2, page.Items.Count);
         harness.Dialogs.DeleteConfirmed = true;
         await page.DeleteAsync();
-        Assert.Single(page.Items); Assert.NotEqual(id, page.SelectedItem!.Template.Id);
+        Assert.Single(page.Items); Assert.Null(page.SelectedItem);
+        Assert.False(page.DeleteCommand.CanExecute(null));
+        page.SelectedItem = page.Items[0];
         await page.DeleteAsync();
         Assert.Empty(page.Items); Assert.Null(page.SelectedItem);
         Assert.False(page.EditCommand.CanExecute(null)); Assert.False(page.DeleteCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Navigation_BackToTemplatesOrDictionary_ClearsPreviousSelection()
+    {
+        using var harness = new Harness("pl-PL");
+        var form = harness.Form();
+        form.Name = "Shopping";
+        form.Description = "Groceries";
+        await form.SaveAsync();
+        var templates = new TransactionTemplatesViewModel(harness.Scopes, harness.Dialogs, harness.Localization);
+        var categories = new CategoriesViewModel(harness.Scopes, harness.Dialogs, harness.Localization);
+        var main = new MainViewModel(null!, categories, null!, null!, null!, null!, templates);
+
+        main.ShowTemplatesCommand.Execute(null);
+        while (templates.IsBusy) await Task.Delay(10);
+        Assert.Null(templates.SelectedItem);
+        templates.SelectedItem = Assert.Single(templates.Items);
+        main.ShowCategoriesCommand.Execute(null);
+        while (categories.IsLoading) await Task.Delay(10);
+        Assert.Null(categories.SelectedItem);
+        categories.SelectedItem = Assert.Single(categories.Items);
+
+        main.ShowTemplatesCommand.Execute(null);
+        while (templates.IsBusy) await Task.Delay(10);
+        Assert.Null(templates.SelectedItem);
+        Assert.False(templates.EditCommand.CanExecute(null));
+        Assert.False(templates.DeleteCommand.CanExecute(null));
+        main.ShowCategoriesCommand.Execute(null);
+        while (categories.IsLoading) await Task.Delay(10);
+        Assert.Null(categories.SelectedItem);
+        Assert.False(categories.EditCommand.CanExecute(null));
+        Assert.False(categories.DeleteCommand.CanExecute(null));
     }
 
     [Fact]

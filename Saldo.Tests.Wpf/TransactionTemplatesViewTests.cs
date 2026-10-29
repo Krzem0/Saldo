@@ -17,6 +17,7 @@ using MahApps.Metro.IconPacks;
 
 namespace Saldo.Tests.Wpf;
 
+[Collection("WpfApplication")]
 public sealed class TransactionTemplatesViewTests
 {
     [Theory]
@@ -158,6 +159,72 @@ public sealed class TransactionTemplatesViewTests
                 || error.Contains("VerticalContentAlignment"));
         }
         finally { vm.IsTemplatePickerOpen = false; owner.Close(); }
+    });
+
+    [Fact]
+    public void TemplatePicker_ClickingClippedRow_DoesNotScrollBeforeChoosingIt() => OnSta(() =>
+    {
+        var application = new System.Windows.Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+        try
+        {
+            foreach (var theme in new[] { "LightTheme", "DarkTheme" })
+            {
+                using var h = new TransactionTemplatesTests.Harness("pl-PL");
+                for (var i = 0; i < 12; i++)
+                {
+                    var template = h.Form();
+                    template.Name = $"Szablon {i:00}";
+                    template.Description = $"Opis {i:00}";
+                    template.SaveAsync().GetAwaiter().GetResult();
+                }
+                var resources = ((UserControl)Load("AddTransactionButton.xaml", theme)).Resources;
+                application.Resources = resources;
+                var vm = new TransactionListViewModel(h.Scopes, h.Dialogs, h.Localization);
+                var control = new Saldo.Desktop.Wpf.Views.AddTransactionButton { Resources = resources, DataContext = vm };
+                var owner = new Window { Content = control, Width = 350, Height = 100,
+                    Left = -10000, Top = -10000, ShowInTaskbar = false };
+                string? chosenDescription = null;
+                h.Dialogs.TransactionCallback = form => { chosenDescription = form.Description; return false; };
+                try
+                {
+                    owner.Show();
+                    vm.OpenTemplatePickerAsync().GetAwaiter().GetResult();
+                    Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                    var popup = (System.Windows.Controls.Primitives.Popup)control.FindName("TemplatePopup");
+                    var list = (ListBox)control.FindName("TemplateList");
+                    ScrollViewer.SetCanContentScroll(list, false);
+                    list.MaxHeight = 110;
+                    popup.Child.UpdateLayout();
+                    var viewport = Descendants(list).OfType<ScrollContentPresenter>().First();
+                    var row = Descendants(list).OfType<ListBoxItem>().First(item =>
+                    {
+                        var top = item.TranslatePoint(new Point(), viewport).Y;
+                        return top >= 0 && top < viewport.ActualHeight && top + item.ActualHeight > viewport.ActualHeight;
+                    });
+                    var templateDto = (Saldo.Application.DTOs.TransactionTemplateDto)row.Content;
+                    var scroll = Descendants(list).OfType<ScrollViewer>().First();
+                    var offset = scroll.VerticalOffset;
+                    var down = new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                        { RoutedEvent = UIElement.PreviewMouseLeftButtonDownEvent, Source = row };
+                    list.RaiseEvent(down);
+                    Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ApplicationIdle);
+                    Assert.True(down.Handled);
+                    Assert.Equal(offset, scroll.VerticalOffset);
+                    Assert.Null(chosenDescription);
+                    list.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+                        { RoutedEvent = UIElement.PreviewMouseLeftButtonUpEvent, Source = row });
+                    Assert.Equal(templateDto.Description, chosenDescription);
+                    Assert.False(vm.IsTemplatePickerOpen);
+                }
+                finally { vm.IsTemplatePickerOpen = false; owner.Close(); }
+            }
+        }
+        finally
+        {
+            // WPF allows only one Application per process. Leave it alive and empty;
+            // Shutdown would prevent later popup tests from opening their windows.
+            application.Resources = new ResourceDictionary();
+        }
     });
 
     [Theory]
@@ -320,11 +387,16 @@ public sealed class TransactionTemplatesViewTests
         page.DataContext = pageModel;
         Layout(page, 900, 560);
         var list = Descendants(page).OfType<ListBox>().Single();
+        Assert.Null(pageModel.SelectedItem);
+        Assert.Null(list.SelectedItem);
+        Assert.False(pageModel.EditCommand.CanExecute(null));
+        Assert.False(pageModel.DeleteCommand.CanExecute(null));
         Assert.Same(pageModel.SelectedItem, list.SelectedItem);
         Assert.Contains(Descendants(page).OfType<TextBlock>(), block => block.Text == "Jedzenie do pracy — Społem");
         SavePreview(page, theme + "-templates", 900, 560);
 
         var search = Descendants(page).OfType<TextBox>().Single();
+        list.SelectedItem = pageModel.Items[0];
         var selectedId = pageModel.SelectedItem!.Template.Id;
         search.Text = "  PRACY  ";
         Layout(page, 900, 560);
@@ -347,10 +419,11 @@ public sealed class TransactionTemplatesViewTests
         Assert.Empty(search.Text);
         Assert.False(clearSearch.Command.CanExecute(null));
         Assert.Single(list.Items);
+        Assert.Null(pageModel.SelectedItem);
         Assert.Same(pageModel.SelectedItem, list.SelectedItem);
 
         var dialog = (Window)Load("TransactionTemplateDialog.xaml", theme);
-        var edit = harness.Form(pageModel.SelectedItem!.Template);
+        var edit = harness.Form(pageModel.Items[0].Template);
         dialog.DataContext = edit;
         var content = (FrameworkElement)dialog.Content;
         dialog.Content = null;
@@ -610,7 +683,7 @@ public sealed class TransactionTemplatesViewTests
         root.Attribute(x + "Class")!.Remove();
         // Root attributes are parsed before local test resources; production gets Localization from App.
         if (file == "NotificationHistoryDialog.xaml") root.Attribute("Title")?.Remove();
-        foreach (var attribute in root.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName is "Closing" or "PreviewKeyDown" or "KeyDown" or "Click" or "Opened" or "PreviewMouseLeftButtonUp" or "TargetUpdated" or "MouseDoubleClick" or "LostKeyboardFocus").ToArray()) attribute.Remove();
+        foreach (var attribute in root.DescendantsAndSelf().Attributes().Where(a => a.Name.LocalName is "Closing" or "PreviewKeyDown" or "KeyDown" or "Click" or "Opened" or "PreviewMouseLeftButtonDown" or "PreviewMouseLeftButtonUp" or "TargetUpdated" or "MouseDoubleClick" or "LostKeyboardFocus").ToArray()) attribute.Remove();
         var controls = "clr-namespace:Saldo.Desktop.Wpf.Controls";
         foreach (var element in root.Descendants().Where(e => e.Name.NamespaceName == controls).ToArray())
             element.Name = XName.Get(element.Name.LocalName, controls + ";assembly=Saldo.Desktop.Wpf");
@@ -689,3 +762,6 @@ public sealed class TransactionTemplatesViewTests
         if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
     }
 }
+
+[CollectionDefinition("WpfApplication", DisableParallelization = true)]
+public sealed class WpfApplicationCollection;

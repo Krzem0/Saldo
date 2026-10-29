@@ -16,6 +16,14 @@ public partial class AddTransactionButton : UserControl
     private void OnPopupOpened(object? sender, EventArgs e) => SearchBox.Focus();
     private void ClearSearch_Click(object sender, RoutedEventArgs e) => SearchBox.Focus();
 
+    private void OnTemplateMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        // ListBoxItem focuses itself on mouse-down and scrolls clipped rows into view.
+        // Keep the row under the pointer until mouse-up commits the template.
+        if (ItemsControl.ContainerFromElement(TemplateList, e.OriginalSource as DependencyObject) is ListBoxItem)
+            e.Handled = true;
+    }
+
     private void OnTemplateClicked(object sender, MouseButtonEventArgs e)
     {
         if (ItemsControl.ContainerFromElement(TemplateList, e.OriginalSource as DependencyObject) is not ListBoxItem item)

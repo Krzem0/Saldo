@@ -128,7 +128,7 @@ public sealed class TransactionTemplatesViewModel : LocalizedViewModelBase
         Items.Clear();
         foreach (var row in _allItems.Where(row => row.Name.Contains(query, StringComparison.OrdinalIgnoreCase)))
             Items.Add(row);
-        SelectedItem = Items.FirstOrDefault(row => row.Template.Id == selectedId) ?? Items.FirstOrDefault();
+        SelectedItem = Items.FirstOrDefault(row => row.Template.Id == selectedId);
         OnPropertyChanged(nameof(EmptyMessage));
     }
     protected override void OnCultureChanged()

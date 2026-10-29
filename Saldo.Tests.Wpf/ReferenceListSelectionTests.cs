@@ -42,7 +42,7 @@ public sealed class ReferenceListSelectionTests
         Assert.Equal(2, vm.SelectedItem!.Id);
         vm.SearchText = "pracy";
         Assert.Equal(1, Assert.Single(vm.Items).Id);
-        Assert.Equal(1, vm.SelectedItem!.Id);
+        Assert.Null(vm.SelectedItem);
         vm.SearchText = "nie istnieje";
         Assert.Empty(vm.Items);
         Assert.Null(vm.SelectedItem);
@@ -62,7 +62,7 @@ public sealed class ReferenceListSelectionTests
     [InlineData(false, false)]
     [InlineData(true, false)]
     [InlineData(true, true)]
-    public void Reload_PreservesSelectionOrSelectsFirstRemainingItem(bool removeSelected, bool emptyList) => OnSta(() =>
+    public void Reload_PreservesExistingSelectionWithoutSelectingAnotherItem(bool removeSelected, bool emptyList) => OnSta(() =>
     {
         using var provider = new ServiceCollection().BuildServiceProvider();
         var viewModel = new TestReferenceList(provider.GetRequiredService<IServiceScopeFactory>());
@@ -73,14 +73,14 @@ public sealed class ReferenceListSelectionTests
             new Binding(nameof(viewModel.SelectedItem)) { Mode = BindingMode.TwoWay });
         viewModel.LoadCommand.Execute(null);
         Pump();
-        Assert.Same(viewModel.Items[0], viewModel.SelectedItem);
-        Assert.Same(viewModel.SelectedItem, list.SelectedItem);
-        Assert.True(viewModel.EditCommand.CanExecute(null));
+        Assert.Null(viewModel.SelectedItem);
+        Assert.Null(list.SelectedItem);
+        Assert.False(viewModel.EditCommand.CanExecute(null));
         list.SelectedItem = viewModel.Items[1];
         var oldSelection = viewModel.SelectedItem;
         Assert.NotNull(oldSelection);
 
-        // A return to the page loads fresh instances; names and order may also change.
+        // Reloading after an operation loads fresh instances; names and order may also change.
         viewModel.Rows = emptyList ? [] : removeSelected
             ? [new Tag { Id = 1, Name = "First" }]
             : [new Tag { Id = 2, Name = "Renamed" }, new Tag { Id = 1, Name = "First" }];
@@ -88,7 +88,7 @@ public sealed class ReferenceListSelectionTests
         Pump();
 
         Assert.False(viewModel.IsLoading);
-        if (emptyList)
+        if (emptyList || removeSelected)
         {
             Assert.Null(viewModel.SelectedItem);
             Assert.Null(list.SelectedItem);
@@ -100,7 +100,7 @@ public sealed class ReferenceListSelectionTests
             Assert.NotSame(oldSelection, viewModel.SelectedItem);
             Assert.Same(viewModel.Items[0], viewModel.SelectedItem);
             Assert.Same(viewModel.SelectedItem, list.SelectedItem);
-            Assert.Equal(removeSelected ? "First" : "Renamed", viewModel.SelectedItem!.Name);
+            Assert.Equal("Renamed", viewModel.SelectedItem!.Name);
             Assert.True(viewModel.EditCommand.CanExecute(null));
             Assert.True(viewModel.DeleteCommand.CanExecute(null));
         }

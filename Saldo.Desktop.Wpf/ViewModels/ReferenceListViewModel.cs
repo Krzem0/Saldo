@@ -37,8 +37,7 @@ public abstract class ReferenceListViewModel<T> : LocalizedViewModelBase where T
         var query = SearchText.Trim();
         SelectedItem = null;
         Items = new ObservableCollection<T>(_allItems.Where(item => GetName(item).Contains(query, StringComparison.OrdinalIgnoreCase)));
-        SelectedItem = (selectedId.HasValue ? Items.FirstOrDefault(item => GetId(item) == selectedId.Value) : null)
-            ?? Items.FirstOrDefault();
+        SelectedItem = selectedId.HasValue ? Items.FirstOrDefault(item => GetId(item) == selectedId.Value) : null;
         OnPropertyChanged(nameof(EmptyMessage));
     }
 

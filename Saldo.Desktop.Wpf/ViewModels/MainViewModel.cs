@@ -90,6 +90,7 @@ public sealed class MainViewModel : ViewModelBase
         switch (page)
         {
             case MainPage.Templates:
+                Templates.SelectedItem = null;
                 Templates.LoadCommand.Execute(null);
                 break;
             case MainPage.Settings:
@@ -99,15 +100,19 @@ public sealed class MainViewModel : ViewModelBase
                 TransactionList.LoadCommand.Execute(null);
                 break;
             case MainPage.Tags:
+                Tags.SelectedItem = null;
                 Tags.LoadCommand.Execute(null);
                 break;
             case MainPage.Categories:
+                Categories.SelectedItem = null;
                 Categories.LoadCommand.Execute(null);
                 break;
             case MainPage.Parties:
+                Parties.SelectedItem = null;
                 Parties.LoadCommand.Execute(null);
                 break;
             case MainPage.Locations:
+                Locations.SelectedItem = null;
                 Locations.LoadCommand.Execute(null);
                 break;
         }

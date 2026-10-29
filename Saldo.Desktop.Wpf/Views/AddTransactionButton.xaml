@@ -165,6 +165,7 @@
                              MaxHeight="280" BorderThickness="0" Background="Transparent"
                              Foreground="{DynamicResource PrimaryTextBrush}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             PreviewMouseLeftButtonDown="OnTemplateMouseDown"
                              PreviewMouseLeftButtonUp="OnTemplateClicked">
                         <ListBox.ItemTemplate>
                             <DataTemplate><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/></DataTemplate>
