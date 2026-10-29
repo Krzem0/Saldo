@@ -102,7 +102,7 @@
 - Shared Application validation rejects identical content under a different name on add and edit, excluding the edited template itself. It compares type, trimmed description without case, amount, reference IDs, and the tag set without order or repetition. Null, empty, and whitespace descriptions are stored as NULL; empty categories are also stored as NULL. Empty templates return `TransactionTemplate.ContentRequired`; matching content returns `TransactionTemplate.ContentDuplicate`. Both WPF save paths display these errors.
 - Validation returns `Result` errors with stable `TransactionTemplate.*` codes and field metadata. Missing templates return `TransactionTemplate.NotFound`.
 - Dictionary entries referenced by templates cannot be deleted. Deleting a template removes its tag links, keeping dictionary entries and transactions.
-- New databases receive both template tables with optional descriptions and categories from the initial migration. Existing databases need a manual schema update to make template descriptions and categories nullable. The content rules run in Application and do not rewrite or delete existing duplicate templates.
+- Template descriptions and categories are optional. Template content rules are enforced in the Application layer.
 
 ## Logging
 
@@ -147,10 +147,9 @@
 - Automatic backups run in the background at startup and after successful month closing. They use an adjacent AutoBackups directory, one file per local day per database, and retain five successful backup days. Startup writes remain blocked until a valid daily copy is available; a persistent status supports retry. See [Automatic backups](docs/features/automatic-backups.md)
 - Restore and a persisted preferred backup folder are not implemented yet
 
-## Development Database Changes
+## Database Initialization
 
-- Earlier local-development schema changes were included in the initial migration. New changes use incremental migrations; `AddAccountingPeriods` creates the accounting-period foundation and backfills only months containing transactions
-- Changing an already applied initial migration does not upgrade an existing database. An existing development database must be updated explicitly after a backup, with schema and data-integrity checks
+- The app automatically applies EF Core migrations at startup, creating the database with the current schema on first launch. New schema changes use incremental migrations
 - `TransactionSettings.DefaultLocationId` is nullable, indexed, and references `Locations` with `ON DELETE SET NULL`; new databases start with no default location
 
 ## Accounting Periods
